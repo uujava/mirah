@@ -193,6 +193,40 @@ class BlocksTest < Test::Unit::TestCase
     assert_run_output("an object\n", cls)
   end
 
+  def test_nesting_with_abstract_class
+    cls, main = compile(%q{
+      abstract class Nestable
+        abstract def foo(n: Nestable):void;end
+        def create(n: Nestable):void
+           puts "create #{n}"
+           n.foo(n)
+        end
+
+        def toString:String
+           "nestable"
+        end
+      end
+
+      class Main
+        def self.create(b: Nestable):void
+          b.foo(b)
+        end
+
+        def self.main(args: String[]):void
+          create do |x:Nestable|
+            puts "outer foo"
+            create do |m: Nestable|
+              puts "in foo #{m}"
+            end
+          end
+        end
+      end
+})
+    assert_output "outer foo\ncreate nestable\nin foo nestable\n" do
+      main.main([])
+    end
+  end
+
   def test_parameter_used_in_block
     cls, = compile(<<-'EOF')
       def r(r:Runnable); r.run; end
