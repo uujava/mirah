@@ -31,7 +31,6 @@ import mirah.impl.MirahParser
 import mirah.lang.ast.CodeSource
 import mirah.lang.ast.Node
 import mirah.lang.ast.Script
-import mirah.lang.ast.StreamCodeSource
 import mirah.lang.ast.StringCodeSource
 import org.mirah.IsolatedResourceLoader
 import org.mirah.MirahClassLoader
@@ -75,7 +74,8 @@ class MirahArguments
                 max_errors: int,
                 use_type_debugger: boolean,
                 use_new_closures: boolean,
-                exit_status: int
+                exit_status: int,
+                encoding: String
 
   def initialize(env=System.getenv)
     @logger_color = true
@@ -88,6 +88,7 @@ class MirahArguments
     @classpath = nil
     @diagnostics = SimpleDiagnostics.new true
     @env = env
+    @encoding = EncodedCodeSource.DEFAULT_CHARSET
   end
 
   def real_macro_destination
@@ -240,6 +241,10 @@ class MirahArguments
         ['new-closures'], 'Use new closure implementation'
     ) { compiler_args.use_new_closures = true }
 
+    parser.addFlag(
+        ['encoding'], 'ENCODING', 'File encoding. Default to OS encoding'
+    ) { |v| compiler_args.encoding = v }
+
     begin
       parser.parse(args).each do |filename: String|
         f = File.new(filename)
@@ -264,7 +269,8 @@ class MirahArguments
         end
       end
     else
-      code_sources.add(StreamCodeSource.new(f.getPath))
+      code_sources.add(EncodedCodeSource.new(f.getPath, encoding))
+      #code_sources.add(StreamCodeSource.new(f.getPath))
     end
   end
 
