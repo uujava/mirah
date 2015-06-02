@@ -227,6 +227,45 @@ class BlocksTest < Test::Unit::TestCase
     end
   end
 
+  def test_use_abstract_inplace
+    pend "compilation order prevents closure compilation" do
+      cls, main, parent = with_finest_logging { compile(%q{
+      abstract class A < P
+
+        def self.empty:A
+          create do
+            puts "empty"
+          end
+        end
+
+        def self.create(n: A):void
+           puts "create #{n}"
+           n.execute
+        end
+
+      end
+
+      class Main
+        def self.create(b: Nestable = A.empty):void
+          b.execute
+        end
+
+        def self.main(args: String[]):void
+          create
+          create { puts "not empty"}
+        end
+      end
+
+      abstract class P
+        abstract def execute:void;end
+      end
+}) }
+      assert_output "outer foo\ncreate nestable\nin foo nestable\n" do
+        main.main([])
+      end
+    end
+  end
+
   def test_parameter_used_in_block
     cls, = compile(<<-'EOF')
       def r(r:Runnable); r.run; end
