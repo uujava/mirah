@@ -229,7 +229,8 @@ class BlocksTest < Test::Unit::TestCase
 
   def test_use_abstract_inplace
     pend "compilation order prevents closure compilation" do
-      cls, main, parent = with_finest_logging { compile(%q{
+      #with_finest_logging {
+      cls, main, parent =  compile(%q{
       abstract class A < P
 
         def self.empty:A
@@ -259,7 +260,7 @@ class BlocksTest < Test::Unit::TestCase
       abstract class P
         abstract def execute:void;end
       end
-}) }
+})
       assert_output "outer foo\ncreate nestable\nin foo nestable\n" do
         main.main([])
       end
