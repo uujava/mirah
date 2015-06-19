@@ -32,10 +32,12 @@ import javax.lang.model.type.TypeMirror
 import mirah.objectweb.asm.Opcodes
 import mirah.objectweb.asm.Type
 import org.mirah.jvm.mirrors.generics.LubFinder
+import org.mirah.jvm.mirrors.Member
 import org.mirah.jvm.model.IntersectionType
 import org.mirah.jvm.types.JVMType
 import org.mirah.jvm.types.JVMTypeUtils
 import org.mirah.jvm.types.JVMMethod
+import org.mirah.jvm.types.MemberKind
 import org.mirah.typer.BaseTypeFuture
 import org.mirah.typer.ErrorType
 import org.mirah.typer.ResolvedType
@@ -181,8 +183,8 @@ class BaseType implements MirrorType, DeclaredType, MethodListener
     @methods_loaded ||= load_methods
     methods = ArrayList.new
     @members.values.each do |list: List|
-      list.each do |m|
-        methods.add(m)
+      list.each do |m:Member|
+        methods.add(m) if m.kind == MemberKind.STATIC_METHOD or  m.kind == MemberKind.METHOD
       end
     end
     methods
