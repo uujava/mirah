@@ -175,7 +175,7 @@ class Bytecode < GeneratorAdapter
     end
   end
 
-  def convertValue(currentType:JVMType, wantedType:JVMType):void
+  def convertValue(currentType:JVMType, wantedType:JVMType):void    
     unless currentType.equals(wantedType)
       if isPrimitive(currentType) && isPrimitive(wantedType)
         cast(currentType.getAsmType, wantedType.getAsmType)
@@ -184,7 +184,7 @@ class Bytecode < GeneratorAdapter
         box(currentType.getAsmType)
       elsif isPrimitive(wantedType)
         # TODO make sure types match
-        unbox(currentType.getAsmType)
+        unbox(wantedType.getAsmType)
       elsif !wantedType.assignableFrom(currentType)
         checkCast(wantedType.getAsmType)
       end

@@ -17,6 +17,7 @@ require 'test_helper'
 module JVMCompiler
   java_import 'org.mirah.tool.RunCommand'
   java_import 'org.mirah.util.SimpleDiagnostics'
+  
   System = java.lang.System
   JVM_VERSION = ENV['MIRAH_TEST_JVM_VERSION'] || '1.7'
 
@@ -24,7 +25,22 @@ module JVMCompiler
     java_import 'java.util.Locale'
     def report(diagnostic)
       if diagnostic.kind.name == "ERROR"
-        raise Mirah::MirahError, diagnostic.getMessage(Locale.getDefault)
+        source =  if diagnostic.source
+
+                    line_no = [0, diagnostic.getLineNumber - diagnostic.source.initial_line].max
+                    line = diagnostic.source.contents.lines.to_a[line_no]
+                    start_col = if line_no == 0
+                                  diagnostic.column_number - diagnostic.source.initial_column
+                                else
+                                  diagnostic.column_number - 1
+                                end
+                    end_col = [start_col + (diagnostic.end_position - diagnostic.start_position),
+                               line.size - 1].min
+                    line[start_col..end_col]
+                  else
+                    "<unknown>"
+                  end
+        raise Mirah::MirahError.new(diagnostic.getMessage(Locale.getDefault), source)
       end
       super
     end
@@ -65,7 +81,13 @@ module JVMCompiler
 
   def build_command(name, code)
     cmd = RunCommand.new
-    cmd.addFakeFile(name, code)
+    if code.is_a?(Array)
+      code.each.with_index do |c,i|
+        cmd.addFakeFile("#{name}_#{i}", c)
+      end
+    else
+      cmd.addFakeFile(name, code)
+    end
     cmd.setDiagnostics(TestDiagnostics.new(false))
     cmd
   end
@@ -85,7 +107,11 @@ module JVMCompiler
 
   def clean_tmp_files
     return unless @tmp_classes
-    File.unlink(*@tmp_classes)
+    begin
+      File.unlink(*@tmp_classes)
+    rescue 
+      JavaFile.unlink *@tmp_classes      
+    end
   end
 
   def dump_class_files class_map
@@ -115,6 +141,20 @@ module JVMCompiler
                   "expected error message to be '#{message}' but was '#{ex.message}'"
     end
     ex
+  end
+  
+  class JavaFile
+    java_import 'java.io.File'
+    
+    def self.unlink *files            
+      files.each do |f| 
+        jf = File.new(f)
+        unless jf.delete 
+          jf.deleteOnExit
+          puts "\nwarn: locked #{jf}"
+        end
+      end            
+    end
   end
 end
 
