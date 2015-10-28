@@ -46,7 +46,7 @@ class SimpleTypes; implements TypeSystem
     @types[main_type] = @main_type = SimpleType.new(main_type, false, false)
   end
   def lookup(name:String)
-    TypeFuture(@types[name])
+    SpecialType(@types[name])
   end
   def getNullType
     lookup :Null
@@ -95,7 +95,7 @@ class SimpleTypes; implements TypeSystem
     t
   end
   def getMetaType(type:TypeFuture):TypeFuture
-    TypeFuture(getMetaType(ResolvedType(type)))
+    SpecialType(getMetaType(ResolvedType(SpecialType(type))))
   end
   def getArrayType(componentType:ResolvedType):ResolvedType
     # What about multi-dimensional arrays?
@@ -107,7 +107,7 @@ class SimpleTypes; implements TypeSystem
     t
   end
   def getArrayType(componentType:TypeFuture):TypeFuture
-    TypeFuture(getArrayType(componentType.resolve))
+    SpecialType(getArrayType(componentType.resolve))
   end
   def createType(name:String)
     if name.equals(name.toLowerCase())
@@ -193,13 +193,16 @@ class SimpleTypes; implements TypeSystem
   def getSuperClass(type)
     nil
   end
-  def defineType(scope, node, name, superclass, interfaces)
+  def createType(scope, node, name, superclass, interfaces)
     type = lookup(name)
     unless type
       type = SimpleType.new(name, false, false)
       @types[name] = type
     end
     type
+  end
+  def publishType(type_future)
+#   @types[type_future.name] = type_future # it happens already in createType
   end
   def addDefaultImports(scope)
   end

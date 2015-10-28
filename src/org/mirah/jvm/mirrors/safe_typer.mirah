@@ -15,7 +15,7 @@
 
 package org.mirah.jvm.mirrors
 
-import java.util.logging.Logger
+import org.mirah.util.Logger
 import java.util.logging.Level
 import javax.tools.DiagnosticListener
 import mirah.impl.MirahParser
@@ -38,9 +38,8 @@ class SafeTyper < Typer
                  types: TypeSystem,
                  scopes: Scoper,
                  jvm_backend: JvmBackend,
-                 parser: MirahParser=nil,
-                 new_closures:boolean=false)
-    super(types, scopes, jvm_backend, parser, new_closures)
+                 parser: MirahParser=nil)
+    super(types, scopes, jvm_backend, parser)
     @diagnostics = context[DiagnosticListener]
   end
 

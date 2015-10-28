@@ -17,7 +17,7 @@ package org.mirah.builtins
 
 import org.mirah.macros.anno.ExtensionsRegistration
 
-$ExtensionsRegistration[['byte', 'short', 'int', 'long', 'float']]
+$ExtensionsRegistration[['byte', 'short', 'int', 'long','float', 'double']]
 class NumberExtensions
   macro def **(n2)
     quote {

@@ -194,7 +194,8 @@ class BlocksTest < Test::Unit::TestCase
   end
 
   def test_nesting_with_abstract_class
-    cls, main = compile(%q{
+    # pend 'test_nesting_with_abstract_class' do
+      cls, main = compile(%q{
       abstract class Nestable
         abstract def foo(n: Nestable):void;end
         def create(n: Nestable):void
@@ -222,13 +223,14 @@ class BlocksTest < Test::Unit::TestCase
         end
       end
 })
-    assert_output "outer foo\ncreate nestable\nin foo nestable\n" do
-      main.main([])
-    end
+      assert_output "outer foo\ncreate nestable\nin foo nestable\n" do
+        main.main([])
+      end
+    # end
   end
 
   def test_use_abstract_inplace
-    pend "compilation order prevents closure compilation" do
+      pend "test_use_abstract_inplace" do
       #with_finest_logging {
       cls, main, parent =  compile(%q{
       abstract class A < P
@@ -362,7 +364,6 @@ class BlocksTest < Test::Unit::TestCase
   end
 
   def test_call_with_block_assigned_to_macro
-    # cls, = with_finest_logging{compile(<<-CODE)}
     cls, = compile(<<-CODE)
         class S
           def initialize(run: Runnable)
@@ -421,6 +422,98 @@ class BlocksTest < Test::Unit::TestCase
     assert_run_output("first closure\nsecond closure\n", cls)
   end
 
+  def test_nested_closure_with_nested_closed_over_args
+    cls, = compile(<<-'CODE')
+      interface Jogger do;def jog(pace:int):void;end;end
+
+      class Nestable
+        def foo(pace: int, a: Jogger)
+          a.jog(pace)
+        end
+      end
+      Nestable.new.foo 10 do |pace|
+        puts "first #{pace}"
+        Nestable.new.foo 20 do |inner_pace|
+          puts "second #{pace} #{inner_pace}"
+        end
+      end
+    CODE
+    assert_run_output("first 10\nsecond 10 20\n", cls)
+  end
+
+  def test_nested_closure_with_nested_closed_over_args2
+    cls, = compile(%q[
+      interface Jogger do;def jog(param:int):void;end;end
+      
+      class Nestable
+        def operate(blub: int, a: Jogger):void
+          a.jog(blub)
+        end
+      end
+      
+      class Bar
+        def baz(foo:int):void
+          puts "bazstart"
+          Nestable.new.operate(10) do |arg1|
+            puts "first #{arg1} #{foo}"
+            Nestable.new.operate 20 do |inner_pace|
+              puts "second #{arg1} #{inner_pace} #{foo}"
+            end
+            Nestable.new.operate 30 do |inner_pace2|
+              puts "third #{arg1} #{inner_pace2}  #{foo}"
+            end
+          end
+        end
+      end
+      
+      Bar.new.baz(4)
+    ])
+    assert_run_output("bazstart\nfirst 10 4\nsecond 10 20 4\nthird 10 30  4\n", cls)
+  end
+
+  def test_two_closures_capture_different_variables
+    cls, = compile(%q[
+      interface Jogger do;def jog(param:int):void;end;end
+      
+      class Nestable
+        def operate(blub: int, a: Jogger):void
+          a.jog(blub)
+        end
+      end
+      
+      class Bar
+        def baz(foo:int):void
+          puts "bazstart"
+          bar = 7
+          Nestable.new.operate(40) do |arg1|
+            puts bar
+          end
+          Nestable.new.operate(10) do |arg1|
+            puts "first #{arg1} #{foo}"
+          end
+        end
+      end
+      
+      Bar.new.baz(4)
+    ])
+    assert_run_output("bazstart\n7\nfirst 10 4\n", cls)
+  end
+
+  def test_uncastable_block_arg_type_fails
+    error = assert_raises Mirah::MirahError do
+      compile(<<-EOF)
+        import java.io.OutputStream
+        def foo x:OutputStream
+          x.write byte(1)
+        rescue
+        end
+        foo do |b:String|
+          puts "writing"
+        end
+      EOF
+    end
+    assert_equal "Cannot cast java.lang.String to int.", error.message
+  end
 
   def test_method_requiring_subclass_of_abstract_class_finds_abstract_method
     cls, = compile(<<-EOF)
@@ -474,6 +567,20 @@ class BlocksTest < Test::Unit::TestCase
     assert_run_output("hello\n1243\n", cls)
   end
 
+  def test_closures_with_static_imports
+    cls, = compile(<<-EOF)
+      def foo a:Runnable
+        a.run
+      end
+      foo do
+        x = [2,1]
+        import static java.util.Collections.*
+        sort x
+        puts x
+      end
+    EOF
+    assert_run_output("[1, 2]\n", cls)
+  end
 
   def test_closures_support_non_local_return
     pend "nlr doesnt work right now" do
@@ -684,9 +791,8 @@ class BlocksTest < Test::Unit::TestCase
 
 
   def test_closure_with_or
-    # cls, = with_finest_logging{compile(<<-EOF)}
     cls, = compile(<<-EOF)
-    def r(run: Runnable) run.run; end
+    def r(run: java.lang.Runnable) run.run; end
     r { puts "a" || "b"}
     EOF
 
@@ -694,7 +800,6 @@ class BlocksTest < Test::Unit::TestCase
   end
 
   def test_closure_with_or_ii
-    # cls, = with_finest_logging{compile(<<-EOF)}
     cls, = compile(<<-EOF)
     interface C; def c(): String;end;end
     def r(cee: C) puts cee.c; end
@@ -750,16 +855,14 @@ class BlocksTest < Test::Unit::TestCase
   end
 
   def test_lambda_with_type_defined_later
-    pend "I think it'd be nice if this worked" do
-      cls, = compile(<<-EOF)
-        x = lambda(Fooable) { puts "hey you" }
-        interface Fooable
-          def foo: void; end
-        end
-        x.foo
-      EOF
-      assert_run_output("hey you\n", cls)
-    end
+    cls, = compile(<<-EOF)
+      x = lambda(Fooable) { puts "hey you" }
+      interface Fooable
+        def foo: void; end
+      end
+      x.foo
+    EOF
+    assert_run_output("hey you\n", cls)
   end
 
   def test_closure_with_primitive_array_param
@@ -776,22 +879,43 @@ class BlocksTest < Test::Unit::TestCase
   end
 
 
+  def test_block_syntax_for_anonymous_class_implementing_inner_interface
+    cls, = compile('
+      import org.foo.InnerInterfaceClass
+      
+      InnerInterfaceClass.forward("foo") do |param|
+        puts param
+      end
+    ')
+    assert_run_output("foo\n", cls)
+  end
+
+  def test_block_syntax_for_abstract_class_invoke_self
+    omit_if JVMCompiler::JVM_VERSION.to_f < 1.8
+    cls, = compile('
+      import org.foo.AbstractExecutorJava8
+
+      AbstractExecutorJava8.execute do
+        puts "foo"
+      end
+    ')
+    assert_run_output("foo\n", cls)
+  end
+
   def test_lambda_closure
-    pend "not working yet" do
-      cls, = compile(<<-EOF)
-        def r b: Runnable
-          b.run
-        end
-        msg = "yay"
-        l = lambda(Runnable) { puts msg }
-        r l
-      EOF
-      assert_run_output("yay\n", cls)
-    end
+    cls, = compile(<<-EOF)
+      def r b: Runnable
+        b.run
+      end
+      msg = "yay"
+      l = lambda(Runnable) { puts msg }
+      r l
+    EOF
+    assert_run_output("yay\n", cls)
   end
 
 
-  def test_binding_has_right_namespace
+  def test_binding_in_class_definition_has_right_namespace
     classes = compile(<<-'EOF')
       package test
       class Something
@@ -811,6 +935,28 @@ class BlocksTest < Test::Unit::TestCase
     assert class_names.find{|c| c.match pattern },
       "generated classes: #{class_names} didn't contain #{pattern}."
   end
+
+
+  def test_binding_in_script_has_right_namespace
+    classes = compile(<<-'EOF', name: 'MyScript')
+      def create(a: Runnable):void
+        a.run
+      end
+      def with_binding
+        loc = 1
+        create do
+          puts "test #{loc}"
+        end
+      end
+    EOF
+    class_names = classes.map(&:java_class).map(&:name)
+    pattern = /MyScriptTopLevel\$.*?Binding\d*/
+
+    assert class_names.find{|c| c.match pattern },
+      "generated classes: #{class_names} didn't contain #{pattern}."
+  end
+
+
 
   # nested nlr scopes
 

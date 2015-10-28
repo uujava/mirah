@@ -10,6 +10,6 @@ import java.lang.annotation.Target;
  */
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.TYPE})
-public @interface ExtensionsRegistration {    
-    String[] value();
+public @interface ExtensionsRegistration {
+	String[] value();
 }

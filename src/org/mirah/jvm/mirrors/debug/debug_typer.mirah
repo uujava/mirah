@@ -15,7 +15,7 @@
 
 package org.mirah.jvm.mirrors.debug
 
-import java.util.logging.Logger
+import org.mirah.util.Logger
 import javax.tools.DiagnosticListener
 import mirah.impl.MirahParser
 import mirah.lang.ast.Node
@@ -48,9 +48,8 @@ class DebugTyper < SafeTyper
     types:TypeSystem,
     scopes:Scoper,
     jvm_backend:JvmBackend,
-    parser:MirahParser=nil,
-    new_closures=false)
-    super(context, types, scopes, jvm_backend, parser, new_closures)
+    parser:MirahParser=nil)
+    super(context, types, scopes, jvm_backend, parser)
     @debugger = debugger
     @context = context
   end

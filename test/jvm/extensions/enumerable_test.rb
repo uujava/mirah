@@ -319,7 +319,7 @@ class EnumerableTest < Test::Unit::TestCase
     assert_run_output("[a]\n", cls)
   end
 
-def test_map_identity
+  def test_map_identity
     cls, = compile(<<-EOF)
       puts [1,2,3].map {|x| x}
     EOF
@@ -331,6 +331,82 @@ def test_map_identity
       puts [1,2,3].map {|x:Integer| x.intValue + 1}
     EOF
     assert_run_output("[2, 3, 4]\n", cls)
+  end
+
+  def test_native_array_map_empty_literal
+    cls, = compile(<<-EOF)
+      puts int[0].map { 'b' }
+    EOF
+    assert_run_output("[]\n", cls)
+  end
+
+  def test_native_array_map_to_different_type
+    cls, = compile(<<-EOF)
+    	a = int[1]
+    	a[0] = 1
+      puts a.map { 'a' }
+    EOF
+    assert_run_output("[a]\n", cls)
+  end
+
+  def test_native_array_map_identity
+    cls, = compile(<<-EOF)
+    	a = int[3]
+    	a[0] = 1
+    	a[1] = 2
+    	a[2] = 3
+      puts a.map {|x| x}
+    EOF
+    assert_run_output("[1, 2, 3]\n", cls)
+  end
+
+  def test_native_array_map_with_type_declaration
+    cls, = compile(<<-EOF)
+    	a = int[3]
+    	a[0] = 1
+    	a[1] = 2
+    	a[2] = 3
+      puts a.map {|x:int| x + 1}
+    EOF
+    assert_run_output("[2, 3, 4]\n", cls)
+  end
+
+  def test_select_identity
+    cls, = compile(<<-EOF)
+      puts [1,2,3].select {|x| true}
+    EOF
+    assert_run_output("[1, 2, 3]\n", cls)
+  end
+
+  def test_select_odd
+    cls, = compile(<<-EOF)
+      puts [1,2,3].select {|x| (x.intValue&1)==1}
+    EOF
+    assert_run_output("[1, 3]\n", cls)
+  end
+
+  def test_select_multistatement_block
+    cls, = compile(<<-EOF)
+      puts ([1,2,3].select do |x|
+       v = x.intValue
+       v&1==1
+      end)
+    EOF
+    assert_run_output("[1, 3]\n", cls)
+  end
+  
+  def test_join
+    cls, = compile(<<-EOF)
+      puts [1,23,4].join
+    EOF
+    assert_run_output("1234\n", cls)
+  end
+
+  def test_join_with_separator
+    cls, = compile(<<-EOF)
+      puts [1,23,4].join ', '
+    EOF
+    assert_run_output("1, 23, 4\n", cls)
   end
 
   def test_zip

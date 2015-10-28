@@ -24,7 +24,7 @@ import java.net.URLClassLoader
 import java.util.HashSet
 import java.util.List
 
-import java.util.logging.Logger
+import org.mirah.util.Logger
 import java.util.logging.Level
 
 import java.util.Collections
@@ -86,8 +86,7 @@ class ExtensionCleanup < NodeScanner
       nil,
       Collections.emptyList, # body
       Collections.emptyList, # interfaces
-      [extensions_anno],
-       nil)
+      [extensions_anno])
     pkg_str = String(Map(map).get(:package))
     pkg_name = Unquote.new(pos, SimpleString.new(pkg_str))
     new_pkg = MirahPackage.new(pos, pkg_name, nil)

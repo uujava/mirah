@@ -14,6 +14,7 @@
 # limitations under the License.
 
 package org.mirah.builtins
+import org.mirah.macros.anno.ExtensionsRegistration
 
 import org.mirah.macros.anno.ExtensionsRegistration
 

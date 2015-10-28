@@ -24,7 +24,7 @@ import java.util.List
 import java.util.Map
 import java.util.Set
 import java.util.logging.Level
-import java.util.logging.Logger
+import org.mirah.util.Logger
 import mirah.lang.ast.Position
 import mirah.objectweb.asm.Opcodes
 import org.mirah.MirahLogFormatter
@@ -88,7 +88,9 @@ class MethodLookup
     end
 
     def isSubType(subtype:ResolvedType, supertype:ResolvedType):boolean
-      return true if subtype == supertype
+      import static org.mirah.util.Comparisons.*
+      return true if areSame(subtype, supertype)
+      return true if subtype.equals(supertype)
       if subtype.kind_of?(JVMType) && supertype.kind_of?(JVMType)
         return isJvmSubType(JVMType(subtype), JVMType(supertype))
       end
@@ -292,15 +294,14 @@ class MethodLookup
                  position:Position,
                  includeStaticImports:boolean):TypeFuture
     potentials = gatherMethods(target, name)
-    is_static_scope = (
-        scope && scope.selfType && target == scope.selfType.resolve)
-    if includeStaticImports && potentials.isEmpty && is_static_scope
+
+    if includeStaticImports && potentials.isEmpty
       potentials = gatherStaticImports(MirrorScope(scope), name)
     end
     state = LookupState.new(@context, scope, target, potentials, position)
     state.search(params, macro_params)
     state.searchFields(name)
-    @@log.fine("findMatchingMethod(#{target}.#{name}#{params}) => #{state}")
+    @@log.fine("findMethod(#{target}.#{name}#{params}) => #{state}")
     state.future(false)
   end
 
@@ -331,7 +332,7 @@ class MethodLookup
       type = if resolved.kind_of?(InlineCode)
         resolved
       else
-        ResolvedCall.new(target, method)
+        ResolvedCall.create(target, method)
       end
       MethodType.new(method.name, method.argumentTypes, type, method.isVararg)
     end
@@ -391,8 +392,7 @@ class MethodLookup
     end
     unless target.nil? || target.isError || visited.contains(target)
       visited.add(target)
-      target.getAllDeclaredMethods.each do |m|
-        member = JVMMethod(m)
+      target.getAllDeclaredMethods.each do |member: JVMMethod|
         if member.isAbstract
           type = MethodType.new(member.name, member.argumentTypes, member.returnType, member.isVararg)
           abstract_methods[[member.name, member.argumentTypes]] = type
@@ -524,7 +524,7 @@ class MethodLookup
     elsif scope.nil? || scope.selfType.nil?
       return 0 != (access & Opcodes.ACC_PUBLIC)
     end
-    selfType = MirrorType(scope.selfType.resolve)
+    selfType = MirrorType(scope.selfType.peekInferredType)
     if (0 != (access & Opcodes.ACC_PUBLIC) ||
         type.getAsmType.getDescriptor.equals(
             selfType.getAsmType.getDescriptor))

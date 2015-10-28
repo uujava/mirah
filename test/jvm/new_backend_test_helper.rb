@@ -25,7 +25,22 @@ module JVMCompiler
     java_import 'java.util.Locale'
     def report(diagnostic)
       if diagnostic.kind.name == "ERROR"
-        raise Mirah::MirahError, diagnostic.getMessage(Locale.getDefault)
+        source =  if diagnostic.source
+
+                    line_no = [0, diagnostic.getLineNumber - diagnostic.source.initial_line].max
+                    line = diagnostic.source.contents.lines.to_a[line_no]
+                    start_col = if line_no == 0
+                                  diagnostic.column_number - diagnostic.source.initial_column
+                                else
+                                  diagnostic.column_number - 1
+                                end
+                    end_col = [start_col + (diagnostic.end_position - diagnostic.start_position),
+                               line.size - 1].min
+                    line[start_col..end_col]
+                  else
+                    "<unknown>"
+                  end
+        raise Mirah::MirahError.new(diagnostic.getMessage(Locale.getDefault), source, diagnostic)
       end
       super
     end
@@ -41,7 +56,6 @@ module JVMCompiler
 
     args = ["-d", TEST_DEST,
             "--vmodule", "org.mirah.jvm.compiler.ClassCompiler=OFF",
-            "--new-closures",
            # "--verbose",
             "--classpath", Mirah::Env.encode_paths([FIXTURE_TEST_DEST, TEST_DEST]) ]
 
@@ -49,7 +63,9 @@ module JVMCompiler
     if java_version
       args += ["--jvm", java_version]
     end
-
+    if options[:verbose]
+      args << '--verbose'
+    end
     if options[:separate_macro_dest]
       macro_dest = TEST_DEST.sub('classes','macro_classes')
       args += ["--macro-dest", macro_dest,
@@ -66,7 +82,13 @@ module JVMCompiler
 
   def build_command(name, code)
     cmd = RunCommand.new
-    cmd.addFakeFile(name, code)
+    if code.is_a?(Array)
+      code.each.with_index do |c,i|
+        cmd.addFakeFile("#{name}_#{i}", c)
+      end
+    else
+      cmd.addFakeFile(name, code)
+    end
     cmd.setDiagnostics(TestDiagnostics.new(false))
     cmd
   end
@@ -124,7 +146,6 @@ module JVMCompiler
   
   class JavaFile
     java_import 'java.io.File'
-    java_import 'java.util.concurrent.ArrayBlockingQueue'
     
     def self.unlink *files            
       files.each do |f| 

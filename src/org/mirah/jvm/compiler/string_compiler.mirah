@@ -15,7 +15,7 @@
 
 package org.mirah.jvm.compiler
 
-import java.util.logging.Logger
+import org.mirah.util.Logger
 import mirah.objectweb.asm.Type
 import mirah.objectweb.asm.commons.Method
 import mirah.lang.ast.StringPieceList
@@ -24,7 +24,8 @@ class StringCompiler < BaseCompiler
   def self.initialize:void
     @@log = Logger.getLogger(StringCompiler.class.getName)
   end
-  def initialize(method:MethodCompiler)
+
+  def initialize(method: MethodCompiler)
     super(method.context)
     @sb = findType('java.lang.StringBuilder')
     @method = method
@@ -38,7 +39,7 @@ class StringCompiler < BaseCompiler
     @bytecode.invokeVirtual(@sb.getAsmType, methodDescriptor(method))
   end
   
-  def compile(node:StringPieceList, expression:boolean):void
+  def compile(node: StringPieceList, expression: boolean): void
     sb = @sb.getAsmType
     @bytecode.newInstance(sb)
     @bytecode.dup
@@ -59,6 +60,6 @@ class StringCompiler < BaseCompiler
   end
   
   def visitStringEval(node, expression)
-    node.value.accept(self, expression)
+    defaultNode(node.value, expression)
   end
 end

@@ -25,6 +25,7 @@ import java.util.Map
 import java.util.Set
 import java.util.logging.Level
 import java.util.logging.Logger
+# import org.mirah.util.Logger # the old compiler is not ready for this
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
@@ -192,7 +193,7 @@ class GenericMethodLookup
       return result
     end
     generic_target = DeclaredMirrorType(inference.findMatchingSupertype(
-        target, DeclaredType(method.declaringClass)))
+        target, DeclaredMirrorType(method.declaringClass)))
     if generic_target.nil?
       # This happens for static imports.
       return result

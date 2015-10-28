@@ -16,15 +16,13 @@
 package org.mirah.jvm.mirrors
 
 import java.util.List
-import java.util.logging.Logger
+import org.mirah.util.Logger
 
 import javax.lang.model.type.ArrayType as ArrayModel
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 import mirah.objectweb.asm.Opcodes
 import mirah.objectweb.asm.Type
-import org.mirah.builtins.ArrayExtensions
-import org.mirah.builtins.EnumerableExtensions
 import org.mirah.jvm.types.JVMType
 import org.mirah.jvm.types.JVMTypeUtils
 import org.mirah.jvm.types.MemberKind
@@ -55,10 +53,9 @@ class ArrayType < BaseType implements ArrayModel
           Opcodes.ACC_PUBLIC, nil)
     @context = context
     @types = @context[MirrorTypeSystem]
+    @types.extendArray(self)
     @int_type = MirrorType(@types.wrap(Type.getType('I')).resolve)
     @componentType = component
-    BytecodeMirrorLoader.extendClass(self, ArrayExtensions.class)
-    BytecodeMirrorLoader.extendClass(self, EnumerableExtensions.class)
   end
 
   def interfaces:TypeFuture[]
@@ -115,7 +112,12 @@ class ArrayType < BaseType implements ArrayModel
 
   def isSameType(other)
     result = if other.getKind == TypeKind.ARRAY
-      @componentType.isSameType(MirrorType(ArrayModel(other).getComponentType))
+      cast_type = if other.kind_of? MirrorProxy
+                    MirrorProxy(other)
+                  elsif other.kind_of? ArrayType
+                    ArrayType(other)
+                  end
+      @componentType.isSameType(MirrorType(cast_type.getComponentType))
     else
       false
     end

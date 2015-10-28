@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+require 'test_helper'
 
 class MacrosTest < Test::Unit::TestCase
   #TODO perhaps one of these should be an error
@@ -208,6 +209,38 @@ class MacrosTest < Test::Unit::TestCase
     assert_equal("foobar", script.function)
   end
 
+  def test_static_macro_instance_macro_coexistence_vcall
+    script, cls = compile(%q[
+      class StaticMacrosWithInstanceMacros
+        def foobar
+          "foobar"
+        end
+
+        macro def macro_foobar
+          quote {`@call.target`.foobar}
+        end
+
+        def call_foobar_instance
+          macro_foobar
+        end
+
+        macro def self.macro_foobar
+          quote {`@call.target`.new.foobar}
+        end
+
+        def self.call_foobar_static
+          macro_foobar
+        end
+      end
+
+      def function
+        "#{StaticMacrosWithInstanceMacros.call_foobar_static}\n#{StaticMacrosWithInstanceMacros.new.call_foobar_instance}"
+      end
+    ])
+
+    assert_equal("foobar\nfoobar", script.function)
+  end
+
 
   def test_unquote_method_definitions_with_main
     script, cls = compile(<<-'EOF')
@@ -282,6 +315,10 @@ class MacrosTest < Test::Unit::TestCase
   end
 
   def test_add_args_in_macro
+    pend "This is poor-man's splat-operator. It should be replaced by a proper splat-operator or abolished entirely."
+    # This unquote is intended to evaluate to more than just exactly one AST node (that is, 2 nodes in this case) and hence
+    # modifies the NodeList higher in the syntax tree, surprisingly.
+    # Hence, the intention of this unquote violates the Principle of Least Surprise. 
     cls, = compile(<<-EOF)
       macro def foo(a:Array)
         quote { bar "1", `a.values`, "2"}
@@ -367,6 +404,42 @@ class MacrosTest < Test::Unit::TestCase
     EOF
     assert_run_output("0\n3\n", script)
   end
+  
+  def test_protected_attr_accessor
+    script, cls = compile(<<-EOF)
+      class ProtectedAttrAccessorTest
+        protected_methods attr_accessor foo:int
+        
+        def selfreflect
+          puts self.getClass.getDeclaredMethod("foo").getModifiers
+          puts self.getClass.getDeclaredMethod("foo_set",[int.class].toArray(Class[0])).getModifiers
+        end
+      end
+
+      ProtectedAttrAccessorTest.new.selfreflect
+    EOF
+    assert_run_output("4\n4\n", script)
+  end
+
+  def test_macro_in_abstract_class
+    pend
+    script, cls = compile(%q{
+      interface I1
+      end
+      
+      abstract class C2 implements I1
+        macro def self.bar
+          quote do
+            puts "bar"
+          end
+        end
+      end
+    })
+    script, _ =compile(%q{
+      C2.bar
+    })
+    assert_run_output("bar\n", script)
+  end
 
   def test_separate_compilation
     compile(<<-CODE)
@@ -399,9 +472,185 @@ class MacrosTest < Test::Unit::TestCase
     CODE
     assert_run_output("two\n", script)
   end
+  
+  def test_import_star_with_macro_def
+    cls1, cls2 = compile([<<-EOF1, <<-EOF2])
+      package org.bar.p1
+      import org.bar.p2.*
+      macro def foo1; end
+      puts MultiPackageImplicitRef.class
+    EOF1
+      package org.bar.p2
+      class MultiPackageImplicitRef; end
+    EOF2
+
+    assert_run_output "class org.bar.p2.MultiPackageImplicitRef\n", cls1
+  end
+  
+  def test_explicit_import_of_as_yet_unresolved_type_in_file_with_macro
+    cls1, cls2 = compile([<<-EOF1, <<-EOF2])
+      package org.bar.p1
+      import org.bar.p2.MultiPackageExplicitRef
+      
+      macro def foo1; end
+      puts MultiPackageExplicitRef.class
+    EOF1
+      package org.bar.p2
+      class MultiPackageExplicitRef; end
+    EOF2
+
+    assert_run_output "class org.bar.p2.MultiPackageExplicitRef\n", cls1
+  end
+
+  def test_macro_using_imported_unresolved_type_fails_to_compile
+    e = assert_raises Mirah::MirahError do
+      compile([<<-EOF1, <<-EOF2])
+        package org.bar.p1
+        import org.bar.p2.UsedInMacro
+        
+        macro def foo1; puts UsedInMacro; quote {}; end
+        foo1
+      EOF1
+        package org.bar.p2
+        class MultiPackageExplicitRef2; end
+      EOF2
+    end
+    assert_equal "UsedInMacro;", e.position
+    assert_equal "Cannot find class org.bar.p1.UsedInMacro", e.message
+  end
+
+  def test_macro_changes_body_of_class_second_but_last_element
+    script, cls = compile(%q{
+      class ChangeableClass
+        macro def self.method_adding_macro
+          node  = @call
+          node  = node.parent until node.nil? || node.kind_of?(ClassDefinition) # cannot call enclosing_class(), currently
+          klass = ClassDefinition(node)
+          
+          klass.body.add(quote do
+            def another_method
+              puts "called"
+            end
+          end)
+          nil
+        end
+        
+        method_adding_macro
+        
+        def last_body_element
+          1
+        end
+      end
+      
+      ChangeableClass.new.another_method
+    })
+    assert_run_output("called\n", script)
+  end
+
+  def test_macro_changes_body_of_class_last_element
+    script, cls = compile(%q{
+      class ChangeableClass
+        macro def self.method_adding_macro
+          node  = @call
+          node  = node.parent until node.nil? || node.kind_of?(ClassDefinition) # cannot call enclosing_class(), currently
+          klass = ClassDefinition(node)
+          
+          klass.body.add(quote do
+            def another_method
+              puts "called"
+            end
+          end)
+          nil
+        end
+        
+        method_adding_macro
+      end
+      
+      ChangeableClass.new.another_method
+    })
+    assert_run_output("called\n", script)
+  end
+  
+  def test_macro_in_class_inheriting_from_previously_defined_class_inheriting_from_later_to_be_defined_class
+    script, cls = compile(%q{
+      interface Bar < Baz
+      end
+      
+      class Foo
+        implements Bar
+        
+        macro def self.generate_foo
+          quote do
+            def foo
+              puts "foo"
+            end
+          end
+        end
+        
+        generate_foo
+      end
+      
+      interface Baz
+      end
+      
+      Foo.new.foo
+    })
+    assert_run_output("foo\n", script)
+  end
+  
+  def test_macro_in_class_inheriting_from_previously_defined_class_inheriting_from_later_to_be_defined_class2
+    script, cls = compile(%q{
+      interface Bar < Baz
+      end
+      
+      class Foo
+        implements Bar, Baz
+        
+        macro def self.generate_foo
+          quote do
+            def foo
+              puts "foo"
+            end
+          end
+        end
+        
+        generate_foo
+      end
+      
+      interface Baz
+      end
+      
+      Foo.new.foo
+    })
+    assert_run_output("foo\n", script)
+  end
+  
+  def test_gensym_clash
+    script, cls = compile(%q{
+      result = []
+      c = lambda(Runnable) do
+        5.times do
+        end
+      end
+      result.each do |r:Runnable|
+      end
+      
+      puts result
+    })
+    assert_run_output("[]\n", script)
+  end
 
   def test_optional_args_macro
     cls, = compile(<<-CODE)
+      class MacroWithBlock
+        macro def self._test(block:Block = nil)
+          if block
+            block.body
+          else
+            quote { puts "self nil" }
+          end
+        end
+
         macro def test(block:Block = nil)
           if block
             block.body
@@ -410,10 +659,22 @@ class MacrosTest < Test::Unit::TestCase
           end
         end
 
-        test
-        test { puts "block"}
+        def self.main(args: String[]):void
+          mb = MacroWithBlock.new
+          mb.test
+          mb.test do
+            puts "test"
+          end
+          _test
+          _test do
+            puts "self test"
+          end
+        end
+      end
     CODE
 
-    assert_run_output("nil\nblock\n", cls)
+    assert_run_output("nil\ntest\nself nil\nself test\n", cls)
   end
+
 end
+

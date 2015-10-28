@@ -22,7 +22,7 @@ import java.net.URL
 import java.net.URLClassLoader
 import java.util.HashSet
 import java.util.List
-import java.util.logging.Logger
+import org.mirah.util.Logger
 import java.util.logging.LogManager
 import java.util.logging.Level
 import java.util.regex.Pattern
@@ -60,7 +60,7 @@ import org.mirah.util.Context
 import org.mirah.util.OptionParser
 
 class MirahArguments
-  @@VERSION = "0.1.4"
+  @@VERSION = "0.1.5.dev"
 
   attr_accessor logger_color: boolean,
                 code_sources: List,
@@ -73,7 +73,6 @@ class MirahArguments
                 silent: boolean,
                 max_errors: int,
                 use_type_debugger: boolean,
-                use_new_closures: boolean,
                 exit_status: int,
                 encoding: String
 
@@ -82,7 +81,6 @@ class MirahArguments
     @use_type_debugger = false
     @code_sources = []
     @destination = "."
-    @use_new_closures = false
 
     @jvm_version = JvmVersion.new
     @classpath = nil
@@ -238,8 +236,8 @@ class MirahArguments
     ) { compiler_args.use_type_debugger = true }
 
     parser.addFlag(
-        ['new-closures'], 'Use new closure implementation'
-    ) { compiler_args.use_new_closures = true }
+        ['new-closures'], 'DEPRECATED: Use new closure implementation. Has no effect. The "new closure" implementation is now always used.'
+    ) { System.err.puts 'WARN: Use of --new-closures is deprecated and has no effect. The "new closure" implementation is now always used.' }
 
     parser.addFlag(
         ['encoding'], 'ENCODING', 'File encoding. Default to OS encoding'
@@ -270,7 +268,6 @@ class MirahArguments
       end
     else
       code_sources.add(EncodedCodeSource.new(f.getPath, encoding))
-      #code_sources.add(StreamCodeSource.new(f.getPath))
     end
   end
 

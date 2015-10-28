@@ -24,7 +24,8 @@ import javax.lang.model.type.NullType
 import javax.lang.model.type.PrimitiveType
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
-import javax.lang.model.type.TypeVariable
+
+import javax.lang.model.type.TypeVariable as TypeVariableModel
 import javax.lang.model.type.WildcardType
 import mirah.lang.ast.Position
 import org.mirah.jvm.types.CallType
@@ -33,13 +34,33 @@ import org.mirah.jvm.types.JVMMethod
 import org.mirah.jvm.types.JVMType
 import org.mirah.typer.BaseTypeFuture
 import org.mirah.typer.TypeFuture
+import org.mirah.jvm.mirrors.generics.Wildcard
+import org.mirah.jvm.mirrors.generics.TypeVariable
 
 # Simple proxy for a MirrorType.
 # The typer compares types using ==, but sometimes we need to
 # change a Mirror in an incompatible way. We can return a new
 # proxy for the same Mirror, and the typer will treat this as
 # a new type.
-class MirrorProxy implements MirrorType, PrimitiveType, DeclaredType, ArrayType, NoType, ErrorType, NullType, TypeVariable, WildcardType, DeclaredMirrorType
+class MirrorProxy implements MirrorType,
+                             PrimitiveType,
+                             DeclaredType,
+                             ArrayType,
+                             NoType,
+                             ErrorType,
+                             NullType,
+                             TypeVariableModel,
+                             WildcardType,
+                             DeclaredMirrorType
+
+  def self.create(type:MirrorType)
+    if type.kind_of? MirrorProxy
+      type
+    else
+      MirrorProxy.new type
+    end
+  end
+
   def initialize(type:MirrorType)
     @target = type
   end
@@ -51,6 +72,9 @@ class MirrorProxy implements MirrorType, PrimitiveType, DeclaredType, ArrayType,
   end
   def onIncompatibleChange(listener):void
     @target.onIncompatibleChange(listener)
+  end
+  def isFullyResolved():boolean
+    @target.isFullyResolved()
   end
   def getDeclaredMethods(name)
     @target.getDeclaredMethods(name)
@@ -66,6 +90,9 @@ class MirrorProxy implements MirrorType, PrimitiveType, DeclaredType, ArrayType,
   end
   def add(member):void
     @target.add(member)
+  end
+  def hasMember(name)
+    @target.hasMember(name)
   end
   def superclass
     @target.superclass
@@ -83,11 +110,21 @@ class MirrorProxy implements MirrorType, PrimitiveType, DeclaredType, ArrayType,
     @target.retention
   end
   def getComponentType:MirrorType
-    MirrorType(@target.getComponentType)
+    if @target.getComponentType.kind_of? MirrorType
+      # unchecked typecheck
+      MirrorType(Object(@target.getComponentType))
+    else
+      nil
+    end
   end
   # FIXME: Manual bridge methods
   def getComponentType:TypeMirror
-    TypeMirror(@target.getComponentType)
+    if @target.getComponentType.kind_of? TypeMirror
+      # unchecked typecheck
+      TypeMirror(Object(@target.getComponentType))
+    else
+      nil
+    end
   end
   def getComponentType:JVMType
     @target.getComponentType
@@ -178,19 +215,44 @@ class MirrorProxy implements MirrorType, PrimitiveType, DeclaredType, ArrayType,
     end
   end
   def getTypeArguments
-    DeclaredType(@target).getTypeArguments
+    if @target.kind_of? DeclaredType
+      # unchecked typecheck
+      DeclaredType(Object(@target)).getTypeArguments
+    else
+      nil
+    end
   end
   def getLowerBound
-    TypeVariable(@target).getLowerBound
+    if @target.kind_of? TypeVariableModel
+      # unchecked typecheck
+      TypeVariableModel(Object(@target)).getLowerBound
+    else
+      nil
+    end
   end
   def getUpperBound
-    TypeVariable(@target).getUpperBound
+    if @target.kind_of? TypeVariableModel
+      # unchecked typecheck
+      TypeVariableModel(Object(@target)).getUpperBound
+    else
+      nil
+    end
   end
   def getExtendsBound
-    WildcardType(@target).getExtendsBound
+    if @target.kind_of? WildcardType
+      # unchecked typecheck
+      WildcardType(Object(@target)).getExtendsBound
+    else
+      nil
+    end
   end
   def getSuperBound
-    WildcardType(@target).getSuperBound
+    if @target.kind_of? WildcardType
+      # unchecked typecheck
+      WildcardType(Object(@target)).getSuperBound
+    else
+      nil
+    end
   end
   def erasure
     e = @target.erasure
@@ -227,12 +289,46 @@ end
 class MirrorFuture < BaseTypeFuture
   def initialize(type:MirrorType, position:Position=nil)
     super(position)
-    resolved(MirrorProxy.new(type))
+    @type = type
     future = self
     type.onIncompatibleChange do
-      future.forgetType
-      future.resolved(MirrorProxy.new(type))
+      future.maybeResolved
     end
+    maybeResolved
+  end
+  
+  def maybeResolved
+    if checkResolved
+      forgetType
+      @mirror_proxy = MirrorProxy.create(type)
+      resolved(@mirror_proxy)
+    end
+  end
+
+  def checkResolved
+    direct_supertypes = @type.directSupertypes
+    direct_supertypes.size.times do |i|
+      direct_supertype = direct_supertypes[i]
+      if direct_supertype.kind_of?(MirrorProxy)
+        if !MirrorProxy(direct_supertype).isFullyResolved
+          return false
+        end
+      elsif direct_supertype.kind_of?(ErrorType)
+        return false
+      end
+    end
+    true
+  end
+  
+  def isResolved
+    super && @type.isFullyResolved
+  end
+  
+  # MirrorFuture does not support the generic contract that the inferred type is always the resolved type.
+  # The represented type is always set. However, resolution may happen only when also the parent types are resolved.
+  # Hence, if we were not implementing our own #peekInferredType, the supermethod would return nil when we could actually return @type.
+  def peekInferredType
+    @type
   end
 end
 
@@ -240,6 +336,10 @@ class ResolvedCall < MirrorProxy implements CallType
   def initialize(target:MirrorType, method:JVMMethod)
     super(ResolvedCall.expressionType(target, method))
     @member = method
+  end
+
+  def self.create(target:MirrorType, method:JVMMethod)
+    ResolvedCall.new(target, method)
   end
 
   def self.expressionType(target:MirrorType, method:JVMMethod):MirrorType

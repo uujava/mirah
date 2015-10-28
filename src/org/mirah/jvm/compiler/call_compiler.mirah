@@ -17,7 +17,7 @@ package org.mirah.jvm.compiler
 
 import java.util.Arrays
 import java.util.List
-import java.util.logging.Logger
+import org.mirah.util.Logger
 import mirah.lang.ast.*
 import org.mirah.jvm.types.CallType
 import org.mirah.jvm.types.JVMType
@@ -223,7 +223,7 @@ class CallCompiler < BaseCompiler implements MemberVisitor
     asm_type = type.getAsmType
     compile(@target)
     @method.convertValue(getInferredType(@target), type)
-    convertArgs([type])
+    convertArgs(method.argumentTypes)
     recordPosition
     @method.math(op, asm_type)
     convertResult(type, expression)

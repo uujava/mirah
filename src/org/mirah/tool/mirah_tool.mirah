@@ -22,7 +22,7 @@ import java.net.URL
 import java.net.URLClassLoader
 import java.util.HashSet
 import java.util.List
-import java.util.logging.Logger
+import org.mirah.util.Logger
 import java.util.logging.Level
 import java.util.regex.Pattern
 import javax.tools.DiagnosticListener
@@ -101,8 +101,7 @@ abstract class MirahTool implements BytecodeConsumer
         @compiler_args.real_macroclasspath,
         @compiler_args.destination,
         @compiler_args.real_macro_destination,
-        @debugger,
-        @compiler_args.use_new_closures)
+        @debugger)
     parseAllFiles
     @compiler.infer
     @compiler.compile(self)

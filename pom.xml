@@ -7,14 +7,14 @@
 		<version>7</version>
 	</parent>
 
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.mirah</groupId>
-	<artifactId>shared</artifactId>
-	<packaging>pom</packaging>
-	<version>0.1.4</version>
-	<name>Mirah Shared</name>
-	<url>http://mirah.org</url>
-	<description>The Mirah Programming Language</description>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.mirah</groupId>
+  <artifactId>shared</artifactId>
+  <packaging>pom</packaging>
+  <version>0.1.5-SNAPSHOT</version>
+  <name>Mirah Shared</name>
+  <url>http://mirah.org</url>
+  <description>The Mirah Programming Language</description>
 
 	<issueManagement>
 		<system>Github issues</system>
@@ -49,9 +49,9 @@
 		<module>maven/mirah-complete</module>
 	</modules>
 
-	<properties>
-		<jruby.version>1.6.0</jruby.version>
-	</properties>
+  <properties>
+    <jruby.version>1.7.19</jruby.version>
+  </properties>
 
 	<build>
 		<defaultGoal>install</defaultGoal>

@@ -18,6 +18,7 @@ vendor/
 tmp_test
 
 # ignore generated jar files
+
 javalib/mirah-bootstrap.jar
 javalib/mirah-builtins.jar
 javalib/mirah-newast-transitional.jar

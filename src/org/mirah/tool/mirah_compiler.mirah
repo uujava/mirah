@@ -22,7 +22,7 @@ import java.net.URL
 import java.net.URLClassLoader
 import java.util.HashSet
 import java.util.List
-import java.util.logging.Logger
+import org.mirah.util.Logger
 import java.util.logging.Level
 import java.util.regex.Pattern
 import java.util.Collections
@@ -63,6 +63,7 @@ import org.mirah.util.TooManyErrorsException
 import org.mirah.util.LazyTypePrinter
 import org.mirah.util.Context
 import org.mirah.util.OptionParser
+import org.mirah.util.AstChecker
 
 class CompilationFailure < Exception
 end
@@ -73,7 +74,7 @@ class MirahCompiler implements JvmBackend
       diagnostics: SimpleDiagnostics, jvm: JvmVersion, classpath: URL[],
       bootclasspath: URL[], macroclasspath: URL[], destination: String,
       macro_destination: String,
-      debugger: DebuggerInterface=nil, new_closures: boolean=false)
+      debugger: DebuggerInterface=nil)
     @diagnostics = diagnostics
     @jvm = jvm
     @destination = destination
@@ -104,15 +105,15 @@ class MirahCompiler implements JvmBackend
     context[Scoper] = @scoper = SimpleScoper.new(BetterScopeFactory.new)
 
     context[MirahParser] = @parser = MirahParser.new
-    BaseParser(@parser).diagnostics = ParserDiagnostics.new(@diagnostics)
+    # BaseParser(@parser).diagnostics = ParserDiagnostics.new(@diagnostics) # Field "diagnostics" does not seem to exist in the current mirah/mmeta source code, but it did exist in an ancient mmeta.jar. 
 
     @macro_context[Scoper] = @scoper
     @macro_context[MirahParser] = @parser
     @macro_context[Typer] = @macro_typer = createTyper(
-        debugger, @macro_context, @macro_types, @scoper, self, @parser, new_closures)
+        debugger, @macro_context, @macro_types, @scoper, self, @parser)
 
     context[Typer] = @typer = createTyper(
-        debugger, context, @types, @scoper, self, @parser, new_closures)
+        debugger, context, @types, @scoper, self, @parser)
 
     # Make sure macros are compiled using the correct type system.
     @typer.macro_compiler = @macro_typer.macro_compiler
@@ -135,19 +136,18 @@ class MirahCompiler implements JvmBackend
   end
 
   def createTyper(debugger:DebuggerInterface, context:Context, types:TypeSystem,
-                  scopes:Scoper, jvm_backend:JvmBackend, parser:MirahParser,
-                  new_closures: boolean)
+                  scopes:Scoper, jvm_backend:JvmBackend, parser:MirahParser)
     if debugger.nil?
-      SafeTyper.new(context, types, scopes, jvm_backend, parser, new_closures)
+      SafeTyper.new(context, types, scopes, jvm_backend, parser)
     else
-      DebugTyper.new(debugger, context, types, scopes, jvm_backend, parser, new_closures)
+      DebugTyper.new(debugger, context, types, scopes, jvm_backend, parser)
     end
   end
 
   def parse(code:CodeSource)
     node = Node(@parser.parse(code))
     if node.nil?
-      puts "#{code.name} parsed to nil"
+      puts "#{code.name} failed to parse."
     else
       @asts.add(node)
       if @debugger
@@ -164,7 +164,9 @@ class MirahCompiler implements JvmBackend
 
     sorted_asts.each do |node: Node|
       begin
+        AstChecker.maybe_check(node) 
         @typer.infer(node, false)
+        AstChecker.maybe_check(node)
       ensure
         logAst(node, @typer)
       end

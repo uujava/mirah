@@ -88,7 +88,7 @@ end
 # It is also responsible for transformations of things like optional arguments and I think,
 # managing intrinsics.
 #
-class MacroBuilder; implements Compiler
+class MacroBuilder; implements org.mirah.macros.Compiler
   def initialize(typer: Typer, backend: JvmBackend, parser: MirahParser=nil)
     @typer = typer
     @types = typer.type_system
@@ -273,7 +273,7 @@ class MacroBuilder; implements Compiler
         end
 
         def gensym: String
-          @mirah.scoper.getScope(@call).temp('gensym')
+          @mirah.scoper.getScope(@call).temp('$gensym')
         end
       end
     end
@@ -287,23 +287,30 @@ class MacroBuilder; implements Compiler
     end
     imports = scope.imports
     imports.keySet.each do |key|
-      preamble.add(Import.new(SimpleString.new(String(imports.get(key))),
-                              SimpleString.new(String(key))))
+      future = @types.get scope, SimpleString.new(String(imports.get(key))).typeref
+      if future.isResolved
+        preamble.add(Import.new(SimpleString.new(String(imports.get(key))),
+                                SimpleString.new(String(key))))
+      end
     end
     script.body.insert(0, preamble)
     script
   end
 
   def extensionName(macroDef: MacroDefinition)
-    enclosing_type = @scopes.getScope(macroDef).selfType.resolve
-    counter = Integer(@extension_counters.get(enclosing_type))
-    if counter.nil?
-      id = 1
+    enclosing_type = @scopes.getScope(macroDef).selfType.peekInferredType
+    if !enclosing_type.isError
+      counter = Integer(@extension_counters.get(enclosing_type))
+      if counter.nil?
+        id = 1
+      else
+        id = counter.intValue + 1
+      end
+      @extension_counters.put(enclosing_type, Integer.new(id))
+      "#{enclosing_type.name}$Extension#{id}"
     else
-      id = counter.intValue + 1
+      raise InternalError.new("Cannot use error type #{enclosing_type} as base name for macros.")
     end
-    @extension_counters.put(enclosing_type, Integer.new(id))
-    "#{enclosing_type.name}$Extension#{id}"
   end
 
   # Adds types to the arguments with none specified.
@@ -414,7 +421,7 @@ class MacroBuilder; implements Compiler
       @scopes
     end
     
-    extended_class = typer.scoper.getScope(macroDef).selfType.resolve
+    extended_class = typer.scoper.getScope(macroDef).selfType.peekInferredType
     typer.type_system.addMacro(extended_class, klass)
   end
 end

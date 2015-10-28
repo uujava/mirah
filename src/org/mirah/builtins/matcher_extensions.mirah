@@ -1,4 +1,4 @@
-# Copyright (c) 2010 The Mirah project authors. All Rights Reserved.
+# Copyright (c) 2015 The Mirah project authors. All Rights Reserved.
 # All contributing project authors may be found in the NOTICE file.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-def_edb :render, 'test.edb'
-@message = "Hello"
-puts render
+package org.mirah.builtins
+import org.mirah.macros.anno.ExtensionsRegistration
+
+$ExtensionsRegistration[['java.util.regex.Matcher']]
+class MatcherExtensions
+  macro def [](index)
+    quote { `@call.target`.group `index` }
+  end
+end

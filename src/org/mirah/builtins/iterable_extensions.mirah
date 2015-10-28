@@ -16,6 +16,7 @@
 package org.mirah.builtins
 
 import org.mirah.macros.anno.ExtensionsRegistration
+
 $ExtensionsRegistration[['java.lang.Iterable']]
 class IterableExtensions
   macro def each(block:Block)
@@ -39,6 +40,19 @@ class IterableExtensions
         init {`it` = `@call.target`.iterator}
         pre {`name` = `getter`}
         `block.body`
+      end
+    end
+  end
+  
+  # Iterates over each element of the Iterable, yielding each time both the element and the index in the Iterable.
+  macro def each_with_index(block:Block)
+    value = block.arguments.required(0)
+    count = block.arguments.required(1).name.identifier
+    quote do
+      `count` = 0
+      `@call.target`.each do |`value`|
+        `block.body`
+        `count` = `count`+1 
       end
     end
   end

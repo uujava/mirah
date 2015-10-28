@@ -128,13 +128,21 @@ end
 
 task :build_test_fixtures => 'tmp_test/fixtures/fixtures_built.txt'
 directory 'tmp_test/fixtures'
+
 file 'tmp_test/fixtures/fixtures_built.txt' => ['tmp_test/fixtures'] + Dir['test/fixtures/**/*.java'] do
   `touch tmp_test/fixtures/fixtures_built.txt`
-  ant.javac 'destdir' => "tmp_test/fixtures",
-            'srcdir' => 'test/fixtures',
-            'includeantruntime' => false,
-            'debug' => true,
-            'listfiles' => true
+
+  javac_args = {
+      'destdir' => "tmp_test/fixtures",
+      'srcdir' => 'test/fixtures',
+      'includeantruntime' => false,
+      'debug' => true,
+      'listfiles' => true
+  }
+  jvm_version = java.lang.System.getProperty('java.specification.version').to_f
+
+  javac_args['excludes'] = '**/*Java8.java' if jvm_version < 1.8
+  ant.javac javac_args
 end
 
 task :init do
@@ -216,7 +224,7 @@ task :dist => [:gem, :zip]
 file_create 'javalib/mirah-asm-5.jar' => 'javalib/jarjar.jar' do
   require 'open-uri'
   puts "Downloading asm-5.jar"
-  url = 'https://search.maven.org/remotecontent?filepath=org/ow2/asm/asm-all/5.0.3/asm-all-5.0.3.jar'
+  url = 'https://search.maven.org/remotecontent?filepath=org/ow2/asm/asm-all/5.0.4/asm-all-5.0.4.jar'
   open(url, 'rb') do |src|
     open('javalib/asm-5.jar', 'wb') do |dest|
       dest.write(src.read)
@@ -256,6 +264,19 @@ file_create 'javalib/jarjar.jar' do
 	open('javalib/rename-asm.jarjar', 'wb') do |dest|
 		dest.write("rule org.objectweb.** mirah.objectweb.@1")
 	end
+end
+def build_jar(new_jar,build_dir, extensions=false)
+  # Build the jar                    
+  ant.jar 'jarfile' => new_jar do
+    fileset 'dir' => build_dir
+    zipfileset 'src' => 'javalib/mirah-asm-5.jar', 'includes' => 'mirah/objectweb/**/*'
+    zipfileset 'src' => 'javalib/mirah-parser.jar'
+    metainf 'dir' => File.dirname(__FILE__), 'includes' => 'LICENSE,COPYING,NOTICE'
+    metainf 'dir' => File.dirname(__FILE__)+'/src/org/mirah/builtins', 'includes' => 'services/*' if extensions
+    manifest do
+      attribute 'name' => 'Main-Class', 'value' => 'org.mirah.MirahCommand'
+    end
+  end
 end
 
 def bootstrap_mirah_from(old_jar, new_jar)
@@ -348,11 +369,15 @@ if false
 
 else # original
 
+  naked_mirahc_jar = new_jar.sub(".jar","-naked.jar")
 
-  mirah_srcs = Dir['src/org/mirah/{builtins,jvm/types,macros,util,}/*.mirah'].sort +
+  mirah_srcs = Dir['src/org/mirah/{jvm/types,macros,util,}/*.mirah'].sort +
                Dir['src/org/mirah/typer/**/*.mirah'].sort +
                Dir['src/org/mirah/jvm/{compiler,mirrors,model}/**/*.mirah'].sort +
                Dir['src/org/mirah/tool/*.mirah'].sort
+
+  extensions_srcs = Dir['src/org/mirah/builtins/*.mirah'].sort
+  ant_srcs        =    ['src/org/mirah/ant/compile.mirah']
 
   file new_jar => mirah_srcs + ['src/org/mirah/ant/compile.mirah'] + [old_jar, 'javalib/mirah-asm-5.jar', 'javalib/mirah-parser.jar'] do
     build_dir = 'build/bootstrap'+new_jar.gsub(/[.-\/]/, '_')
@@ -387,6 +412,8 @@ else # original
             #'--verbose',
 
             *mirah_srcs)
+  
+    build_jar(naked_mirahc_jar,build_dir)
 
       # compile ant stuff
       ant_classpath = $CLASSPATH.grep(/ant/).map{|x| x.sub(/^file:/,'')}.join(File::PATH_SEPARATOR)
@@ -397,17 +424,10 @@ else # original
             '--jvm', build_version,
             'src/org/mirah/ant'
 
-    # Build the jar
-    ant.jar 'jarfile' => new_jar do
-      fileset 'dir' => build_dir
-      zipfileset 'src' => 'javalib/mirah-asm-5.jar', 'includes' => 'mirah/objectweb/**/*'
-      zipfileset 'src' => 'javalib/mirah-parser.jar'
-      metainf 'dir' => File.dirname(__FILE__), 'includes' => 'LICENSE,COPYING,NOTICE'
-      metainf 'dir' => File.dirname(__FILE__)+'/src/org/mirah/builtins', 'includes' => 'services/*'
-      manifest do
-        attribute 'name' => 'Main-Class', 'value' => 'org.mirah.MirahCommand'
-      end
-    end
+    # compile extensions stuff
+    runjava('-Xmx512m', naked_mirahc_jar, '-d', build_dir, '-classpath', default_class_path, '--jvm', build_version, *extensions_srcs)
+
+    build_jar(new_jar,build_dir, true)
   end
 end # feature flag
 end

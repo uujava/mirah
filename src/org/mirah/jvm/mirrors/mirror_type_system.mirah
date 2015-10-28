@@ -16,12 +16,13 @@
 package org.mirah.jvm.mirrors
 
 import java.io.File
+import java.util.HashSet
 
 import java.util.ArrayList
 import java.util.Collections
 import java.util.LinkedList
 import java.util.List
-import java.util.logging.Logger
+import org.mirah.util.Logger
 import java.util.logging.Level
 
 import javax.lang.model.util.Types as JavaxTypes
@@ -38,6 +39,10 @@ import mirah.lang.ast.Script
 import mirah.lang.ast.SimpleString
 
 import org.mirah.MirahLogFormatter
+import org.mirah.macros.anno.ExtensionsRegistration
+import org.mirah.macros.ExtensionsService
+import org.mirah.macros.ExtensionsProvider
+import java.util.ServiceLoader
 
 import org.mirah.typer.AssignableTypeFuture
 import org.mirah.typer.BaseTypeFuture
@@ -63,14 +68,6 @@ import org.mirah.jvm.model.Types
 import org.mirah.jvm.types.JVMType
 import org.mirah.jvm.types.JVMTypeUtils
 import org.mirah.jvm.types.MemberKind
-
-import org.mirah.macros.anno.ExtensionsRegistration
-import org.mirah.builtins.ExtensionsService
-import org.mirah.builtins.ExtensionsProvider
-import java.util.ServiceLoader
-
-import java.net.URL
-import java.net.URLClassLoader
 
 class MirrorTypeSystem implements TypeSystem, ExtensionsService
   def initialize(
@@ -104,6 +101,8 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     @object = BaseType(@object_future.resolve)
     @anonymousClasses = {}
     @unpinned_field_futures = {}
+    @cached_array_types = {}
+    @array_extensions = HashSet.new
     register_extensions
     addObjectIntrinsics
     initBoxes
@@ -150,10 +149,10 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def getMainType(scope, script)
-    getMetaType(defineType(scope, script, getMainClassName(script), nil, []))
+    getMetaType(defineType(scope, script, MirrorTypeSystem.getMainClassName(script), nil, []))
   end
 
-  def getMainClassName(script:Script):String
+  def self.getMainClassName(script:Script):String
     (script && script.position && script.position.source &&
          script.position.source.name &&
          MirrorTypeSystem.classnameFromFilename(script.position.source.name)) ||
@@ -245,7 +244,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   def getMethodDefType(target, name, flags, argTypes, declaredReturnType, position)
     name = name.replaceAll('=$', '_set')
     createMember(
-        MirrorType(target.resolve), name, flags, argTypes, declaredReturnType,
+        MirrorType(target.peekInferredType), name, flags, argTypes, declaredReturnType,
         position)
   end
 
@@ -296,6 +295,11 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
           f.onUpdate do |x, resolved|
             if resolved.kind_of?(MirrorType)
               MirrorType(resolved).addMethodListener(method_name, listener)
+              if resolved.kind_of?(MirrorProxy)
+                if BaseType(MirrorProxy(resolved).target).hasMember(method_name) # if the method was already created, then
+                  listener.methodChanged(MirrorType(resolved),method_name)       #   fire the listener right away
+                end
+              end
             end
           end
         end
@@ -305,7 +309,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def getFieldType(target, name, position)
-    resolved = MirrorType(target.resolve)
+    resolved = MirrorType(target.peekInferredType)
     klass = MirrorType(resolved.unmeta)
     member = klass.getDeclaredField(name)
     if member
@@ -326,7 +330,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def getFieldTypeOrDeclare(target, name, position)
-    resolved = MirrorType(target.resolve)
+    resolved = MirrorType(target.peekInferredType)
     klass = MirrorType(resolved.unmeta)
     member = klass.getDeclaredField(name)
     future = if member
@@ -374,7 +378,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
       if resolved.isError
         resolved
       else
-        MirrorProxy.new(MirrorType(types.getMetaType(resolved)))
+        MirrorProxy.create(MirrorType(types.getMetaType(resolved)))
       end
     end
   end
@@ -412,8 +416,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def findTypeDefinition(future:TypeFuture):MirahMirror
-    return nil unless future.isResolved
-    resolved = future.resolve
+    resolved = future.peekInferredType
     while resolved.kind_of?(MirrorProxy)
       resolved = MirrorProxy(resolved).target
     end
@@ -424,11 +427,17 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     end
   end
 
-  def defineType(scope, node, name, superclass, interfaces)
+  def defineType(scope:Scope, node:Node, name:String, superclass:TypeFuture, interfaces:List)
+    type_future = createType(scope,node,name,superclass,interfaces)
+    publishType(type_future)
+    type_future
+  end
+
+  def createType(scope:Scope, node:Node, name:String, superclass:TypeFuture, interfaces:List)
     position = node ? node.position : nil
     fullname = calculateName(scope, node, name)
     type = Type.getObjectType(fullname.replace(?., ?/))
-    existing_future = wrap(type)
+    existing_future = DelegateFuture(wrap(type)).type
     existing_type = findTypeDefinition(existing_future)
     if existing_type
       if superclass.nil? && (interfaces.nil? || interfaces.size == 0)
@@ -462,10 +471,20 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
                              superclass, interfaceArray)
     addClassIntrinsic(mirror)
     future = MirrorFuture.new(mirror, position)
-    @loader.defineMirror(type, future)
     future
   end
-
+  
+  def publishType(future:TypeFuture)
+    if future.kind_of?(MirrorFuture)
+      mirror_future = MirrorFuture(future)
+      publishType(MirahMirror(mirror_future.peekInferredType),mirror_future)
+    end
+  end
+  
+  def publishType(mirror:MirahMirror,future:MirrorFuture):void
+    @loader.defineMirror(mirror.getAsmType, future)
+  end
+  
   def get(scope, typeref)
     name = resolveName(scope, typeref.name)
     type = if scope.nil?
@@ -528,7 +547,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def getResolvedArrayType(componentType:ResolvedType):ResolvedType
-    ArrayType.new(@context, cast(componentType))
+    ResolvedType(@cached_array_types[componentType] ||= ArrayType.new(@context, cast(componentType)))
   end
 
   def getArrayType(componentType:ResolvedType):ResolvedType
@@ -552,6 +571,16 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   def extendClass(classname:String, extensions:Class)
     type = BaseType(loadNamedType(classname).resolve)
     BytecodeMirrorLoader.extendClass(type, extensions)
+  end
+
+  def register_array_extension(clazz:Class)
+    @array_extensions.add clazz
+  end
+
+  def extendArray(type:BaseType)
+    @array_extensions.each do |klass: Class|
+      BytecodeMirrorLoader.extendClass(type, klass)
+    end
   end
 
   def addClassIntrinsic(type:BaseType)
@@ -708,7 +737,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     i = 0
     args.each do |arg|
       if arg.kind_of?(TypeFuture)
-        future = TypeFuture(arg)
+        future = TypeFuture(Object(arg))
         if future.isResolved
           arg = future.resolve
         end
@@ -739,6 +768,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
         sb.append(s.substring(1, s.length))
       end
     end
+    sb.append("TopLevel")
     sb.toString
   end
 
@@ -753,6 +783,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def register_extensions:void
+    log.fine("register extensions")
     boot_class_loader = MirrorTypeSystem.class.getClassLoader
     register_extensions boot_class_loader
     
@@ -762,35 +793,39 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
       register_extensions compile_class_loader
     end
   end
+  
   # use java service SPI to load all extensions registrations from context classloader
   def register_extensions(class_loader:ClassLoader):void    
     return unless class_loader
     services = ServiceLoader.load(ExtensionsProvider.class, class_loader)
     type_system = self
-    iter = Iterable(services).iterator
-    while iter.hasNext
-      provider = ExtensionsProvider(iter.next)
+    log.fine("register extensions for services: #{services}")
+    Iterable(services).each do |provider: ExtensionsProvider|
       provider.register(type_system)
     end
-  rescue Error => ex
-    puts "Unable to load regtistration service: #{ex}"
   end
 
   # ExtensionsService implementation
   def macro_registration(clazz:Class):void
+    log.fine("macro registration for: #{clazz}")
     anno = clazz.getAnnotation(ExtensionsRegistration.class)
     macro_clazz = @context[ClassLoader].loadClass("#{clazz.getName}$Extensions") rescue nil
     # different ways for extensions annotations
     macro_clazz = clazz unless macro_clazz
     type_system = self
+    log.fine("annotation: #{anno}")
     unless anno.nil?
       anno.value.each do |class_name|
-        type_system.extendClass(class_name, macro_clazz)
+        if class_name.equals('[]')
+          log.fine("array extension: #{class_name} #{macro_clazz}")
+          type_system.register_array_extension(macro_clazz)
+        else
+          log.fine("extend class: #{class_name} #{macro_clazz}")
+          type_system.extendClass(class_name, macro_clazz)
+        end
       end
     end
-  rescue Error => ex
-    puts "Unable to register macro: #{ex}"   
-  end  
+  end
 end
 
 class FakeMember < Member

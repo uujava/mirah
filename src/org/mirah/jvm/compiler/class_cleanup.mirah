@@ -17,7 +17,7 @@ package org.mirah.jvm.compiler
 
 import java.util.Collections
 import java.util.List
-import java.util.logging.Logger
+import org.mirah.util.Logger
 import javax.tools.DiagnosticListener
 import mirah.lang.ast.*
 import org.mirah.jvm.types.JVMType
@@ -44,6 +44,7 @@ class ClassCleanup < NodeScanner
     @init_nodes = ArrayList.new
     @constructors = ArrayList.new
     @field_collector = FieldCollector.new(context)
+    @field_annotation_requestss = {}
     @methods = ArrayList.new
     @method_states = {}
   end
@@ -126,7 +127,7 @@ class ClassCleanup < NodeScanner
     type.getDeclaredFields.each do |f|
       @@log.finest "creating field declaration for #{f.name}"
       name = f.name
-      decl = FieldDeclaration.new(SimpleString.new(name), makeTypeRef(f.returnType), Collections.emptyList,  Collections.emptyList)
+      decl = FieldDeclaration.new(SimpleString.new(name), makeTypeRef(f.returnType), nil, Collections.emptyList)
       decl.isStatic = type.hasStaticField(f.name)
       decl.annotations = @field_collector.getAnnotations(name)
       decl.modifiers = @field_collector.getModifiers(name)
@@ -241,6 +242,11 @@ class ClassCleanup < NodeScanner
       @init_nodes.add(node)
       node.parent.removeChild(node)
     end
+    false
+  end
+  def enterFieldAnnotationRequest(node, arg)
+    field_annotation_requestss[node.name.identifier] ||= []
+    List(field_annotation_requestss[node.name.identifier]).add(node)
     false
   end
   def enterFieldDeclaration(node, arg)

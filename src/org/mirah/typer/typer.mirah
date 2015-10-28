@@ -16,13 +16,16 @@
 package org.mirah.typer
 
 import java.util.*
-import java.util.logging.Logger
+import org.mirah.util.Logger
 import mirah.lang.ast.*
 import mirah.impl.MirahParser
 import org.mirah.macros.JvmBackend
 import org.mirah.macros.MacroBuilder
 import mirah.objectweb.asm.Opcodes
+
 import org.mirah.jvm.types.JVMTypeUtils
+import org.mirah.jvm.types.JVMType
+import org.mirah.jvm.mirrors.*
 
 # Type inference engine.
 # Makes a single pass over the AST nodes building a graph of the type
@@ -58,20 +61,15 @@ class Typer < SimpleNodeVisitor
   def initialize(types: TypeSystem,
                  scopes: Scoper,
                  jvm_backend: JvmBackend,
-                 parser: MirahParser=nil,
-                 new_closures=false)
+                 parser: MirahParser=nil)
     @trueobj = java::lang::Boolean.valueOf(true)
     @futures = HashMap.new
     @types = types
     @scopes = scopes
     @macros = MacroBuilder.new(self, jvm_backend, parser)
     
-    if new_closures
-      # might want one of these for each script
-      @closures = BetterClosureBuilder.new(self, @macros)
-    else
-      @closures = ClosureBuilder.new(self)
-    end
+    # might want one of these for each script
+    @closures = BetterClosureBuilder.new(self, @macros)
   end
 
   def finish_closures
@@ -105,16 +103,17 @@ class Typer < SimpleNodeVisitor
 
   def learnType(node:Node, type:TypeFuture):void
     existing = @futures[node]
-    raise IllegalArgumentException if existing
+    raise IllegalArgumentException, "had existing type #{existing}" if existing
     @futures[node] = type
   end
 
   def infer(node:Node, expression:boolean=true)
     @@log.entering("Typer", "infer", "infer(#{node})")
-    @@log.fine("source:\n    #{sourceContent node}")
+
     return nil if node.nil?
     type = @futures[node]
     if type.nil?
+      @@log.fine("source:\n    #{sourceContent node}")
       type = node.accept(self, expression ? @trueobj : nil)
       @futures[node] ||= type
     end
@@ -328,10 +327,109 @@ class Typer < SimpleNodeVisitor
     end
   end
 
+
+  def isCastable(resolved_cast_type: ResolvedType, resolved_value_type: ResolvedType): boolean
+    if resolved_cast_type.kind_of?(JVMType)                   &&
+       resolved_value_type.kind_of?(JVMType)                  &&
+       JVMTypeUtils.isPrimitive(JVMType(resolved_cast_type))  &&
+       JVMTypeUtils.isPrimitive(JVMType(resolved_value_type))
+      true
+    elsif resolved_value_type.assignableFrom(resolved_cast_type)
+      true
+    elsif resolved_cast_type.assignableFrom(resolved_value_type)
+      true
+    else
+      false
+    end
+  end
+
+  def isNotReallyResolvedDoOnIncompatibility(resolved: ResolvedType, runnable: Runnable): boolean
+    import org.mirah.jvm.mirrors.AsyncMirror
+    if resolved.kind_of?(AsyncMirror) && AsyncMirror(resolved).superclass.nil?
+      AsyncMirror(resolved).onIncompatibleChange runnable
+      true
+    elsif resolved.kind_of?(MirrorProxy)                            &&
+          MirrorProxy(resolved).target.kind_of?(AsyncMirror)        &&
+          AsyncMirror(MirrorProxy(resolved).target).superclass.nil?
+      AsyncMirror(MirrorProxy(resolved).target).onIncompatibleChange runnable
+      true
+    else
+      false
+    end
+  end
+
+  def checkCastabilityAndUpdate(future: DelegateFuture,
+                                resolved_cast_type: ResolvedType,
+                                resolved_value_type: ResolvedType,
+                                cast_position: Position,
+                                cast_future: TypeFuture)
+    if isCastable(resolved_cast_type, resolved_value_type)
+      # fine, but may need to undo erroring
+      future.type = cast_future
+    else
+      future.type = ErrorType.new([["Cannot cast #{resolved_value_type} to #{resolved_cast_type}.", cast_position]])
+    end
+  end
+
+  def updateCastFuture(future: DelegateFuture,
+                       resolved_cast_type: ResolvedType,
+                       resolved_value_type: ResolvedType,
+                       cast_position: Position,
+                       cast_type: TypeFuture)
+    typer = self
+    if typer.isNotReallyResolvedDoOnIncompatibility(resolved_cast_type) do
+        typer.checkCastabilityAndUpdate(future,
+                                        resolved_cast_type,
+                                        resolved_value_type,
+                                        cast_position,
+                                        cast_type)
+      end
+    elsif typer.isNotReallyResolvedDoOnIncompatibility(resolved_value_type) do
+        typer.checkCastabilityAndUpdate(future,
+                                        resolved_cast_type,
+                                        resolved_value_type,
+                                        cast_position,
+                                        cast_type)
+      end
+    else
+      typer.checkCastabilityAndUpdate(future,
+                                      resolved_cast_type,
+                                      resolved_value_type,
+                                      cast_position,
+                                      cast_type)
+    end
+  end
+
   def visitCast(cast, expression)
-    # TODO check for compatibility
-    infer(cast.value)
-    getTypeOf(cast, cast.type.typeref)
+    value_type = infer(cast.value)
+    cast_type = getTypeOf(cast, cast.type.typeref)
+
+    future = DelegateFuture.new
+    future.type = cast_type
+    log = @@log
+    typer = self
+
+    value_type.onUpdate do |x, resolved_value_type|
+      if cast_type.isResolved
+        resolved_cast_type = cast_type.resolve
+        typer.updateCastFuture(future,
+                               resolved_cast_type,
+                               resolved_value_type,
+                               cast.position,
+                               cast_type)
+      end
+    end
+    cast_type.onUpdate do |x, resolved_cast_type|
+      if value_type.isResolved
+        resolved_value_type = value_type.resolve
+        typer.updateCastFuture(future,
+                               resolved_cast_type,
+                               resolved_value_type,
+                               cast.position,
+                               cast_type)
+      end
+    end
+    future
   end
 
   def visitColon2(colon2, expression)
@@ -372,9 +470,10 @@ class Typer < SimpleNodeVisitor
     name = if classdef.name
       classdef.name.identifier
     end
-    type = @types.defineType(scope, classdef, name, superclass, interfaces)
+    type = @types.createType(scope, classdef, name, superclass, interfaces)
     addScopeWithSelfType(classdef, type)
     infer(classdef.body, false) if classdef.body
+    @types.publishType(type)
     type
   end
 
@@ -386,6 +485,10 @@ class Typer < SimpleNodeVisitor
     visitClassDefinition(idef, expression)
   end
 
+  def visitFieldAnnotationRequest(decl, expression)
+    @types.getNullType()
+  end
+  
   def visitFieldDeclaration(decl, expression)
     inferAnnotations decl
     getFieldTypeOrDeclare(decl, decl.isStatic).declare(
@@ -448,10 +551,10 @@ class Typer < SimpleNodeVisitor
 
   def visitLoop(node, expression)
     enhanceLoop(node)
-    infer(node.condition, true)
-    infer(node.body, false)
     infer(node.init, false)
+    infer(node.condition, true)
     infer(node.pre, false)
+    infer(node.body, false)
     infer(node.post, false)
     @types.getNullType()
   end
@@ -464,6 +567,7 @@ class Typer < SimpleNodeVisitor
     end
     enclosing_node = node.findAncestor {|n| n.kind_of?(MethodDefinition) || n.kind_of?(Script)}
     if enclosing_node.kind_of? MethodDefinition
+      return nil if isMethodInBlock(MethodDefinition(enclosing_node)) # return types are not supported currently for methods which act as templates
       methodType = infer enclosing_node
       returnType = MethodFuture(methodType).returnType
       assignment = returnType.assign(type, node.position)
@@ -710,13 +814,13 @@ class Typer < SimpleNodeVisitor
   end
 
   def visitNodeList(body, expression)
-    i = 0
-    while i < body.size - 1
-      infer(body.get(i), false)
-      i += 1
-    end
     if body.size > 0
-      infer(body.get(body.size - 1), expression != nil)
+      i = 0
+      while i < body.size # note that we re-evaluate body.size each time, as body.size may change _during_ infer(), as macros may change the AST
+        res = infer(body.get(i),(i<body.size-1) ? false : expression != nil)
+        i += 1
+      end
+      res
     else
       @types.getImplicitNilType()
     end
@@ -751,18 +855,20 @@ class Typer < SimpleNodeVisitor
     scope = scopeOf(node)
     fullName = node.fullName.identifier
     simpleName = node.simpleName.identifier
+    @@log.fine "import full: #{fullName} simple: #{simpleName}"
     imported_type = if ".*".equals(simpleName)
-      # TODO support static importing a single method
-      type = @types.getMetaType(@types.get(scope, TypeName(node.fullName).typeref))
-      scope.staticImport(type)
-      type
-    else
-      scope.import(fullName, simpleName)
-      unless '*'.equals(simpleName)
-        @types.get(scope, TypeName(node.fullName).typeref)
-      end
-    end
-    void_type = @types.getVoidType()
+                      # TODO support static importing a single method
+                      type = @types.getMetaType(@types.get(scope, TypeName(Node(node.fullName)).typeref))
+                      scope.staticImport(type)
+                      type
+                    else
+                      scope.import(fullName, simpleName)
+                      unless '*'.equals(simpleName)
+                        @@log.fine "wut wut. "
+                        @types.get(scope, TypeName(Node(node.fullName)).typeref)
+                      end
+                    end
+    void_type = @types.getVoidType
     if imported_type
       DerivedFuture.new(imported_type) do |resolved|
         if resolved.isError
@@ -812,7 +918,7 @@ class Typer < SimpleNodeVisitor
     replacement = Node(nil)
     object = node.unquote.object
     if object.kind_of?(FieldAccess)
-      fa = FieldAccess(node.name)
+      fa = FieldAccess(Object(node.name))
       replacement = FieldAssign.new(fa.position, fa.name, node.value, nil, nil)
     else
       replacement = LocalAssignment.new(node.position, node.name, node.value)
@@ -1022,43 +1128,56 @@ class Typer < SimpleNodeVisitor
     @@log.entering("Typer", "visitMethodDefinition", mdef)
     # TODO optional arguments
 
-    addScopeForMethod(mdef)
 
-    inferAll(mdef.annotations)
-    infer(mdef.arguments)
-    parameters = inferAll(mdef.arguments)
+    if !isMethodInBlock(mdef)
+      addScopeForMethod(mdef)
+      @@log.finest "Normal method #{mdef}."
+      inferAll(mdef.annotations)
+      infer(mdef.arguments)
+      parameters = inferAll(mdef.arguments)
+  
+      if mdef.type
+        returnType = getTypeOf(mdef, mdef.type.typeref)
+      end
+  
+     
+      selfType = selfTypeOf(mdef)
 
-    if mdef.type
-      returnType = getTypeOf(mdef, mdef.type.typeref)
-    end
+      flags = JVMTypeUtils.calculateFlags(Opcodes.ACC_PUBLIC, mdef)
 
-    selfType = selfTypeOf(mdef)
-
-    flags = JVMTypeUtils.calculateFlags(Opcodes.ACC_PUBLIC, mdef)
-
-    type = @types.getMethodDefType(selfType,
+      type = @types.getMethodDefType(selfType,
                                    mdef.name.identifier,
                                    flags,
                                    parameters,
                                    returnType,
                                    mdef.name.position)
-    @futures[mdef] = type
-    declareOptionalMethods(selfType,
+      @futures[mdef] = type
+      declareOptionalMethods(selfType,
                            mdef,
                            flags,
                            parameters,
                            type.returnType)
 
-    # TODO deal with overridden methods?
-    # TODO throws
-    # mdef.exceptions.each {|e| type.throws(@types.get(TypeName(e).typeref))}
-    if isVoid type
-      infer(mdef.body, false)
-      type.returnType.assign(@types.getVoidType, mdef.position)
-    else
-      type.returnType.assign(infer(mdef.body), mdef.body.position)
+      # TODO deal with overridden methods?
+      # TODO throws
+      # mdef.exceptions.each {|e| type.throws(@types.get(TypeName(e).typeref))}
+      if isVoid type
+        infer(mdef.body, false)
+        type.returnType.assign(@types.getVoidType, mdef.position)
+      else
+        type.returnType.assign(infer(mdef.body), mdef.body.position)
+      end
+      type
+    else  # We are a method defined in a block. We are just a template for a method in a ClosureDefinition
+      block = Block(mdef.parent.parent)
+      @@log.finest "Method #{mdef} is member of #{block}"
+      scope_around_block = scopeOf(block)
+      scope              = addScopeUnder(mdef)
+      scope.selfType     = scope_around_block.selfType
+      scope.parent       = scope_around_block # We may want to access variables available in the scope outside of the block.
+      infer(mdef.body, false)                 # We want to determine which free variables are referenced in the MethodDefinition.
+      nil                                     # But we are actually not interested in the return type of the MethodDefintion, as this special MethodDefinition will be cloned into an AST of an anonymous class.
     end
-    type
   end
   
   def declareOptionalMethods(target:TypeFuture, mdef:MethodDefinition, flags:int, argTypes:List, type:TypeFuture):void
@@ -1101,7 +1220,7 @@ class Typer < SimpleNodeVisitor
     typer = self
     typer.logger.fine "at block future registration for #{block}"
     BlockFuture.new(block) do |block_future, resolvedType|
-      typer.logger.fine "in block future for #{block}\n  #{typer.sourceContent block}"
+      typer.logger.fine "in block future for #{block}: resolvedType=#{resolvedType}\n  #{typer.sourceContent block}"
       closures.add_todo block, resolvedType
     end
   end
@@ -1139,6 +1258,12 @@ class Typer < SimpleNodeVisitor
     block.arguments = unquoted_args
     unquoted_args.setParent block
     block.body.removeChild block.body.get(0)
+  end
+  
+  def visitSyntheticLambdaDefinition(node, expression)
+    supertype = infer(node.supertype)
+    block     = BlockFuture(infer(node.block))
+    SyntheticLambdaFuture.new(supertype,block,node.position)
   end
 
   # Returns true if any MethodDefinitions were found.
@@ -1288,6 +1413,10 @@ class Typer < SimpleNodeVisitor
   def addScopeForMethod(mdef: MethodDefinition): void
     scope = addScopeWithSelfType(mdef, selfTypeOf(mdef))
     addScopeUnder(mdef)
+  end
+  
+  def isMethodInBlock(mdef: MethodDefinition): boolean
+    mdef.parent.kind_of?(NodeList) && mdef.parent.parent.kind_of?(Block)
   end
 
   def addScopeWithSelfType(node: Node, selfType: TypeFuture)

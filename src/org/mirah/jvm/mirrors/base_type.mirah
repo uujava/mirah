@@ -15,7 +15,7 @@
 
 package org.mirah.jvm.mirrors
 
-import java.util.logging.Logger
+import org.mirah.util.Logger
 
 import java.util.Collections
 import java.util.ArrayList
@@ -51,11 +51,13 @@ end
 interface MirrorType < JVMType, TypeMirror
   def notifyOfIncompatibleChange:void; end
   def onIncompatibleChange(listener:Runnable):void; end
+  def isFullyResolved():boolean; end # Whether the type itself is resolved and its superclasses and its superinterfaces.
   def getDeclaredMethods(name:String):List; end  # List<Member>
   def getAllDeclaredMethods:List; end
   def addMethodListener(name:String, listener:MethodListener):void; end
   def invalidateMethod(name:String):void; end
   def add(member:JVMMethod):void; end
+  def hasMember(name:String):boolean; end
   def declareField(field:JVMMethod):void; end
   def unmeta:MirrorType; end
   def isSameType(other:MirrorType):boolean; end
@@ -119,6 +121,10 @@ class BaseType implements MirrorType, DeclaredType, MethodListener
   def onIncompatibleChange(listener:Runnable)
     @compatibility_listeners.add(listener)
   end
+  
+  def isFullyResolved():boolean
+    false
+  end
 
   def assignableFrom(other)
     MethodLookup.isSubTypeWithConversion(other, self)
@@ -136,7 +142,7 @@ class BaseType implements MirrorType, DeclaredType, MethodListener
     else
       # This may spread intersection types to places java wouldn't allow them.
       # Do we care?
-      lub = MirrorType(LubFinder.new(@context).leastUpperBound([self, other]))
+      lub = MirrorType(Object(LubFinder.new(@context).leastUpperBound([self, other])))
       lub || ErrorType.new([["Incompatible types #{self} and #{other}."]])
     end
   end
@@ -183,8 +189,10 @@ class BaseType implements MirrorType, DeclaredType, MethodListener
     @methods_loaded ||= load_methods
     methods = ArrayList.new
     @members.values.each do |list: List|
-      list.each do |m:Member|
-        methods.add(m) if m.kind == MemberKind.STATIC_METHOD or  m.kind == MemberKind.METHOD
+      list.each do |m: Member|
+        if m.kind != MemberKind.CLASS_LITERAL
+          methods.add(m)
+        end
       end
     end
     methods
@@ -278,8 +286,9 @@ class BaseType implements MirrorType, DeclaredType, MethodListener
     import static org.mirah.util.Comparisons.*
     return true if areSame(self, other)
     return false if other.getKind != TypeKind.DECLARED
-    return false unless getTypeArguments.equals(
-        DeclaredType(other).getTypeArguments)
+    return false unless other.kind_of?(DeclaredType) &&
+                        getTypeArguments.equals(
+                          DeclaredType(Object(other)).getTypeArguments)
     getAsmType().equals(other.getAsmType)
   end
 
@@ -287,13 +296,24 @@ class BaseType implements MirrorType, DeclaredType, MethodListener
     @cached_supertypes ||= begin
       supertypes = LinkedList.new
       skip_super = JVMTypeUtils.isInterface(self) && interfaces.length > 0
-      unless superclass.nil? || skip_super
-        supertypes.add(superclass)
+      if skip_super
+        # N/A
+      elsif superclass
+        supertypes.add superclass
+      elsif @context
+        object_type = MirrorType(
+               @context[MirrorTypeSystem].loadNamedType(
+                  "java.lang.Object").resolve)
+        unless self.isSameType object_type
+          supertypes.add(object_type)
+        end
       end
       interfaces.each do |i|
         resolved = i.resolve
         # Skip error supertypes
-        supertypes.add(resolved) if resolved.kind_of?(MirrorType)
+        if resolved.kind_of?(MirrorType)
+          supertypes.add(resolved)
+        end
       end
       supertypes
     end
@@ -306,6 +326,10 @@ class BaseType implements MirrorType, DeclaredType, MethodListener
 
   def getMembers(name:String)
     List(@members[name])
+  end
+  
+  def hasMember(name:String)
+    @members[name] != nil
   end
 
   def getMethod(name:String, params:List):JVMMethod
@@ -326,17 +350,20 @@ class AsyncMirror < BaseType
   def initialize(context:Context, type:Type, flags:int, superclass:TypeFuture, interfaces:TypeFuture[])
     super(context, type, flags, nil)
     @watched_methods = HashSet.new
+    @fullyResolved = false
     setSupertypes(superclass, interfaces)
   end
 
   def initialize(context:Context, type:Type, flags:int)
     super(context, type, flags, nil)
+    @fullyResolved = false
     @watched_methods = HashSet.new
   end
 
   def setSupertypes(superclass:TypeFuture, interfaces:TypeFuture[]):void
     mirror = self
     @interfaces = interfaces
+    @orig_superclass = superclass
     if superclass
       superclass.onUpdate do |x, resolved|
         mirror.resolveSuperclass(JVMType(resolved))
@@ -362,7 +389,7 @@ class AsyncMirror < BaseType
         parent.addMethodListener(name, self)
       end
     end
-    notifyOfIncompatibleChange
+    updateFullyResolved
   end
 
   def addMethodListener(name, listener)
@@ -376,5 +403,33 @@ class AsyncMirror < BaseType
 
   def interfaces:TypeFuture[]
     @interfaces
+  end
+  
+  def isFullyResolved():boolean
+    @fullyResolved
+  end
+
+  def updateFullyResolved:void
+    oldFullyResolved = @fullyResolved
+    @fullyResolved = checkFullyResolved
+    if oldFullyResolved!=@fullyResolved
+      notifyOfIncompatibleChange
+    end
+  end
+  
+  def checkFullyResolved
+    if (!@orig_superclass || @orig_superclass.isResolved)
+      if interfaces
+        interfaces.length.times do |i|
+          interfacE = interfaces[i]
+          if !(interfacE.isResolved && interfacE.resolve.isFullyResolved)
+            return false
+          end
+        end
+      end
+      true
+    else
+      false
+    end
   end
 end

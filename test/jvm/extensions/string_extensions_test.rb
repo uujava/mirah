@@ -1,3 +1,5 @@
+# encoding: UTF-8
+#
 # Copyright (c) 2013 The Mirah project authors. All Rights Reserved.
 # All contributing project authors may be found in the NOTICE file.
 #
@@ -55,18 +57,69 @@ class StringExtensionsTest < Test::Unit::TestCase
   end
 
   def test_string_match
+    cls, = compile(%q{puts 'byeby'.match(/b(.*)y/)[1]})
+    assert_run_output("yeb\n", cls)
+  end
+
+  def test_string_matches
     cls, = compile("def match; 'abcdef' =~ /d/; end")
     assert cls.match, 'failed to match string'
   end
 
-  def test_string_dont_match
-    cls, = compile("def dont_match; 'abcdef' =~ /g/; end")
-    refute cls.dont_match, 'mistakenly matched string'
+  def test_string_doesnt_match
+    cls, = compile("def doesnt_match; 'abcdef' =~ /g/; end")
+    refute cls.doesnt_match, 'mistakenly matched string'
   end
 
-  def test_string_match_wrong_type
+  def test_string_matches_wrong_type
     assert_raises Mirah::MirahError do
       compile("def match_wrong_type; 'abcdef' =~ 'd'; end")
     end
   end
+  
+  def test_string_to_int_invalid_number
+    cls, = compile(<<-EOF)
+      puts 'abc'.to_int
+    EOF
+    assert_raise_java Java::JavaLang::NumberFormatException do
+      cls.main nil
+    end
+  end
+
+  def test_string_to_int_valid_number
+    cls, = compile(<<-EOF)
+      puts '-987654321'.to_int
+    EOF
+    assert_run_output("-987654321\n", cls)
+  end
+
+  def test_string_to_int_too_big_number
+    cls, = compile(<<-EOF)
+      puts '-9876543210'.to_int
+    EOF
+    assert_raise_java Java::JavaLang::NumberFormatException do
+      cls.main nil
+    end
+  end
+  
+  def test_string_each_codepoint_1_block_argument
+    cls, = compile(%q{
+      "abc\u1234\U0010FFFF\u5678de𠀘f".each_codepoint do |codepoint|
+        puts codepoint
+      end
+    })
+    assert_run_output("97\n98\n99\n4660\n1114111\n22136\n100\n101\n131096\n102\n", cls)
+  end
+  
+  def test_string_each_codepoint_0_block_arguments
+    cls, = compile(%q{
+      count = 0
+      "abc\u1234\U0010FFFF\u5678de𠀘f".each_codepoint do
+        count+=1
+      end
+      puts count
+    })
+    assert_run_output("10\n", cls)
+  end
 end
+

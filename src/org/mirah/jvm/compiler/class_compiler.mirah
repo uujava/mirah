@@ -18,7 +18,7 @@ package org.mirah.jvm.compiler
 import java.io.File
 import java.util.Collections
 import java.util.LinkedList
-import java.util.logging.Logger
+import org.mirah.util.Logger
 import mirah.lang.ast.*
 import org.mirah.util.Context
 import org.mirah.jvm.types.JVMType
@@ -46,7 +46,7 @@ class ClassCompiler < BaseCompiler implements InnerClassCompiler
   end  
   
   def compile:void
-    @@log.info "Compiling class #{@classdef.name.identifier}"
+    @@log.fine "Compiling class #{@classdef.name.identifier}"
     startClass
     visit(@classdef.body, nil)
     @classwriter.visitEnd
@@ -86,8 +86,20 @@ class ClassCompiler < BaseCompiler implements InnerClassCompiler
     compileInnerClass(node, nil)
   end
   
+  def visitInterfaceDeclaration(node, expression)
+    compileInnerInterface(node, nil)
+  end
+  
   def compileInnerClass(node:ClassDefinition, method:Method):void
     compiler = ClassCompiler.new(context, node, @type, method)
+    @innerClasses.add(compiler)
+    # TODO only supporting anonymous inner classes for now.
+    @classwriter.visitInnerClass(compiler.internal_name, nil, nil, 0)
+    compiler.compile
+  end
+  
+  def compileInnerInterface(node:InterfaceDeclaration, method:Method):void
+    compiler = InterfaceCompiler.new(context, node, @type, method)
     @innerClasses.add(compiler)
     # TODO only supporting anonymous inner classes for now.
     @classwriter.visitInnerClass(compiler.internal_name, nil, nil, 0)

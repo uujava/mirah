@@ -16,7 +16,7 @@
 package org.mirah.jvm.compiler
 
 import java.util.Collections
-import java.util.logging.Logger
+import org.mirah.util.Logger
 import mirah.lang.ast.*
 import mirah.objectweb.asm.AnnotationVisitor
 import mirah.objectweb.asm.ClassVisitor

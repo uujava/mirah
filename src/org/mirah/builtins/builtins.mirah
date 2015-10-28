@@ -17,10 +17,13 @@ package org.mirah.builtins
 
 import org.mirah.typer.TypeSystem
 import java.util.Collections
+import org.mirah.macros.ExtensionsProvider
+import org.mirah.macros.ExtensionsService
 
-class Builtins
-    implements ExtensionsProvider
+class Builtins implements ExtensionsProvider
+
   def register(type_system:ExtensionsService):void
+    type_system.macro_registration(ArrayExtensions.class)
     type_system.macro_registration(CollectionExtensions.class)
     type_system.macro_registration(MapExtensions.class)
     type_system.macro_registration(ListExtensions.class)
@@ -29,36 +32,15 @@ class Builtins
     type_system.macro_registration(IterableExtensions.class)
     type_system.macro_registration(StringExtensions.class)
     type_system.macro_registration(StringBuilderExtensions.class)
-
     type_system.macro_registration(LockExtensions.class)
-
     type_system.macro_registration(IntExtensions.class)
     type_system.macro_registration(NumberExtensions.class)
-  end
-
-  macro def newHash(hash:Hash)
-    map = gensym
-    capacity = int(hash.size * 0.84)
-    capacity = 16 if capacity < 16
-
-    block = quote do
-      `map` = java::util::HashMap.new(`Fixnum.new(capacity)`)
-      `map`.put()
-      `map`
-    end
-    result = block.remove(2)
-    put_template = block.remove(1)
-    i = 0
-    while i < hash.size
-      entry = hash.get(i)
-      put = Call(put_template.clone)
-      put.position = entry.position
-      put.parameters.add(entry.key)
-      put.parameters.add(entry.value)
-      block.add(put)
-      i += 1
-    end
-    block.add(result)
-    NodeList.new(hash.position, [block])
+    type_system.macro_registration(MatcherExtensions.class)
+    type_system.macro_registration(IntegerOperators.class)
+    type_system.macro_registration(ByteOperators.class)
+    type_system.macro_registration(ShortOperators.class)
+    type_system.macro_registration(LongOperators.class)
+    type_system.macro_registration(DoubleOperators.class)
+    type_system.macro_registration(FloatOperators.class)
   end
 end

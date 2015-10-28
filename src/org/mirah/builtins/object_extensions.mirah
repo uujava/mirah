@@ -16,10 +16,7 @@
 package org.mirah.builtins
 
 import mirah.lang.ast.*
-import org.mirah.typer.ClosureBuilder
-import org.mirah.typer.ErrorType
-import org.mirah.typer.ProxyNode
-import org.mirah.jvm.mirrors.MirrorTypeSystem
+
 import org.mirah.macros.anno.ExtensionsRegistration
 
 $ExtensionsRegistration[['java.lang.Object']]
@@ -30,26 +27,23 @@ class ObjectExtensions
     mdef = MethodDefinition(@call.findAncestor(MethodDefinition.class))
     if mdef && mdef.name.identifier.equals("equals")
       if @call.target.kind_of?(Self) || node.kind_of?(Self)
-        message = "WARNING: == is now an alias for Object#equals(), === is now used for identity.\n" +
-          "This use of == with self in equals() definition may cause a stack overflow in next release!"
-
-        puts message
-        puts "#{mdef.position.source.name}:"
+        System.out.println("WARNING: == is now an alias for Object#equals(), === is now used for identity.\nThis use of == with self in equals() definition may cause a stack overflow in next release!#{mdef.position.source.name}:")
         source = @mirah.typer.sourceContent(mdef)
         s = source.split("\n")
         # last end has right whitespace, but def doesn't
         whitespace = s[s.length - 1].substring(0, s[s.length - 1].indexOf("end"))
-        puts whitespace + source
+        System.out.println("#{whitespace}#{source}")
         return quote {`@call.target` === `node`}
       end
     end
 
-    # TODO this doesn't work, but should
-    #quote { `@call.target`.nil? && `node`.nil? || `@call.target` && `@call.target`.equals(`node`) }
-
-    tmp = gensym
-    quote { `tmp` = `@call.target`.nil? && `node`.nil?
-            `tmp` || `@call.target` && `@call.target`.equals(`node`) }
+    left  = gensym
+    right = gensym
+    quote do
+      `left`  = `@call.target`
+      `right` = `node`
+      `left`.nil? ? `right`.nil? : `left`.equals(`right`)
+    end
   end
 
   ## TODO handle the negation st def == will be called
@@ -59,12 +53,29 @@ class ObjectExtensions
 
     quote { !(`@call.target` == `node`)}
   end
+  
+  macro def tap(block:Block)
+    x = gensym
+    quote do
+      `x` = `@call.target`
+      `block.arguments.required(0).name.identifier` = `x`
+      `block.body`
+      `x`
+    end
+  end
 
   macro def puts(node)
     quote {System.out.println(` [node] `)}
   end
   macro def self.puts(node)
     quote {System.out.println(` [node] `)}
+  end
+
+  macro def puts()
+    quote {System.out.println()}
+  end
+  macro def self.puts()
+    quote {System.out.println()}
   end
 
   macro def print(node)
@@ -79,7 +90,33 @@ class ObjectExtensions
   macro def self.loop(block:Block)
     quote { while true do `block.body` end }
   end
-  
+
+  # "protected" on a list of methods
+  macro def self.protected_methods(methods_proxy:NodeList)
+    import org.mirah.typer.ProxyNode
+    import java.util.LinkedList
+    work = LinkedList.new([methods_proxy])
+
+    while !work.isEmpty
+      node = work.poll
+      if node.kind_of?(MethodDefinition)
+        anno = Modifier.new('PROTECTED')
+        MethodDefinition(node).modifiers.add(anno)
+      elsif node.kind_of?(ProxyNode)
+        work.add(ProxyNode(node).get(0))
+      elsif node.kind_of?(NodeList)
+        list = NodeList(node)
+        i = 0
+        while i < list.size
+          work.add(list.get(i))
+          i+=1
+        end
+      end
+    end
+    methods_proxy.get(0).setParent(nil)
+    methods_proxy.get(0) # FIXME: if we used methods_proxy instead of methods_proxy.get(0) as return value, then the annotation is not effective
+  end
+
   macro def self.attr_accessor(hash:Hash)
     args = [hash]
     quote do
@@ -124,21 +161,10 @@ class ObjectExtensions
   end
 
   macro def lambda(type:TypeName, block:Block)
-  # TODO, just create a SyntheticLambdaDefinition that the ClosureBuilder picks up
-    builder = ClosureBuilder.new(@mirah.typer)
-    scope = @mirah.typer.scoper.getScope(@call)
-    resolved = @mirah.type_system.get(scope, type.typeref).resolve
-    # TODO, do something better than this
-    raise "can't build lambda for #{type} #{resolved}" if resolved.kind_of? ErrorType
-    builder.prepare(block, resolved)
+    SyntheticLambdaDefinition.new(@call.position, type, block)
   end
 
   macro def self.lambda(type:TypeName, block:Block)
-    builder = ClosureBuilder.new(@mirah.typer)
-    scope = @mirah.typer.scoper.getScope(@call)
-    resolved = @mirah.type_system.get(scope, type.typeref).resolve
-    # TODO, do something better than this
-    raise "can't build lambda for #{type} #{resolved}" if resolved.kind_of? ErrorType
-    builder.prepare(block, resolved)
+    SyntheticLambdaDefinition.new(@call.position, type, block)
   end
 end

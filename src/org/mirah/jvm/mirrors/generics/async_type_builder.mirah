@@ -25,10 +25,12 @@ import mirah.objectweb.asm.Type
 import mirah.objectweb.asm.signature.SignatureVisitor
 import org.mirah.jvm.mirrors.MirrorTypeSystem
 import org.mirah.jvm.mirrors.MirrorType
+import org.mirah.jvm.mirrors.generics.Wildcard
 import org.mirah.typer.BaseTypeFuture
 import org.mirah.typer.DerivedFuture
 import org.mirah.typer.TypeFuture
 import org.mirah.util.Context
+
 
 interface AsyncTypeBuilderResult
   def getResult:TypeFuture; end
@@ -36,7 +38,7 @@ end
 
 class AsyncTypeBuilder < SignatureVisitor
   def initialize(context:Context, typeVariables:Map={}):void
-    super(Opcodes.ASM4)
+    super(Opcodes.ASM5)
     @context = context
     @typeVariables = typeVariables
     @types = @context[MirrorTypeSystem]
@@ -55,7 +57,8 @@ class AsyncTypeBuilder < SignatureVisitor
     component = newBuilder
     types = @types
     @result = lambda(AsyncTypeBuilderResult) do
-      types.getArrayType(component.future)
+      f = component.future # f can be nil, as it may refer to a type variable intentionally not defined in TypeInvoker
+      f ? types.getArrayType(f) : nil
     end
     component
   end
@@ -68,7 +71,7 @@ class AsyncTypeBuilder < SignatureVisitor
 
   def visitTypeArgument
     @typeArguments.add(BaseTypeFuture.new.resolved(
-        MirrorType(@type_utils.getWildcardType(nil, nil))))
+        Wildcard(@type_utils.getWildcardType(nil, nil))))
   end
 
   def visitTypeArgument(kind)
@@ -81,9 +84,9 @@ class AsyncTypeBuilder < SignatureVisitor
           if kind == ?=
             type
           elsif kind == ?-
-            MirrorType(utils.getWildcardType(type, nil))
+            Wildcard(utils.getWildcardType(type, nil))
           else
-            MirrorType(utils.getWildcardType(nil, type))
+            Wildcard(utils.getWildcardType(nil, type))
           end
         end
       else
@@ -116,7 +119,7 @@ class AsyncTypeBuilder < SignatureVisitor
     # once the parser is fixed to support it
     all_question_marks=args.all? do |ar: TypeFuture|
       if ar
-        MirrorType(utils.getWildcardType(nil, nil)).equals(ar.resolve)
+        Wildcard(utils.getWildcardType(nil, nil)).equals(ar.resolve)
       else
         true
       end
