@@ -488,7 +488,7 @@ class BetterClosureBuilder
                            Collections.emptyList,
                            nil)
       binding_assigns = binding_list.map do |name: String|
-        FieldAssign.new(SimpleString.new(name), LocalAccess.new(SimpleString.new(name)), nil, [Modifier.new('PROTECTED')])
+        FieldAssign.new(SimpleString.new(name), LocalAccess.new(SimpleString.new(name)), nil, [Modifier.new(closure_klass.position, 'PROTECTED')])
       end
       constructor = ConstructorDefinition.new(
         SimpleString.new('initialize'), args,
@@ -734,7 +734,7 @@ class BetterClosureBuilder
                          Collections.emptyList,
                          nil)
     body = unless void_type? return_value_type
-             [FieldAssign.new(SimpleString.new('return_value'), LocalAccess.new(SimpleString.new('return_value')), nil, [Modifier.new('PROTECTED')])]
+             [FieldAssign.new(SimpleString.new('return_value'), LocalAccess.new(SimpleString.new('return_value')), nil, [Modifier.new(block.position, 'PROTECTED')])]
            else
              Collections.emptyList
            end
@@ -1084,11 +1084,15 @@ enclosing_scope = get_scope(enclosing_body)
         call.parameters.add param
       end
         
-      bridge_method = MethodDefinition.new(args.position, name, bridge_args, return_type, nil, [])
-      bridge_method.body = NodeList.new(args.position, [call])
-      anno = Annotation.new(args.position, Constant.new(SimpleString.new('org.mirah.jvm.types.Modifiers')),
-                         [HashEntry.new(SimpleString.new('flags'), Array.new([SimpleString.new('BRIDGE')]))])
-      bridge_method.annotations.add(anno)
+      bridge_method = MethodDefinition.new(
+                        args.position,
+                        name,
+                        bridge_args,
+                        return_type,
+                        [call],      # body
+                        [],          # annotations
+                        [Modifier.new(args.position, 'BRIDGE')]
+                      )
       methods.add(bridge_method)
     end
     methods

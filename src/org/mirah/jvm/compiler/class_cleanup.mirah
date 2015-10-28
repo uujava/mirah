@@ -302,10 +302,6 @@ class ClassCleanup < NodeScanner
     mdef = MethodDefinition(orig.clone)
     mdef.arguments = Arguments(args.clone)
     mdef.body = NodeList.new([FunctionalCall.new(mdef.position, mdef.name, params, nil)])
-    modifiers = Annotation.new(mdef.position, SimpleString.new('org.mirah.jvm.types.Modifiers'), [
-      HashEntry.new(SimpleString.new('access'), SimpleString.new('PUBLIC')),
-      HashEntry.new(SimpleString.new('flags'), Array.new([SimpleString.new('SYNTHETIC'), SimpleString.new('BRIDGE')]))
-      ])
-    mdef.annotations = AnnotationList.new([modifiers])
+    mdef.modifiers = ModifierList.new([Modifier.new(mdef.position, 'PUBLIC'), Modifier.new(mdef.position, 'SYNTHETIC'), Modifier.new(mdef.position, 'BRIDGE')])
   end
 end

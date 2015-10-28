@@ -85,14 +85,13 @@ class JVMTypeUtils
           modifiers = HasModifiers(node).modifiers
           if modifiers
           modifiers.each do |m: Modifier|
-            key = m.value
-            accss = @@ACCESS[key]
+            accss = access_opcode(m.value)
             if accss
-                access = Integer(accss).intValue
+                access = accss.intValue
             end
-            flag = @@FLAGS[key]
+            flag = flag_opcode(m.value)
             if flag
-                flags |= Integer(flag).intValue
+                flags |= flag.intValue
             end
           end 
           end
@@ -100,34 +99,16 @@ class JVMTypeUtils
         
         @@log.fine "calculated flag from modifiers: #{flags} access:#{access}"
 
-        if Annotated.class.isAssignableFrom(node.getClass)
-          annotations = Annotated(node).annotations  
-          if annotations
-          annotations.each do |anno: Annotation|
-            next unless "org.mirah.jvm.types.Modifiers".equals(anno.type.typeref.name)
-            anno.values.each do |entry: HashEntry|
-              key = Identifier(entry.key).identifier
-
-              if "access".equals(key)
-                #access = @@ACCESS[Identifier(entry.value).identifier] # TODO better boxing
-                access = Integer(@@ACCESS[Identifier(entry.value).identifier]).intValue
-              elsif "flags".equals(key) # TODO better boxing
-                values = Array(entry.value)
-                values.values.each do |id: Identifier| # cast from Node
-                    flag = id.identifier
-                    flags |= Integer(@@FLAGS[flag]).intValue 
-                end
-              else
-                raise "unknown modifier entry: #{entry}"
-              end
-            end
-          end 
-          end
-        end
-  
-        @@log.fine "calculated flag from annotations: #{flags} access:#{access}"
-        
         flags | access
     end
+
+    def access_opcode(modifier:String):Integer
+      Integer(@@ACCESS[modifier])
+    end
+
+    def flag_opcode(modifier:String):Integer
+      Integer(@@FLAGS[modifier])
+    end
+
   end
 end

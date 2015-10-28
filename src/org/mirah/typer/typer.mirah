@@ -503,7 +503,7 @@ class Typer < SimpleNodeVisitor
   end
 
   def visitConstantAssign(field, expression)
-    newField = FieldAssign.new field.name, field.value, nil, [Modifier.new("PUBLIC")]
+    newField = FieldAssign.new field.name, field.value, nil, [Modifier.new(field.position, "PUBLIC")]
     newField.isStatic = true
     newField.position = field.position
 

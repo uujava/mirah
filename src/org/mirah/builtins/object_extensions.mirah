@@ -100,7 +100,8 @@ class ObjectExtensions
     while !work.isEmpty
       node = work.poll
       if node.kind_of?(MethodDefinition)
-        anno = Modifier.new('PROTECTED')
+        anno = Modifier.new(node.position, 'PROTECTED')
+        MethodDefinition(node).modifiers ||= ModifierList.new
         MethodDefinition(node).modifiers.add(anno)
       elsif node.kind_of?(ProxyNode)
         work.add(ProxyNode(node).get(0))
