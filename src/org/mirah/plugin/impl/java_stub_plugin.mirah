@@ -31,7 +31,7 @@ import java.io.*
 # mirahc -plugin stub[:optional_dir] ...
 # mirahc -plugin stub:* ... redirects output to System.out
 # TODO add tests
-class JavaStubPlugin < AbstractCompilerPlugin
+class JavaStubPlugin < CompilerPluginAdapter
 
   def self.initialize
     @@log = Logger.getLogger JavaStubPlugin.class.getName
@@ -435,9 +435,9 @@ class MethodStubWriter < StubWriter
         write ' return null; '
       else
         if 'boolean'.equals(type.name)
-            write ' return false; '
+          write ' return false; '
         else
-            write ' return 0; '
+          write ' return 0; '
         end
       end
     end

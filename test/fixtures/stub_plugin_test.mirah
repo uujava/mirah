@@ -28,7 +28,6 @@ class AOne
     def initialize
       @@test = "x"
     end
-
   end
 end
 
