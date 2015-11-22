@@ -32,6 +32,11 @@ class SpecialType; implements ResolvedType, TypeFuture
   def resolve
     ResolvedType(self)
   end
+
+  def peekInferredType
+    resolve
+  end
+
   def name
     @name
   end
