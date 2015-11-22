@@ -654,9 +654,6 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
       flags |= Opcodes.ACC_STATIC
       kind = MemberKind.STATIC_METHOD
     end
-    if target.isInterface
-      flags |= Opcodes.ACC_ABSTRACT
-    end
     if "initialize".equals(name)
       if isMeta
         name = "<clinit>"

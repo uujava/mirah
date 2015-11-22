@@ -12,7 +12,7 @@ target
 Gemfile.lock
 vendor/
 *~
-
+.*/
 .ruby-*
 
 tmp_test
@@ -31,7 +31,7 @@ javalib/asm-5.jar
 javalib/jarjar.jar
 javalib/mirah-asm-5.jar
 javalib/*.jarjar
-
+maven/mirah/lib/
 #git ignore netbeans files
 nb-configuration.xml
 .idea

@@ -1139,11 +1139,19 @@ class Typer < SimpleNodeVisitor
       if mdef.type
         returnType = getTypeOf(mdef, mdef.type.typeref)
       end
-  
-     
-      selfType = selfTypeOf(mdef)
 
       flags = JVMTypeUtils.calculateFlags(Opcodes.ACC_PUBLIC, mdef)
+
+      selfType = selfTypeOf(mdef)
+      resolvedSelf =  ResolvedType(selfType.peekInferredType)
+
+      if resolvedSelf.isInterface and !resolvedSelf.isMeta
+        # TODO: better handle java8 virtual methods (@see interface_compiler#method_is_not_abstract)
+        # note compilers does not use flags from typer?!
+        if mdef.body.size == 0
+          flags |= Opcodes.ACC_ABSTRACT
+        end
+      end
 
       type = @types.getMethodDefType(selfType,
                                    mdef.name.identifier,
