@@ -27,7 +27,10 @@ import mirah.objectweb.asm.*
 import mirah.objectweb.asm.Type as AsmType
 import mirah.objectweb.asm.commons.GeneratorAdapter
 import mirah.objectweb.asm.commons.Method as AsmMethod
-
+import org.mirah.jvm.mirrors.MirrorType
+import org.mirah.jvm.mirrors.BytecodeMirror
+import org.mirah.jvm.mirrors.Member
+import org.mirah.jvm.types.JVMMethod
 import org.mirah.jvm.types.JVMTypeUtils
 
 import java.util.List
@@ -243,12 +246,34 @@ class MethodCompiler < BaseCompiler
     end
     recordPosition(node.position)
     result = getInferredType(node)
-    method = if result.kind_of?(CallType)
-      CallType(result).member
+
+    target = MirrorType(nil)
+    method = JVMMethod(nil)
+
+    if @name.equals 'initialize' or @name.endsWith 'init>'
+       # handle constructors
+       target = @superclass
+       method = if result.kind_of?(CallType)
+         CallType(result).member
+       else
+         @superclass.getMethod(@name, paramTypes)
+       end
     else
-      @superclass.getMethod(@name, paramTypes)
+      # assume order: superclass, interface1, interface2 etc
+      MirrorType(@klass).directSupertypes.each do |type:MirrorType|
+        method = findSameMethod(type, @name, paramTypes, @flags)
+        if method
+          target = type
+          break
+        end
+      end
     end
-    @builder.invokeSpecial(@superclass.getAsmType, methodDescriptor(method))
+
+    if method == nil or target == nil
+     reportError("No method #{@name} params: #{paramTypes} found for super call", node.position)
+    end
+
+    @builder.invokeSpecial(target.getAsmType, methodDescriptor(method))
     if expression && isVoid
       @builder.loadThis
     elsif expression.nil? && !isVoid
@@ -730,5 +755,37 @@ class MethodCompiler < BaseCompiler
   
   def visitBindingReference(node, expression)
     @builder.loadLocal(@binding) if expression
+  end
+
+  def self.findSameMethod(type:MirrorType, name: String, params: List, flags:int):Member
+    if type.kind_of? BytecodeMirror
+      method = Member(type.getMethod(name, params))
+      if method and checkSuperFlags(method, flags)
+        @@log.fine "Method #{name}(#{params}) found for #{type}"
+        return method
+      end
+    else
+      MirrorType(type).getDeclaredMethods(name).each do |member:Member|
+        if member.argumentTypes.equals(params) and checkSuperFlags(member, flags)
+          @@log.fine "Method #{name}(#{params}) found for #{type}"
+          return member
+        end
+      end
+    end
+
+    type.directSupertypes.each do |type:MirrorType|
+      method = findSameMethod(type, name, params, flags)
+      if method
+        return method
+      end
+    end
+
+    return nil
+  end
+
+  # check not abstract and same value for static mask
+  def self.checkSuperFlags(member:Member, flags:int):boolean
+     _flags = member.flags
+     _flags & Opcodes.ACC_ABSTRACT == 0 and  (flags & Opcodes.ACC_STATIC == _flags & Opcodes.ACC_STATIC)
   end
 end

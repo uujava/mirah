@@ -542,7 +542,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     end
     future = PickFirst.new(types, nil)
     future.position = position
-    future.error_message = "Cannot find class #{name}"
+    future.error_message = "Cannot find class #{name} in package #{packageName}, search packages #{scope.search_packages} or imports #{scope.imports}"
     future
   end
 

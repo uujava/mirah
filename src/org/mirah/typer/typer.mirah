@@ -439,9 +439,16 @@ class Typer < SimpleNodeVisitor
   def visitSuper(node, expression)
     method = MethodDefinition(node.findAncestor(MethodDefinition.class))
     scope = scopeOf(node)
-    target = @types.getSuperClass(scope.selfType)
     parameters = inferParameterTypes node
-    CallFuture.new(@types, scope, target, true, method.name.identifier, parameters, nil, node.position)
+    if method.kind_of? ConstructorDefinition
+      target = @types.getSuperClass(scope.selfType)
+      CallFuture.new(@types, scope, target, true, method.name.identifier, parameters, nil, node.position)
+    else
+      # handle super for interface default methods:
+      # use selfType for method lookup
+      # defer supertype or superinterface check to method compiler
+      CallFuture.new(@types, scope, scope.selfType, true, method.name.identifier, parameters, nil, node.position)
+    end
   end
 
   def visitZSuper(node, expression)
