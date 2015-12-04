@@ -8,6 +8,7 @@ import mirah.lang.ast.Annotation
 import mirah.lang.ast.HashEntry
 import mirah.lang.ast.Array
 import mirah.lang.ast.Node
+import mirah.lang.ast.MethodDefinition
 import mirah.lang.ast.Annotated
 import mirah.lang.ast.HasModifiers
 import mirah.lang.ast.Modifier
@@ -96,7 +97,13 @@ class JVMTypeUtils
           end 
           end
         end 
-        
+
+        if node.kind_of? MethodDefinition
+          if MethodDefinition(node).arguments.rest
+            flags |= Opcodes.ACC_VARARGS
+          end
+        end
+
         @@log.fine "calculated flag from modifiers: #{flags} access:#{access}"
 
         flags | access

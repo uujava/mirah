@@ -52,4 +52,23 @@ class VarargsTest < Test::Unit::TestCase
     assert_run_output("rocking with an array\n", cls)
   end
 
+  def test_mirah_varargs
+    cls, = compile(<<-EOF)
+      class TestVarargs
+        def initialize(*args:int)
+          @args = args
+          puts @args.join "-"
+        end
+        def self._test(*args:int):void
+          puts args.join "-"
+        end
+        def test(arg:int, *args:int):void
+          puts args.join "-"
+        end
+      end
+      TestVarargs._test 1,2,3
+      TestVarargs.new(4,5,6).test 7,8,9
+    EOF
+    assert_run_output("1-2-3\n4-5-6\n8-9\n", cls)
+  end
 end
