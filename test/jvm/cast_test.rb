@@ -215,4 +215,17 @@ class CastTest < Test::Unit::TestCase
     EOF
 	assert_equal(6, cls.foo())
   end
+
+  def test_no_errors_for_interface_casts
+    cls, = compile(<<-EOF)
+      a = Runnable(nil)
+      b = java::io::Serializable(nil)
+      a = Runnable(b)
+      c = Number.new
+      a = Runnable(c)
+      c = Number(b)
+    EOF
+  rescue Exception => ex
+    fail "casts for interfaces #{ex} #{ex.backtrace.join "\n"}"
+  end
 end

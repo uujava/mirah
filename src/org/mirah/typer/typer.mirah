@@ -327,10 +327,10 @@ class Typer < SimpleNodeVisitor
     end
   end
 
-
+  # Should be verified by JLS 5.5 Casting Contexts
   def isCastable(resolved_cast_type: ResolvedType, resolved_value_type: ResolvedType): boolean
-    if resolved_cast_type.kind_of?(JVMType)                   &&
-       resolved_value_type.kind_of?(JVMType)                  &&
+    are_jvm_types = resolved_cast_type.kind_of?(JVMType) && resolved_value_type.kind_of?(JVMType)
+    if are_jvm_types &&
        JVMTypeUtils.isPrimitive(JVMType(resolved_cast_type))  &&
        JVMTypeUtils.isPrimitive(JVMType(resolved_value_type))
       true
@@ -339,7 +339,19 @@ class Typer < SimpleNodeVisitor
     elsif resolved_cast_type.assignableFrom(resolved_value_type)
       true
     else
-      false
+      # avoid error when casting to from interfaces (JLS 5.5.1) for non final classes
+      # Here we do not have common subtypes as this check already done above.
+      # Note! Currently do not support generics checks
+      if  are_jvm_types
+        are_final = JVMType(resolved_value_type).flags & Opcodes.ACC_FINAL !=0 || JVMType(resolved_cast_type).flags  & Opcodes.ACC_FINAL !=0
+        are_interfaces = JVMType(resolved_value_type).isInterface || JVMType(resolved_cast_type).isInterface
+        if are_final
+          return false
+        elsif are_interfaces
+          return true
+        end
+      end
+      return false
     end
   end
 
