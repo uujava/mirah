@@ -256,5 +256,22 @@ class ClosureTest < Test::Unit::TestCase
     })
     assert_run_output("b: 123\n\tb: 234\n\t\tb: 234 123\n\t\tb: 234 123\nb: 123\n\tb: 234\n\t\tb: 234 123\n\tb: 234\n\t\tb: 234 123\n", cls)
   end
+  
+  def test_closure_with_assignment_in_rescue
+    cls, = compile(%q{
+      foo = nil
+      t = Thread.new do
+        begin
+          raise Exception
+        rescue => e
+          foo = Integer.new(3)
+        end
+      end
+      t.start
+      t.join
+      puts foo
+    })
+    assert_run_output("3\n", cls)
+  end
 end
 
