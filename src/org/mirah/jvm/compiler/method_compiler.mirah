@@ -270,7 +270,7 @@ class MethodCompiler < BaseCompiler
     end
 
     if method == nil or target == nil
-     reportError("No method #{@name} params: #{paramTypes} found for super call", node.position)
+     raise "No method #{@name} params: #{paramTypes} found for super call in #{node.position}"
     end
 
     @builder.invokeSpecial(target.getAsmType, methodDescriptor(method))
