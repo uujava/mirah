@@ -491,8 +491,7 @@ class MacrosTest < Test::Unit::TestCase
     cls1, cls2 = compile([<<-EOF1, <<-EOF2])
       package org.bar.p1
       import org.bar.p2.MultiPackageExplicitRef
-      
-      macro def foo1; end
+      macro def foo1;end
       puts MultiPackageExplicitRef.class
     EOF1
       package org.bar.p2
@@ -676,5 +675,15 @@ class MacrosTest < Test::Unit::TestCase
     assert_run_output("nil\ntest\nself nil\nself test\n", cls)
   end
 
+  def test_attr_accessor_for_interfaces
+    cls, = compile(<<-EOF)
+        interface TestAcc
+          attr_accessor a:int
+        end
+        puts TestAcc.class.getMethod('a') rescue puts false
+        puts TestAcc.class.getMethod('a_set', [Integer.TYPE].toArray(Class[1])) rescue puts false
+      EOF
+    assert_run_output("public abstract int TestAcc.a()\npublic abstract void TestAcc.a_set(int)\n", cls)
+  end
 end
 

@@ -118,6 +118,33 @@ class ObjectExtensions
     methods_proxy.get(0) # FIXME: if we used methods_proxy instead of methods_proxy.get(0) as return value, then the annotation is not effective
   end
 
+  # "private" on a list of methods
+  macro def self.private_methods(methods_proxy:NodeList)
+    import org.mirah.typer.ProxyNode
+    import java.util.LinkedList
+    work = LinkedList.new([methods_proxy])
+
+    while !work.isEmpty
+      node = work.poll
+      if node.kind_of?(MethodDefinition)
+        anno = Modifier.new(node.position, 'PRIVATE')
+        MethodDefinition(node).modifiers ||= ModifierList.new
+        MethodDefinition(node).modifiers.add(anno)
+      elsif node.kind_of?(ProxyNode)
+        work.add(ProxyNode(node).get(0))
+      elsif node.kind_of?(NodeList)
+        list = NodeList(node)
+        i = 0
+        while i < list.size
+          work.add(list.get(i))
+          i+=1
+        end
+      end
+    end
+    methods_proxy.get(0).setParent(nil)
+    methods_proxy.get(0) # FIXME: if we used methods_proxy instead of methods_proxy.get(0) as return value, then the annotation is not effective
+  end
+
   macro def self.attr_accessor(hash:Hash)
     args = [hash]
     quote do
@@ -133,9 +160,24 @@ class ObjectExtensions
     while i < size
       e = hash.get(i)
       i += 1
-      method = quote do
-        def `e.key`:`e.value`  #`
-          @`e.key`
+      isClass = true
+      parent = hash.parent
+      while parent
+        if parent.kind_of? InterfaceDeclaration
+          isClass = false
+          break
+        end
+        parent = parent.parent
+      end
+      method = if isClass
+        quote do
+          def `e.key`:`e.value`  #`
+            @`e.key`
+          end
+        end
+      else
+        quote do
+          def `e.key`:`e.value`;end
         end
       end
       methods.add(method)
@@ -151,9 +193,24 @@ class ObjectExtensions
       e = hash.get(i)
       i += 1
       name = "#{Identifier(e.key).identifier}_set"
-      method = quote do
-        def `name`(value:`e.value`):void  #`
-          @`e.key` = value
+      isClass = true
+      parent = hash.parent
+      while parent
+        if parent.kind_of? InterfaceDeclaration
+          isClass = false
+          break
+        end
+        parent = parent.parent
+      end
+      method =  if isClass
+        method = quote do
+          def `name`(value:`e.value`):void
+            @`e.key` = value
+          end
+        end
+      else
+        method = quote do
+          def `name`(value:`e.value`):void;end
         end
       end
       methods.add(method)
