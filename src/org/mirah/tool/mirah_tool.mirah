@@ -80,23 +80,7 @@ abstract class MirahTool implements BytecodeConsumer
     if @compiler_args.exit?
       return @compiler_args.exit_status
     end
-
-    @compiler_args.setup_logging
-
-    if compiler_args.use_type_debugger && !@debugger
-      debugger = ConsoleDebugger.new
-      debugger.start
-      @debugger = debugger.debugger
-    end
-
-    diagnostics = @compiler_args.diagnostics
-
-    diagnostics.setMaxErrors(@compiler_args.max_errors)
-
-    @compiler = MirahCompiler.new(
-        diagnostics,
-        @compiler_args,
-        @debugger)
+    @compiler = MirahCompiler.new(@compiler_args)
     parseAllFiles
     @compiler.infer
     @compiler.compile(self)
@@ -105,7 +89,7 @@ abstract class MirahTool implements BytecodeConsumer
     puts "Too many errors."
     1
   rescue CompilationFailure
-    puts "#{diagnostics.errorCount} errors"
+    puts "#{compiler_args.diagnostics.errorCount} errors"
     1
   end
 
@@ -142,7 +126,7 @@ abstract class MirahTool implements BytecodeConsumer
   end
 
   def setDebugger(debugger:DebuggerInterface):void
-    @debugger = debugger
+    @compiler_args.debugger = debugger
   end
 
   def addFakeFile(name:String, code:String):void

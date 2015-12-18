@@ -92,7 +92,7 @@ class MirahCompiler implements JvmBackend
     @macro_context[DiagnosticListener] = @diagnostics
     @macro_context[SimpleDiagnostics] = @diagnostics
     @macro_context[JvmVersion] = @jvm
-    @macro_context[DebuggerInterface] = debugger
+    @macro_context[DebuggerInterface] = @debugger
     @macro_context[MirahArguments] = compiler_args
 
     # The main type system needs access to the macro one to call macros.
@@ -125,7 +125,10 @@ class MirahCompiler implements JvmBackend
     @asts = []
 
     @plugins = CompilerPlugins.new(@context)
+  end
 
+  def initialize(compiler_args: MirahArguments)
+    initialize(compiler_args.diagnostics, compiler_args, compiler_args.debugger)
   end
 
   def self.initialize:void

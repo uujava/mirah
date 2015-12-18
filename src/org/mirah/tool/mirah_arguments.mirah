@@ -75,7 +75,8 @@ class MirahArguments
                 use_type_debugger: boolean,
                 exit_status: int,
                 encoding: String,
-                plugins: String
+                plugins: String,
+                debugger: DebuggerInterface
 
   def initialize(env=System.getenv)
     @logger_color = true
@@ -258,7 +259,17 @@ class MirahArguments
       prep_for_exit 1
     end
 
-    compiler_args
+    self.setup_logging
+
+    self.diagnostics.setMaxErrors(max_errors)
+
+   if @use_type_debugger && !@debugger
+      console_debugger = ConsoleDebugger.new
+      console_debugger.start
+      @debugger = console_debugger.debugger
+    end
+
+    self
   end
 
   def addFileOrDirectory(f:File):void
