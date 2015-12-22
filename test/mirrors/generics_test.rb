@@ -38,7 +38,6 @@ class GenericsTest < Test::Unit::TestCase
   java_import 'org.mirah.jvm.model.IntersectionType'
   java_import 'org.mirah.typer.BaseTypeFuture'
   java_import 'mirah.objectweb.asm.Type'
-  java_import 'javax.lang.model.util.Types'
 
   def setup
     @types = MirrorTypeSystem.new
@@ -787,4 +786,29 @@ class GenericsTest < Test::Unit::TestCase
     assert_equal(["java.lang.Comparable<java.lang.String>"],
                  interfaces.grep(/Comparable/))
   end
+  
+  def test_type_invoker_simple_signature
+    invoker = invoker_for_signature('Ljava/lang/Object;')
+    assert_equal(0,invoker.getFormalTypeParameters.size)
+  end
+  
+  def test_type_invoker_array_as_type_parameter_signature
+    invoker = invoker_for_signature('<T:Ljava/lang/Object;>Ljava/lang/Class<[TT;>;')
+    assert_equal(1,invoker.getFormalTypeParameters.size)
+  end
+  
+  def test_type_invoker_recursive_reference_signature
+    if JVMCompiler::JVM_VERSION.to_f >= 1.8 # Stream API is needed here
+      invoker = invoker_for_signature('<T:Ljava/lang/Object;S::Ljava/util/stream/BaseStream<TT;TS;>;>Ljava/lang/Object;Ljava/lang/AutoCloseable;')
+      assert_equal(2,invoker.getFormalTypeParameters.size)
+    end
+  end
+  
+  def invoker_for_signature(signature)
+    context   = @types.context
+    invoker   = TypeInvoker.new(context, nil, [], {})
+    invoker.read(signature)
+    invoker
+  end
 end
+
