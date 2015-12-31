@@ -564,14 +564,14 @@ class Typer < SimpleNodeVisitor
       destination_body.add(initializer_method_call)
       destination_body.add(field_annotation_request)
   
-      nil # nothing to infer now
+      @types.getNullType() # nothing to infer now
     else # we are in some other context, maybe method
       infer(newField, expression != nil) # keep old behavior, for now
     end
   end
   
   def visitClassInitializer(field, expression)
-    nil # do nothing here, the body of the ClassInitializer will be inferred during ClassCleanup
+    @types.getNullType() # do nothing here, the body of the ClassInitializer will be inferred during ClassCleanup
   end
 
   def visitFieldAccess(field, expression)
