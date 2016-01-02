@@ -490,7 +490,7 @@ class Typer < SimpleNodeVisitor
   
   def visitFieldDeclaration(decl, expression)
     inferAnnotations decl
-    getFieldTypeOrDeclare(decl, decl.isStatic).declare(
+    getFieldTypeOrDeclare(decl, decl.isStatic, decl.isFinal).declare(
                           getTypeOf(decl, decl.type.typeref),
                           decl.position)
   end
@@ -498,7 +498,7 @@ class Typer < SimpleNodeVisitor
   def visitFieldAssign(field, expression)
     inferAnnotations field
     value = infer(field.value, true)
-    getFieldTypeOrDeclare(field, field.isStatic).assign(value, field.position)
+    getFieldTypeOrDeclare(field, field.isStatic, field.isFinal).assign(value, field.position)
   end
 
   def visitConstantAssign(field, expression)
@@ -512,6 +512,7 @@ class Typer < SimpleNodeVisitor
        )
     ]
     newField.isStatic = true
+    newField.isFinal  = true
     newField.position = field.position
     
     # annotations to FieldAssign currently do not work, but FieldAnnotationRequests do work. 
@@ -1546,12 +1547,13 @@ class Typer < SimpleNodeVisitor
                         field.position)
   end
 
-  def getFieldTypeOrDeclare(field: Named, isStatic: boolean)
-    getFieldTypeOrDeclare(field, fieldTargetType(field, isStatic))
+  def getFieldTypeOrDeclare(field: Named, isStatic: boolean, isFinal: boolean)
+    getFieldTypeOrDeclare(field, fieldTargetType(field, isStatic), isFinal)
   end
 
-  def getFieldTypeOrDeclare field: Named, targetType: TypeFuture
+  def getFieldTypeOrDeclare field: Named, targetType: TypeFuture, isFinal: boolean
     @types.getFieldTypeOrDeclare(targetType,
+                        isFinal,
                         field.name.identifier,
                         field.position)
   end
