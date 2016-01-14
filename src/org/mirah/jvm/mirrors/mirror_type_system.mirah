@@ -328,14 +328,18 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     AssignableTypeFuture(future)
   end
 
-  def getFieldTypeOrDeclare(target, name, position)
+  def getFieldTypeOrDeclare(target, flags, name, position)
     resolved = MirrorType(target.peekInferredType)
     klass = MirrorType(resolved.unmeta)
     member = klass.getDeclaredField(name)
     future = if member
       AsyncMember(member).asyncReturnType
     else
-      createField(klass, name, resolved.isMeta, position)
+      if resolved.isMeta and (flags & Opcodes.ACC_STATIC) == 0
+        @@log.warning "implicitly enable static flag for meta field #{name} #{target}"
+        flags |= Opcodes.ACC_STATIC
+      end
+      createField(klass, name, flags, position)
     end
     AssignableTypeFuture(future)
   end
@@ -678,17 +682,16 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     MethodFuture.new(name, member.argumentTypes, returnFuture, false, position)
   end
 
-  def createField(target:MirrorType, name:String,
-                  isStatic:boolean, position:Position):TypeFuture
-    flags = Opcodes.ACC_PRIVATE
-    if isStatic
+  def createField(target:MirrorType, name:String, flags:int, position:Position):TypeFuture
+
+    if (flags & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC
       kind = MemberKind.STATIC_FIELD_ACCESS
-      flags |= Opcodes.ACC_STATIC
       access = "static"
     else
       kind = MemberKind.FIELD_ACCESS
       access = "instance"
     end
+
     undeclared_future = @unpinned_field_futures[unpinned_key(target, name)]
     future = if undeclared_future
       AssignableTypeFuture(undeclared_future)
@@ -700,8 +703,8 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     future.onUpdate do |x, resolved|
       log.fine("Learned #{access} field #{target}.#{name} = #{resolved}")
     end
-    member = AsyncMember.new(
-        flags, target, name, [], future, kind)
+    member = AsyncMember.new(flags, target, name, [], future, kind)
+    @@log.fine "declare field #{member} #{target}"
     target.declareField(member)
     future
   end

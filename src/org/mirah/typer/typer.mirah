@@ -510,7 +510,7 @@ class Typer < SimpleNodeVisitor
   
   def visitFieldDeclaration(decl, expression)
     inferAnnotations decl
-    getFieldTypeOrDeclare(decl, decl.isStatic).declare(
+    getFieldTypeOrDeclare(decl).declare(
                           getTypeOf(decl, decl.type.typeref),
                           decl.position)
   end
@@ -518,11 +518,11 @@ class Typer < SimpleNodeVisitor
   def visitFieldAssign(field, expression)
     inferAnnotations field
     value = infer(field.value, true)
-    getFieldTypeOrDeclare(field, field.isStatic).assign(value, field.position)
+    getFieldTypeOrDeclare(field).assign(value, field.position)
   end
 
   def visitConstantAssign(field, expression)
-    newField = FieldAssign.new field.name, field.value, nil, [Modifier.new(field.position, "PUBLIC")]
+    newField = FieldAssign.new field.name, field.value, nil, [Modifier.new(field.position, "PUBLIC"), Modifier.new(field.position, "FINAL")]
     newField.isStatic = true
     newField.position = field.position
 
@@ -1517,12 +1517,22 @@ class Typer < SimpleNodeVisitor
                         field.position)
   end
 
-  def getFieldTypeOrDeclare(field: Named, isStatic: boolean)
-    getFieldTypeOrDeclare(field, fieldTargetType(field, isStatic))
+
+  def getFieldTypeOrDeclare(field: FieldAssign)
+    getFieldTypeOrDeclare(field, fieldTargetType(field, field.isStatic), field.isStatic)
   end
 
-  def getFieldTypeOrDeclare field: Named, targetType: TypeFuture
+  def getFieldTypeOrDeclare(field: FieldDeclaration)
+    getFieldTypeOrDeclare(field, fieldTargetType(field, field.isStatic), field.isStatic)
+  end
+
+  def getFieldTypeOrDeclare field: Named, targetType: TypeFuture, isStatic: boolean
+    # private by default, static if needed
+    flags = JVMTypeUtils.calculateFlags(Opcodes.ACC_PRIVATE, Node(field))
+    flags |= Opcodes.ACC_STATIC if isStatic
+    logger.fine("flags for field #{field.name}  #{targetType}" + flags)
     @types.getFieldTypeOrDeclare(targetType,
+                        flags,
                         field.name.identifier,
                         field.position)
   end

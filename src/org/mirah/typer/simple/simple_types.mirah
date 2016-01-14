@@ -166,7 +166,7 @@ class SimpleTypes; implements TypeSystem
     t
   end
 
-  def getFieldTypeOrDeclare(target, name, position)
+  def getFieldTypeOrDeclare(target, flags, name, position)
     getFieldType(target, name, position)
   end
   def getFieldType(target, name, position)

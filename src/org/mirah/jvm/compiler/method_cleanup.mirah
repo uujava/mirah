@@ -21,6 +21,7 @@ import org.mirah.typer.Typer
 import org.mirah.jvm.mirrors.MirrorType
 import org.mirah.jvm.types.JVMType
 import org.mirah.jvm.types.JVMTypeUtils
+import org.mirah.typer.MethodType
 
 # Runs class cleanup on any enclosed classes.
 class MethodCleanup < NodeScanner
@@ -29,6 +30,7 @@ class MethodCleanup < NodeScanner
     @typer = context[Typer]
     @scope = @typer.scoper.getIntroducedScope(method)
     @method = method
+    @type = MethodType(@typer.getInferredType(method).resolve)
   end
 
   def clean:void

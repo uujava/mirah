@@ -280,7 +280,7 @@ class TypePrinter2 < NodeScanner
     @out.print "\""
     false
   end
-def enterStringEval(node, arg)
+  def enterStringEval(node, arg)
     @out.print '#{'
     node.value.accept self, arg
     @out.print '}'

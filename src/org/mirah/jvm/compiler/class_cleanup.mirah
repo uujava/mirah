@@ -139,6 +139,7 @@ class ClassCleanup < NodeScanner
   def error(message:String, position:Position)
     @context[DiagnosticListener].report(MirahDiagnostic.error(position, message))
   end
+
   def note(message:String, position:Position)
     @context[DiagnosticListener].report(MirahDiagnostic.note(position, message))
   end
@@ -167,6 +168,7 @@ class ClassCleanup < NodeScanner
     error("Statement (#{node.getClass}) not enclosed in a method", node.position)
     false
   end
+
   def enterMethodDefinition(node, arg)
     MethodCleanup.new(@context, node).clean
     @methods.add(node)
@@ -174,6 +176,7 @@ class ClassCleanup < NodeScanner
         node, MethodType(@typer.getInferredType(node).resolve)))
     false
   end
+
   def enterStaticMethodDefinition(node, arg)
     if "initialize".equals(node.name.identifier)
       @field_collector.collect(node.body)
@@ -185,9 +188,11 @@ class ClassCleanup < NodeScanner
         node, MethodType(@typer.getInferredType(node).resolve)))
     false
   end
+
   def isStatic(node:Node)
     @typer.scoper.getScope(node).selfType.resolve.isMeta
   end
+
   def setCinit(node:MethodDefinition):void
     unless @cinit.nil?
       error("Duplicate static initializer", node.position)
@@ -196,6 +201,7 @@ class ClassCleanup < NodeScanner
     end
     @cinit = node
   end
+
   def enterConstructorDefinition(node, arg)
     @constructors.add(node)
     @field_collector.collect(node.body)
@@ -210,30 +216,37 @@ class ClassCleanup < NodeScanner
     ClassCleanup.new(@context, node).clean
     false
   end
+
   def enterInterfaceDeclaration(node, arg)
     enterClassDefinition(node, arg)
     false
   end
+
   def enterImport(node, arg)
     # ignore
     false
   end
+
   def enterNoop(node, arg)
     # ignore
     false
   end
+
   def enterNodeList(node, arg)
     # Scan the children
     true
   end
+
   def enterClassAppendSelf(node, arg)
     # Scan the children
     true
   end
+
   def enterConstantAssign(node, arg)
     @static_init_nodes.add(node)
     false
   end
+
   def enterFieldAssign(node, arg)
     @field_collector.collect(node)
     if node.isStatic || isStatic(node)
@@ -244,16 +257,19 @@ class ClassCleanup < NodeScanner
     end
     false
   end
+
   def enterFieldAnnotationRequest(node, arg)
     field_annotation_requestss[node.name.identifier] ||= []
     List(field_annotation_requestss[node.name.identifier]).add(node)
     false
   end
+
   def enterFieldDeclaration(node, arg)
     # We've already cleaned this class, don't add more field decls.
     @alreadyCleaned = true
     false
   end
+
   def enterMacroDefinition(node, arg)
     addMethodState(MethodState.new(node))
     false

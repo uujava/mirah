@@ -176,6 +176,8 @@ end
 
 class StubWriter
 
+  TAB = '    '
+
   def self.initialize
     @@log = Logger.getLogger StubWriter.class.getName
   end
@@ -247,6 +249,17 @@ class StubWriter
     end
   end
 
+  def default_value type:JVMType
+    unless isPrimitive type
+      return 'null'
+    else
+      if 'boolean'.equals(type.name)
+        return 'false'
+      else
+        return '0'
+      end
+    end
+  end
 end
 
 class ClassStubWriter < StubWriter
@@ -384,7 +397,7 @@ class MethodStubWriter < StubWriter
       end
       if atype == 1
         if value == 'SYNTHETIC' || value == 'BRIDGE'
-            this.writeln ' // ', value
+            this.writeln StubWriter.TAB, '// ', value
         else
             flags.add value.toLowerCase
         end
@@ -396,7 +409,7 @@ class MethodStubWriter < StubWriter
     return if type.name.endsWith 'init>' and static
 
     writeln JavaDoc(@node.java_doc).value if @node.java_doc
-    write '    ', modifier, ' '
+    write StubWriter.TAB, modifier, ' '
     //constructor
     if type.name.endsWith 'init>'
       write @class_name
@@ -441,15 +454,7 @@ class MethodStubWriter < StubWriter
 
   def write_body(type:JVMType):void
     unless type.name.equals 'void'
-      unless isPrimitive type
-        write ' return null; '
-      else
-        if 'boolean'.equals(type.name)
-          write ' return false; '
-        else
-          write ' return 0; '
-        end
-      end
+      write ' return ', default_value(type), '; '
     end
   end
 end
@@ -474,23 +479,32 @@ class FieldStubWriter < StubWriter
   def generate:void
     type = JVMType(getInferredType(@node).resolve)
     @@log.fine "node:#{@node} type: #{type}"
-    modifier = 'private'
+    access = 'private'
     flags = []
+    _final = false
     process_modifiers(HasModifiers(@node)) do |atype:int, value:String|
       # workaround for PRIVATE and PUBLIC annotations for class constants
       if atype == 0
-       modifier = value.toLowerCase if !'PRIVATE'.equals value
+        access = value.toLowerCase if !'PRIVATE'.equals value
       end
       if atype == 1
-        flags.add value.toLowerCase
+        flag_str = value.toLowerCase
+        flags.add flag_str
+        _final = true if flag_str == 'final'
       end
     end
-    @@log.fine "access: #{modifier} modifier: #{flags}"
 
-    write '    ', modifier, ' '
+    @@log.fine "access: #{access} modifier: #{flags}"
+
+    if _final
+      writeln StubWriter.TAB, "/** values for constants not implemented */"
+    end
+
+    write StubWriter.TAB, access, ' '
     write 'static ' if @node.isStatic
-    iterator = flags.each { |f| write f, ' ' }
-    writeln type.name, ' ', name(), ";"
+    flags.each { |f| write f, ' ' }
+    write type.name, ' ', name()
+    write ' = ', default_value(type) if _final
+    writeln ";"
   end
-
 end

@@ -19,30 +19,30 @@ import java.util.logging.Level
 class JVMTypeUtils
     # defining initialize in class << self does not work
     def self.initialize
-       @@ACCESS = {
-          PUBLIC: Opcodes.ACC_PUBLIC,
-          PRIVATE: Opcodes.ACC_PRIVATE,
-          PROTECTED: Opcodes.ACC_PROTECTED,
-          DEFAULT: 0
-        }
-        @@FLAGS = {
-          STATIC: Opcodes.ACC_STATIC,
-          FINAL: Opcodes.ACC_FINAL,
-          SUPER: Opcodes.ACC_SUPER,
-          SYNCHRONIZED: Opcodes.ACC_SYNCHRONIZED,
-          VOLATILE: Opcodes.ACC_VOLATILE,
-          BRIDGE: Opcodes.ACC_BRIDGE,
-          VARARGS: Opcodes.ACC_VARARGS,
-          TRANSIENT: Opcodes.ACC_TRANSIENT,
-          NATIVE: Opcodes.ACC_NATIVE,
-          INTERFACE: Opcodes.ACC_INTERFACE,
-          ABSTRACT: Opcodes.ACC_ABSTRACT,
-          STRICT: Opcodes.ACC_STRICT,
-          SYNTHETIC: Opcodes.ACC_SYNTHETIC,
-          ANNOTATION: Opcodes.ACC_ANNOTATION,
-          ENUM: Opcodes.ACC_ENUM,
-          DEPRECATED: Opcodes.ACC_DEPRECATED
-        }
+      @@ACCESS = {
+        PUBLIC: Opcodes.ACC_PUBLIC,
+        PRIVATE: Opcodes.ACC_PRIVATE,
+        PROTECTED: Opcodes.ACC_PROTECTED,
+        DEFAULT: 0
+      }
+      @@FLAGS = {
+        STATIC: Opcodes.ACC_STATIC,
+        FINAL: Opcodes.ACC_FINAL,
+        SUPER: Opcodes.ACC_SUPER,
+        SYNCHRONIZED: Opcodes.ACC_SYNCHRONIZED,
+        VOLATILE: Opcodes.ACC_VOLATILE,
+        BRIDGE: Opcodes.ACC_BRIDGE,
+        VARARGS: Opcodes.ACC_VARARGS,
+        TRANSIENT: Opcodes.ACC_TRANSIENT,
+        NATIVE: Opcodes.ACC_NATIVE,
+        INTERFACE: Opcodes.ACC_INTERFACE,
+        ABSTRACT: Opcodes.ACC_ABSTRACT,
+        STRICT: Opcodes.ACC_STRICT,
+        SYNTHETIC: Opcodes.ACC_SYNTHETIC,
+        ANNOTATION: Opcodes.ACC_ANNOTATION,
+        ENUM: Opcodes.ACC_ENUM,
+        DEPRECATED: Opcodes.ACC_DEPRECATED
+      }
       @@log = Logger.getLogger(JVMTypeUtils.class.getName)
   end
 
@@ -86,9 +86,9 @@ class JVMTypeUtils
           modifiers = HasModifiers(node).modifiers
           if modifiers
           modifiers.each do |m: Modifier|
-            accss = access_opcode(m.value)
-            if accss
-                access = accss.intValue
+            _access = access_opcode(m.value)
+            if _access
+                access = _access.intValue
             end
             flag = flag_opcode(m.value)
             if flag
