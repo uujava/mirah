@@ -117,7 +117,6 @@ class StaticFieldsTest < Test::Unit::TestCase
       end
   end
   def test_declare_constant_in_instance_method_is_an_error
-    pend "fix final constant validation for instance methods" do
     e = assert_raise_kind_of Mirah::MirahError do
       cls, = compile(<<-EOF)
         class Foo
@@ -131,8 +130,7 @@ class StaticFieldsTest < Test::Unit::TestCase
       EOF
       assert_run_output("1\n", cls)
     end
-    end
-  end  
+  end
   def test_constants_are_public_and_final_and_static
     cls, = compile(<<-EOF)
       class Foo

@@ -20,9 +20,14 @@ import org.mirah.util.Logger
 import javax.tools.DiagnosticListener
 import mirah.lang.ast.*
 import org.mirah.typer.Typer
+import org.mirah.typer.ResolvedType
 import org.mirah.macros.Compiler as MacroCompiler
 import org.mirah.util.Context
 import org.mirah.util.MirahDiagnostic
+import static org.mirah.jvm.types.JVMTypeUtils.*
+import org.mirah.typer.MethodType
+import org.mirah.jvm.mirrors.Member
+import org.mirah.jvm.types.JVMType
 
 import java.util.ArrayList
 
@@ -30,18 +35,20 @@ import java.util.ArrayList
 # annotations on FieldAssignments. ClassCleanup will generate
 # FieldDeclarations containing the annotations.
 class FieldCollector < NodeScanner
-  def initialize(context:Context)
+  def initialize(context:Context, type:JVMType)
     @context = context
     @field_annotations = {}
     @field_modifiers = {}
+    @type = type
+    @typer = context[Typer]
   end
 
   def error(message:String, position:Position)
     @context[DiagnosticListener].report(MirahDiagnostic.error(position, message))
   end
 
-  def collect(node:Node):void
-    scan(node, nil)
+  def collect(node:Node, parent:Node):void
+    scan(node, parent)
   end
 
   def getAnnotations(field:String):AnnotationList
@@ -52,11 +59,11 @@ class FieldCollector < NodeScanner
     ModifierList(@field_modifiers[field]) || ModifierList.new
   end
   
-  def enterFieldAssign(node, arg)
+  def enterFieldAssign(node, parent)
     name = node.name.identifier
     if node.annotations && node.annotations_size > 0
       if @field_annotations[name]
-        error("Multiple declarations for field #{name}", node.position)
+        error("Multiple declarations for field #{name} #{node.modifiers}", node.position)
       else
         @field_annotations[name] = node.annotations
         node.annotations = AnnotationList.new
@@ -64,12 +71,13 @@ class FieldCollector < NodeScanner
     end
     if node.modifiers && node.modifiers_size > 0
       if @field_modifiers[name]
-        error("Multiple declarations for field #{name}", node.position)
+        error("Multiple declarations for field #{name} #{node.modifiers}", node.position)
       else
         @field_modifiers[name] = node.modifiers
          node.modifiers = ModifierList.new
       end
     end
+    validate(node, Node(parent))
     false
   end
   
@@ -86,4 +94,18 @@ class FieldCollector < NodeScanner
     # We only treat it as a declaration if it's at the top level
     false
   end
+
+  def validate(node: FieldAssign, parent:Node):void
+    name = node.name.identifier
+    # field declared in typer use field type here
+    field = Member @type.getDeclaredField(name)
+
+    # invalidate constant field assign in instance method
+    is_meta = parent.kind_of?(StaticMethodDefinition) || parent.kind_of?(ClassDefinition) || parent.kind_of?(InterfaceDeclaration)
+    is_constant = isFinal(field) && isStatic(field)
+    if !is_meta && is_constant
+      error("Static final field #{node} assigned in instance method: #{parent}", node.position)
+    end
+  end
+
 end

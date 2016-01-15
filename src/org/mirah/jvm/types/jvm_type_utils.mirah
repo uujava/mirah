@@ -15,6 +15,7 @@ import mirah.lang.ast.Modifier
 import mirah.lang.ast.Identifier
 import java.util.logging.Logger
 import java.util.logging.Level
+import org.mirah.jvm.mirrors.Member
 
 class JVMTypeUtils
     # defining initialize in class << self does not work
@@ -74,6 +75,32 @@ class JVMTypeUtils
 
     def isArray(type:JVMType):boolean
       type.getAsmType.getSort == Type.ARRAY
+    end
+
+    def isFinal(type:JVMType)
+      if type.isError
+        return false
+      end
+      (type.flags & Opcodes.ACC_FINAL) == Opcodes.ACC_FINAL
+    end
+
+    def isStatic(type:JVMType)
+      if type.isError
+        return false
+      end
+      (type.flags & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC
+    end
+
+    def isFinal(type:Member)
+      (type.flags & Opcodes.ACC_FINAL) == Opcodes.ACC_FINAL
+    end
+
+    def isStatic(type:Member)
+      (type.flags & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC
+    end
+
+    def isAbstract(type:Member):boolean
+      (type.flags & Opcodes.ACC_ABSTRACT) == Opcodes.ACC_ABSTRACT
     end
 
     def calculateFlags(defaultAccess:int, node:Node):int        

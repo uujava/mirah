@@ -21,7 +21,7 @@ import org.mirah.util.Logger
 import javax.tools.DiagnosticListener
 import mirah.lang.ast.*
 import org.mirah.jvm.types.JVMType
-import org.mirah.jvm.types.JVMTypeUtils
+import static org.mirah.jvm.types.JVMTypeUtils.*
 import org.mirah.typer.Typer
 import org.mirah.typer.MethodType
 import org.mirah.macros.Compiler as MacroCompiler
@@ -43,7 +43,8 @@ class ClassCleanup < NodeScanner
     @static_init_nodes = ArrayList.new
     @init_nodes = ArrayList.new
     @constructors = ArrayList.new
-    @field_collector = FieldCollector.new(context)
+    @type = JVMType(@typer.getInferredType(@klass).resolve)
+    @field_collector = FieldCollector.new(context, @type)
     @field_annotation_requestss = {}
     @methods = ArrayList.new
     @method_states = {}
@@ -118,13 +119,12 @@ class ClassCleanup < NodeScanner
   
   def makeTypeRef(type:JVMType):TypeRef
     # FIXME: there's no way to represent multi-dimensional arrays in a TypeRef
-    TypeRefImpl.new(type.name, JVMTypeUtils.isArray(type), false, nil)
+    TypeRefImpl.new(type.name, isArray(type), false, nil)
   end
   
   def declareFields:void
     return if @alreadyCleaned
-    type = JVMType(@typer.getInferredType(@klass).resolve)
-    type.getDeclaredFields.each do |f|
+    @type.getDeclaredFields.each do |f|
       @@log.finest "creating field declaration for #{f.name}"
       name = f.name
       decl = FieldDeclaration.new(SimpleString.new(name), makeTypeRef(f.returnType), nil, Collections.emptyList)
@@ -170,6 +170,7 @@ class ClassCleanup < NodeScanner
   end
 
   def enterMethodDefinition(node, arg)
+    @field_collector.collect(node.body, node)
     MethodCleanup.new(@context, node).clean
     @methods.add(node)
     addMethodState(MethodState.new(
@@ -178,8 +179,8 @@ class ClassCleanup < NodeScanner
   end
 
   def enterStaticMethodDefinition(node, arg)
+    @field_collector.collect(node.body, node)
     if "initialize".equals(node.name.identifier)
-      @field_collector.collect(node.body)
       setCinit(node)
     end
     @methods.add(node)
@@ -204,7 +205,7 @@ class ClassCleanup < NodeScanner
 
   def enterConstructorDefinition(node, arg)
     @constructors.add(node)
-    @field_collector.collect(node.body)
+    @field_collector.collect(node.body, node)
     MethodCleanup.new(@context, node).clean
     @methods.add(node)
     addMethodState(MethodState.new(
@@ -248,7 +249,7 @@ class ClassCleanup < NodeScanner
   end
 
   def enterFieldAssign(node, arg)
-    @field_collector.collect(node)
+    @field_collector.collect(node, @klass)
     if node.isStatic || isStatic(node)
       @static_init_nodes.add(node)
     else
