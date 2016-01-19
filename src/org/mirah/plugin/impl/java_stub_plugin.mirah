@@ -30,6 +30,7 @@ import java.io.*
 # preserve java doc style comments
 # mirahc -plugin stub[:optional_dir] ...
 # mirahc -plugin stub:* ... redirects output to System.out
+# mirahc -plugin stub:optional_dir|+cs ... copy mirah source as java doc to method body
 # TODO add tests
 class JavaStubPlugin < CompilerPluginAdapter
 
@@ -41,29 +42,37 @@ class JavaStubPlugin < CompilerPluginAdapter
     super('stub')
   end
 
+  attr_reader typer:Typer,
+              copy_src:boolean,
+              encoding:String,
+              stub_dir:String
+
   def start(param, context)
     super(param, context)
     context[MirahParser].skip_java_doc false
     args = context[MirahArguments]
     @typer = context[Typer]
     @@log.fine "typer: #{@typer} args: #{args}"
-    @stub_dir = (param != nil and param.trim.length > 0) ? param.trim : args.destination
-    @@log.fine "stub dir: '#{@stub_dir}' mirahc destination: '#{args.destination}'"
     @encoding = args.encoding
     @defs = Stack.new
     @writers = []
+    @copy_src = false
+    @stub_dir = args.destination
+    read_params param, args
   end
 
-  def typer:Typer
-    @typer
-  end
-
-  def encoding:String
-    @encoding
-  end
-
-  def stub_dir:String
-    @stub_dir
+  private def read_params(params:String, args: MirahArguments):void
+    if params != nil and params.trim.length > 0
+     split_regexp = '\|'
+     param_list = ArrayList.new Arrays.asList params.trim.split split_regexp
+     if param_list.contains "+cs"
+       param_list.remove "+cs"
+       @copy_src = true
+     end
+     @stub_dir = String(param_list[0]) if param_list.size > 0
+    end
+    @@log.fine "stub dir: '#{@stub_dir}' mirahc destination: '#{args.destination}'"
+    @@log.fine "copy src: '#{@copy_src}"
   end
 
   def on_clean(node)
@@ -182,12 +191,11 @@ class StubWriter
     @@log = Logger.getLogger StubWriter.class.getName
   end
 
-  def typer:Typer
-    @typer
-  end
+  attr_reader typer:Typer, plugin:JavaStubPlugin
 
-  def initialize(typer:Typer)
-    @typer = typer
+  def initialize(plugin:JavaStubPlugin)
+    @typer = plugin.typer
+    @plugin = plugin
   end
 
   def generate:void
@@ -270,10 +278,10 @@ class ClassStubWriter < StubWriter
 
   attr_accessor append_self:boolean
 
-  def initialize(ctx:JavaStubPlugin, node:ClassDefinition)
-    super(ctx.typer )
-    @dest_path = ctx.stub_dir
-    @encoding = ctx.encoding
+  def initialize(plugin:JavaStubPlugin, node:ClassDefinition)
+    super(plugin)
+    @dest_path = plugin.stub_dir
+    @encoding = plugin.encoding
     @class_name = node.name.identifier
     @node = node
     @fields = []
@@ -287,11 +295,12 @@ class ClassStubWriter < StubWriter
 
   def add_method(node:MethodDefinition):void
     @@log.fine "add method #{class_name} #{node.name} #{@append_self}"
-    @methods.add MethodStubWriter.new @class_name, node, typer, @append_self
+    stub_writer = MethodStubWriter.new plugin, @class_name, node, @append_self
+    @methods.add stub_writer
   end
 
   def add_field(node:FieldDeclaration):void
-    @fields.add FieldStubWriter.new node, typer
+    @fields.add FieldStubWriter.new plugin, node
   end
 
   def generate:void
@@ -342,18 +351,41 @@ class ClassStubWriter < StubWriter
     else
       write ' class '
     end
-    writeln @class_name, '{'
+    write @class_name, ' '
+    write_extends
+    write_implements
+    writeln  '{'
     write_fields
     write_methods
     write '}'
   end
 
-  def write_fields:void
-    sorted = @fields.sort do |field1:FieldStubWriter, field2:FieldStubWriter|
-      field1.name.compareTo field2.name
-     end
+  def write_extends
+    superclass = node_type.superclass
+    writeln 'extends ', superclass unless superclass.toString == 'java.lang.Object'
+  end
 
-    sorted.each do |stub_writer:StubWriter|
+  def write_implements
+    type = node_type
+    if type.interfaces.size > 0
+      write StubWriter.TAB, 'implements'
+      first = true
+      node_type.interfaces.each do |iface|
+        write ',' unless first
+        write iface.resolve.name
+        first = false
+      end
+    end
+  end
+
+  private def node_type
+    JVMType(typer.getInferredType(@node).resolve)
+  end
+
+  def write_fields:void
+    Collections.sort @fields { |field1:FieldStubWriter, field2:FieldStubWriter| field1.name.compareTo field2.name }
+
+    @fields.each do |stub_writer:StubWriter|
       stub_writer.writer=writer
       stub_writer.generate
     end
@@ -374,11 +406,15 @@ class MethodStubWriter < StubWriter
     @@log = Logger.getLogger MethodStubWriter.class.getName
   end
 
-  def initialize(class_name:String, node:MethodDefinition, typer:Typer, append_self:boolean)
-    super(typer)
+  attr_writer synthetic:boolean
+
+  def initialize(plugin:JavaStubPlugin, class_name:String, node:MethodDefinition, append_self:boolean)
+    super(plugin)
     @node = node
     @class_name = class_name
     @append_self = append_self
+    @copy_src = plugin.copy_src
+    @synthetic = false
   end
 
   # TODO optional args
@@ -393,11 +429,12 @@ class MethodStubWriter < StubWriter
     process_modifiers(HasModifiers(@node)) do |atype:int, value:String|
       # workaround for PRIVATE and PUBLIC annotations for class constants
       if atype == 0
-       modifier = value.toLowerCase
+        modifier = value.toLowerCase
       end
       if atype == 1
         if value == 'SYNTHETIC' || value == 'BRIDGE'
             this.writeln StubWriter.TAB, '// ', value
+            this.synthetic = true
         else
             flags.add value.toLowerCase
         end
@@ -453,9 +490,31 @@ class MethodStubWriter < StubWriter
   end
 
   def write_body(type:JVMType):void
+    write_src
     unless type.name.equals 'void'
       write ' return ', default_value(type), '; '
     end
+  end
+
+  def write_src:void
+     return unless @copy_src
+     return unless @node.body
+     return if @synthetic
+     # strange: parser produce body position wrapping whole method definition?
+     node_list = []
+     @node.body.each { |child:Node| node_list << child if child}
+     if node_list.size > 0
+       # this calculate position correctly
+       body =  NodeList.new node_list
+       node_src = if body.position
+         body.position.source.substring(body.position.startChar, body.position.endChar)
+       else
+         ""
+       end
+       writeln "\n", '/** '
+       writeln node_src
+       writeln ' */'
+     end
   end
 end
 
@@ -465,8 +524,8 @@ class FieldStubWriter < StubWriter
     @@log = Logger.getLogger MethodStubWriter.class.getName
   end
 
-  def initialize(node:FieldDeclaration, typer:Typer)
-    super(typer)
+  def initialize(plugin:JavaStubPlugin, node:FieldDeclaration)
+    super(plugin)
     @node = node
     @name = @node.name.identifier
   end

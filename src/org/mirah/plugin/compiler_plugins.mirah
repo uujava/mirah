@@ -36,6 +36,7 @@ class CompilerPlugins
     class_loader = context[ClassLoader]
     args = context[MirahArguments]
     plugin_params = parse_plugin_params(args.plugins)
+    @@log.fine "plugins params map: #{plugin_params} class_loader: #{class_loader}"
     return unless class_loader
     services = ServiceLoader.load(CompilerPlugin.class, class_loader)
     available = {}
@@ -49,6 +50,7 @@ class CompilerPlugins
       if plugin
         plugin.start(String(entry.getValue), context)
         plugins.add plugin
+        @@log.fine "plugin started: #{plugin} params: #{entry.getValue}"
       else
         raise "missing plugin implementation for: " + entry.getKey
       end
@@ -88,15 +90,15 @@ class CompilerPlugins
     return result if plugin_string.trim.length == 0
     plugins = plugin_string.split ','
     plugins.each do |v|
-      pair = v.split ':', 2
-      old_value = nil
-      if pair.length == 2
-        old_value = result.put pair[0], pair[1]
+      v = v.trim
+      delim_index = v.indexOf ':'
+      if delim_index > 0 or delim_index == v.length - 1
+        old_value = result.put v.substring(0, delim_index), v.substring(delim_index + 1, v.length)
       else
         old_value = result.put v, ""
       end
       if old_value
-        raise "multiple plugin keys: " + v + " => " + pair[0] + ":"+ old_value
+        raise "multiple plugin keys: #{v}:#{old_value}"
       end
     end
     return result

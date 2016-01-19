@@ -3,7 +3,7 @@ package org.foo;
  /**
     java doc
  */
-public class AOne{
+public class AOne {
     /** values for constants not implemented */
     public static final int CONST = 0;
     private int a;
