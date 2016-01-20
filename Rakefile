@@ -266,10 +266,10 @@ file_create 'javalib/jarjar.jar' do
 	end
 end
 
-def build_jar(new_jar,build_dir, extensions=false)
+def build_jar(new_jar,build_dir)
   # Build the jar                    
   ant.jar 'jarfile' => new_jar do
-    fileset 'dir' => build_dir
+    fileset 'dir' => build_dir, 'excludes' => 'services'
     zipfileset 'src' => 'javalib/mirah-asm-5.jar', 'includes' => 'mirah/objectweb/**/*'
     zipfileset 'src' => 'javalib/mirah-parser.jar'
     metainf 'dir' => File.dirname(__FILE__), 'includes' => 'LICENSE,COPYING,NOTICE'
@@ -379,7 +379,7 @@ else # original
 
   extensions_srcs = Dir['src/org/mirah/builtins/*.mirah'].sort
 
-  plugin_srcs = Dir['src/org/mirah/plugin/impl/*.mirah'].sort
+  plugin_srcs = Dir['src/org/mirah/plugin/impl/**/*.mirah'].sort
 
   ant_srcs        =    ['src/org/mirah/ant/compile.mirah']
 
@@ -429,7 +429,7 @@ else # original
             'src/org/mirah/ant'
 
     # compile extensions stuff
-    runjava('-Xmx512m', naked_mirahc_jar, '-d', build_dir, '-classpath', default_class_path, '--jvm', build_version, *extensions_srcs)
+    runjava('-Xmx512m', naked_mirahc_jar, '-d', build_dir, '-classpath', naked_mirahc_jar, '--jvm', build_version, *extensions_srcs)
 
     extended_mirahc_jar = new_jar.sub(".jar","-extended.jar")
 
@@ -438,7 +438,7 @@ else # original
     build_jar(extended_mirahc_jar, build_dir)
 
     # compile plugin stuff
-    runjava('-Xmx512m', extended_mirahc_jar, '-d', build_dir, '-classpath', default_class_path, '--jvm', build_version, *plugin_srcs)
+    runjava('-Xmx512m', extended_mirahc_jar, '-d', build_dir, '-classpath', extended_mirahc_jar, '--jvm', build_version, *plugin_srcs)
 
     cp_r 'src/org/mirah/plugin/impl/services', build_dir
 
