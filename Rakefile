@@ -47,7 +47,8 @@ def run_tests tests
   results = tests.map do |name|
     begin
       Rake.application[name].invoke
-    rescue Exception
+    rescue Exception => ex
+      puts "test: #{name} failed: #{ex} #{ex.backtrace.join "\n"}"
     end
   end
 
@@ -269,7 +270,7 @@ end
 def build_jar(new_jar,build_dir)
   # Build the jar                    
   ant.jar 'jarfile' => new_jar do
-    fileset 'dir' => build_dir, 'excludes' => 'services'
+    fileset 'dir' => build_dir, 'excludes' => 'services/*'
     zipfileset 'src' => 'javalib/mirah-asm-5.jar', 'includes' => 'mirah/objectweb/**/*'
     zipfileset 'src' => 'javalib/mirah-parser.jar'
     metainf 'dir' => File.dirname(__FILE__), 'includes' => 'LICENSE,COPYING,NOTICE'
