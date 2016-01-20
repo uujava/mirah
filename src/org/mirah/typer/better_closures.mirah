@@ -419,14 +419,16 @@ class BetterClosureBuilder
   end
 
   def temp_name_from_outer_scope block: Node,  scoped_name: String
-    class_or_script = block.findAncestor {|node| node.kind_of?(ClassDefinition) || node.kind_of?(Script)}
+    class_or_script = block.findAncestor {|node| node.kind_of?(ClassDefinition) || node.kind_of?(Script) }
+    enclosing_method = block.findAncestor {|node| node.kind_of?(MethodDefinition)}
+    enclosing_method_name = enclosing_method ? MethodDefinition(enclosing_method).name.identifier : 'anon'
     outer_name = if class_or_script.kind_of? ClassDefinition
                    ClassDefinition(class_or_script).name.identifier
                  else
                   @@log.fine "#{class_or_script} is not a class"
                    MirrorTypeSystem.getMainClassName(Script(class_or_script))
                  end
-    get_scope(class_or_script).temp "#{outer_name}$#{scoped_name}"
+    get_scope(class_or_script).temp "#{outer_name}$#{enclosing_method_name}$#{scoped_name}"
   end
 
   def finish_nlr_exception(block: Node, nlr_klass: ClosureDefinition, return_value_type: ResolvedType)
