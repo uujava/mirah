@@ -33,9 +33,9 @@ class FieldStubWriter < StubWriter
     @@log = Logger.getLogger MethodStubWriter.class.getName
   end
 
-  def initialize(plugin:JavaStubPlugin, node:FieldDeclaration)
-    super(plugin)
-    @node = node
+  def initialize(plugin:JavaStubPlugin, parent: StubWriter, node:FieldDeclaration)
+    super(plugin, parent, node)
+    @node = node  # hide superclass field to avoid casts!!!
     @name = @node.name.identifier
   end
 

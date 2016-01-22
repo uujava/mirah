@@ -33,14 +33,15 @@ class MethodStubWriter < StubWriter
     @@log = Logger.getLogger MethodStubWriter.class.getName
   end
 
+  attr_reader start_line:int
   attr_writer synthetic:boolean
 
-  def initialize(plugin:JavaStubPlugin, class_name:String, node:MethodDefinition, append_self:boolean)
-    super(plugin)
-    @node = node
+  def initialize(plugin:JavaStubPlugin, parent:StubWriter, class_name:String, node:MethodDefinition, append_self:boolean)
+    super(plugin, parent, node)
+    @node = node # hide superclass field to avoid casts!!!
+    @start_line = @node.position.startLine
     @class_name = class_name
     @append_self = append_self
-    @copy_src = plugin.copy_src
     @synthetic = false
   end
 
@@ -55,11 +56,10 @@ class MethodStubWriter < StubWriter
     this = self
     process_modifiers(HasModifiers(@node)) do |atype:int, value:String|
       # workaround for PRIVATE and PUBLIC annotations for class constants
-      if atype == 0
+      if atype == ModifierVisitor.ACCESS
         modifier = value.toLowerCase
-      end
-      if atype == 1
-        if value == 'SYNTHETIC' || value == 'BRIDGE'
+      else
+        if value == 'SYNTHETIC' or value == 'BRIDGE'
             this.writeln StubWriter.TAB, '// ', value
             this.synthetic = true
         else
@@ -85,9 +85,13 @@ class MethodStubWriter < StubWriter
 
     write '('
     write_args
-    write '){'
-    write_body JVMType(type.returnType)
-    writeln '}'
+    if flags.contains 'abstract'
+      writeln ');'
+    else
+      write '){'
+      write_body JVMType(type.returnType)
+      writeln '}'
+    end
   end
 
   def write_args:void
@@ -118,29 +122,27 @@ class MethodStubWriter < StubWriter
 
   def write_body(type:JVMType):void
     write_src
-    unless type.name.equals 'void'
+    unless type.name == 'void'
       write ' return ', default_value(type), '; '
     end
   end
 
   def write_src:void
-     return unless @copy_src
+     return unless plugin.copy_src or plugin.preserve_lines
      return unless @node.body
      return if @synthetic
-     # strange: parser produce body position wrapping whole method definition?
-     node_list = []
-     @node.body.each { |child:Node| node_list << child if child}
-     if node_list.size > 0
-       # this calculate position correctly
-       body =  NodeList.new node_list
-       node_src = if body.position
-         body.position.source.substring(body.position.startChar, body.position.endChar)
-       else
-         ""
-       end
-       writeln "\n", '/** '
-       writeln node_src
-       writeln ' */'
+     # hack???: parser produce body position wrapping whole method definition?
+     start_char = if @node.type
+        @node.type.position.endChar
+     else
+        @node.arguments.position.endChar
      end
+
+     end_char = @node.position.endChar - 3 #end offset
+
+     node_src = @node.position.source.substring(start_char, end_char)
+     write '/** ', node_src, ' */'
+
   end
+
 end

@@ -25,9 +25,10 @@ import org.mirah.tool.MirahArguments
 import org.mirah.util.Logger
 import java.util.*
 import java.io.*
+import java.util.regex.*
 import org.mirah.plugin.impl.*
 
-class StubWriter
+abstract class StubWriter
 
   TAB = '    '
 
@@ -35,14 +36,28 @@ class StubWriter
     @@log = Logger.getLogger StubWriter.class.getName
   end
 
-  attr_reader typer:Typer, plugin:JavaStubPlugin
+  attr_reader typer:Typer, plugin:JavaStubPlugin, line:int, parent:StubWriter, node:Node
 
-  def initialize(plugin:JavaStubPlugin)
+  def initialize(plugin:JavaStubPlugin, parent: StubWriter, node: Node)
     @typer = plugin.typer
+    @parent = parent
     @plugin = plugin
+    @line = 0
+    @node = node
   end
 
-  def generate:void
+  def same_source(*children:StubWriter):boolean
+    children.each do |child|
+      if child.node and child.node.position
+        return false unless node.position.source == child.node.position.source
+      else
+        return false
+      end
+    end
+    true
+  end
+
+  abstract def generate:void
   end
 
   def writer_set(w:Writer)
@@ -53,28 +68,67 @@ class StubWriter
     @writer
   end
 
-  def writeln(part1:Object=nil, part2:Object=nil, part3:Object=nil, part4:Object=nil, part5:Object=nil):void
-     write part1, part2, part3, part4, part5
+  def writeln(*parts:Object):void
+     if parent
+       parent.writeln parts
+       return
+     end
+     write parts
      @writer.write "\n"
+     @line += 1
   end
 
-  def write(part1:Object=nil, part2:Object=nil, part3:Object=nil, part4:Object=nil, part5:Object=nil):void
-     @writer.write part1.toString if part1
-     @writer.write part2.toString if part2
-     @writer.write part3.toString if part3
-     @writer.write part4.toString if part4
-     @writer.write part5.toString if part5
+  EOL = Pattern.compile '\n'
+
+  def write(*parts:Object):void
+     if parent
+       parent.write parts
+       return
+     end
+     this = self
+     parts.each do |part|
+       unless part.nil?
+         part_str = part.toString
+         @writer.write part_str
+         this.line += line_count part_str
+       end
+     end
+  end
+
+  def writeln(target_line:int):void
+    if parent
+      parent.writeln target_line
+      return
+    end
+    offset = target_line - @line
+    if offset < 0
+      @@log.warning "wrong line #{@line} offset: #{offset} target line: #{target_line}"
+    else
+      this = self
+      offset.times { this.writeln }
+    end
+  end
+
+  private def line_count(str:String):int
+    count = 0
+    if str
+      matcher = EOL.matcher str
+      while matcher.find
+        count +=1
+      end
+    end
+    return count
   end
 
   def stop:void
     @writer.close if @writer
   end
 
-  def getInferredType(node:Node):TypeFuture
+  protected def getInferredType(node:Node):TypeFuture
     @typer.getInferredType(node)
   end
 
-  def process_annotations(node:Annotated, visitor:AnnotationVisitor):void
+  protected def process_annotations(node:Annotated, visitor:AnnotationVisitor):void
     iterator = Annotated(node).annotations.iterator
     while iterator.hasNext
      anno = Annotation(iterator.next)
@@ -95,9 +149,9 @@ class StubWriter
     end
   end
 
-  def process_modifiers(node:HasModifiers, visitor:ModifierVisitor):void
+  protected def process_modifiers(node:HasModifiers, visitor:ModifierVisitor):void
     node.modifiers.each do |m:Modifier|
-        visitor.visit(access_opcode(m.value) ? 0 : 1, m.value)
+        visitor.visit(access_opcode(m.value) ? ModifierVisitor.ACCESS : ModifierVisitor.FLAG, m.value)
     end
   end
 

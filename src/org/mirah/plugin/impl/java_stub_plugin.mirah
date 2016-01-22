@@ -45,6 +45,7 @@ class JavaStubPlugin < CompilerPluginAdapter
 
   attr_reader typer:Typer,
               copy_src:boolean,
+              preserve_lines:boolean,
               encoding:String,
               stub_dir:String
 
@@ -69,6 +70,10 @@ class JavaStubPlugin < CompilerPluginAdapter
      if param_list.contains "+cs"
        param_list.remove "+cs"
        @copy_src = true
+     end
+     if param_list.contains "+pl"
+       param_list.remove "+pl"
+       @preserve_lines = true
      end
      @stub_dir = String(param_list[0]) if param_list.size > 0
     end

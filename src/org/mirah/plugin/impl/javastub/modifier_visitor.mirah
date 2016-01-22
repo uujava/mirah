@@ -17,7 +17,7 @@ package org.mirah.plugin.impl.javastub
 
 interface ModifierVisitor
   # TODO reimplement when constants supported
-  # ACCESS = 0 # compiler error if used
-  # FLAG = 1 # compiler error if used
+  ACCESS = 0
+  FLAG = 1
   def visit(type:int, value:String):void;end
 end

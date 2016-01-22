@@ -36,11 +36,11 @@ class ClassStubWriter < StubWriter
   attr_accessor append_self:boolean
 
   def initialize(plugin:JavaStubPlugin, node:ClassDefinition)
-    super(plugin)
+    super(plugin, nil, node)
     @dest_path = plugin.stub_dir
     @encoding = plugin.encoding
     @class_name = node.name.identifier
-    @node = node
+    @node = node # hides superclass field to avoid casts!!!
     @fields = []
     @methods = []
     @append_self = false
@@ -52,12 +52,12 @@ class ClassStubWriter < StubWriter
 
   def add_method(node:MethodDefinition):void
     @@log.fine "add method #{class_name} #{node.name} #{@append_self}"
-    stub_writer = MethodStubWriter.new plugin, @class_name, node, @append_self
+    stub_writer = MethodStubWriter.new plugin, self, @class_name, node, @append_self
     @methods.add stub_writer
   end
 
   def add_field(node:FieldDeclaration):void
-    @fields.add FieldStubWriter.new plugin, node
+    @fields.add FieldStubWriter.new plugin, self, node
   end
 
   def generate:void
@@ -91,12 +91,11 @@ class ClassStubWriter < StubWriter
   def write_definition:void
     writeln JavaDoc(@node.java_doc).value if @node.java_doc
     modifier = 'public'
-    flags = []
+    flags = HashSet.new
     process_modifiers(@node) do |atype:int, value:String|
-      if atype = 0
+      if atype == ModifierVisitor.ACCESS
         modifier = value.toLowerCase
-      end
-      if atype = 1
+      else
         flags.add value.toLowerCase
       end
     end
@@ -112,8 +111,13 @@ class ClassStubWriter < StubWriter
     write_extends
     write_implements
     writeln  '{'
-    write_fields
-    write_methods
+    if plugin.preserve_lines
+      write_methods
+      write_fields
+    else
+      write_fields
+      write_methods
+    end
     write '}'
   end
 
@@ -149,8 +153,25 @@ class ClassStubWriter < StubWriter
   end
 
   def write_methods:void
-    @methods.each do |stub_writer:StubWriter|
-      stub_writer.writer=writer
+    outer = self
+    if plugin.preserve_lines
+    # reorder by position
+      Collections.sort @methods do |m1:MethodStubWriter, m2:MethodStubWriter|
+        if outer.same_source m1, m2
+          m1.start_line - m2.start_line
+        else
+          if outer.same_source m1
+            m1.start_line - Integer.MAX_VALUE
+          elsif outer.same_source m2
+            Integer.MAX_VALUE - m2.start_line
+          else
+            Integer.MAX_VALUE
+          end
+        end
+      end
+    end
+    @methods.each do |stub_writer:MethodStubWriter|
+      writeln stub_writer.start_line - 1 if plugin.preserve_lines and outer.same_source stub_writer
       stub_writer.generate
     end
   end
