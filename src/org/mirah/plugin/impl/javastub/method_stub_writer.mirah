@@ -135,7 +135,7 @@ class MethodStubWriter < StubWriter
      start_char = if @node.type
         @node.type.position.endChar
      else
-        @node.arguments.position.endChar
+        @node.arguments.position.endChar + 1
      end
 
      end_char = @node.position.endChar - 3 #end offset
