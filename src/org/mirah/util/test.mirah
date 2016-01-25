@@ -31,10 +31,6 @@ class Test
     value
   end
 
-  final def onError(expected:Object, actual:Object, code: String)
-
-  end
-
   def self.main(*args:String):void
     # todo setup/teardown
     setup = nil
@@ -62,14 +58,14 @@ class Test
             failed +=1
             ax.method = name
             ax.clazz = clazz
-            errors << ax
+            errors.add ax
             print "F"
           rescue Throwable => ex
             failed +=1
             ax = AssertionError.new ex, ""
             ax.method = name
             ax.clazz = clazz
-            errors << ax
+            errors.add ax
             print "F"
           end
         end
