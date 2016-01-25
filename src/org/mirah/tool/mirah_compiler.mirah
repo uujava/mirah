@@ -253,10 +253,12 @@ class MirahCompiler implements JvmBackend
 
   def compile(generator: BytecodeConsumer)
     clean
-    @asts.each do |node: Script|
-      @backend.compile(node, nil)
+    unless context[MirahArguments].skip_compile
+      @asts.each do |node: Script|
+        @backend.compile(node, nil)
+      end
+      @backend.generate(generator)
     end
-    @backend.generate(generator)
     @plugins.stop
   end
 
