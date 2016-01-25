@@ -129,7 +129,7 @@ class ClassStubWriter < StubWriter
   def write_implements
     type = node_type
     if type.interfaces.size > 0
-      write StubWriter.TAB, 'implements'
+      write ' implements '
       first = true
       node_type.interfaces.each do |iface|
         write ',' unless first
