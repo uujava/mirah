@@ -24,7 +24,6 @@ require 'rubygems/package_task'
 require 'java'
 require 'jruby/compiler'
 require 'ant'
-require 'benchmark'
 
 #TODO update downloads st build reqs that are not run reqs go in a different dir
 # put run reqs in javalib
@@ -326,25 +325,25 @@ def bootstrap_mirah_from(old_jar, new_jar, options={})
     report = Measure.measure do |x|
       x.report "Compile Mirah core" do
         args = ['-classpath', default_class_path]
-        run_mirahc( old_jar, *(args + optargs + mirah_srcs))
+        run_mirahc("core-#{old_jar}", old_jar, *(args + optargs + mirah_srcs))
       end
 
       x.report "compile ant stuff" do
         args = ['-classpath', [build_class_path,ant_classpath].join(File::PATH_SEPARATOR)]
         ant_sources = ['src/org/mirah/ant']
 
-        run_mirahc(build_class_path, *(args + optargs + ant_sources))
+        run_mirahc("ant-#{old_jar}", build_class_path, *(args + optargs + ant_sources))
       end
 
       x.report "compile extensions" do
         args = [ '-classpath', build_class_path ]
-        run_mirahc(build_class_path, *(args + optargs + extensions_srcs))
+        run_mirahc("ext-#{old_jar}", build_class_path, *(args + optargs + extensions_srcs))
         cp_r 'src/org/mirah/builtins/services', "#{build_dir}/META-INF"
       end
 
       x.report "compile plugins" do
         args = [ '-classpath', build_class_path]
-        run_mirahc(build_class_path, *(args + optargs + plugin_srcs))
+        run_mirahc("plugins-#{old_jar}", build_class_path, *(args + optargs + plugin_srcs))
         cp_r 'src/org/mirah/plugin/impl/services', "#{build_dir}/META-INF"
       end
 
@@ -373,7 +372,7 @@ def build_version
 end
 
 def run_java(*args)
-  sh 'java', '-Xmx512m',*args
+  sh 'java', *args
   unless $?.success?
     exit $?.exitstatus
   end
@@ -383,8 +382,9 @@ def run_jar(jar, *args)
   run_java '-jar', jar, *args
 end
 
-def run_mirahc(mirahc_jar, *args)
-  run_java '-cp', mirahc_jar, 'org.mirah.MirahCommand' ,*args
+def run_mirahc(step, mirahc_jar, *args)
+  file_name = step.gsub /[\/\\]/, '_'
+  run_java '-Xms712m', '-Xmx712m', '-XX:+PrintGC','-XX:+PrintGCDetails','-XX:+PrintGCDateStamps',"-Xloggc:build/#{file_name}_gc.log", '-cp', mirahc_jar, 'org.mirah.MirahCommand' ,*args
 end
 
 class Measure
