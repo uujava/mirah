@@ -76,7 +76,8 @@ class MirahArguments
                 exit_status: int,
                 encoding: String,
                 plugins: String,
-                debugger: DebuggerInterface
+                debugger: DebuggerInterface,
+                skip_compile:boolean
 
   def initialize(env=System.getenv)
     @logger_color = true
@@ -89,6 +90,7 @@ class MirahArguments
     @diagnostics = SimpleDiagnostics.new true
     @env = env
     @encoding = EncodedCodeSource.DEFAULT_CHARSET
+    @skip_compile = false
   end
 
   def real_macro_destination
@@ -240,6 +242,10 @@ class MirahArguments
     parser.addFlag(
         ['new-closures'], 'DEPRECATED: Use new closure implementation. Has no effect. The "new closure" implementation is now always used.'
     ) { System.err.puts 'WARN: Use of --new-closures is deprecated and has no effect. The "new closure" implementation is now always used.' }
+
+    parser.addFlag(
+        ['skip-compile'], 'Do not enter compile step'
+    ) { compiler_args.skip_compile = true}
 
     parser.addFlag(
         ['encoding'], 'ENCODING', 'File encoding. Default to OS encoding'

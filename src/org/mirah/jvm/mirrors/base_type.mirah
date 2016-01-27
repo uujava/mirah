@@ -43,6 +43,8 @@ import org.mirah.typer.ErrorType
 import org.mirah.typer.ResolvedType
 import org.mirah.typer.TypeFuture
 import org.mirah.util.Context
+import java.lang.annotation.Annotation
+import javax.lang.model.element.Element
 
 interface MethodListener
   def methodChanged(klass:JVMType, name:String):void; end
@@ -339,6 +341,27 @@ class BaseType implements MirrorType, DeclaredType, MethodListener
   def erasure
     self
   end
+
+  def getAnnotation(annotationType:Class):Annotation
+    raise "Unsupported operation: getAnnotation #{annotationType}"
+  end
+
+  def getAnnotationsByType(annotationType:Class):Annotation[]
+    raise "Unsupported operation: getAnnotationsByType #{annotationType}"
+  end
+
+  def getAnnotationMirrors():List
+    raise "Unsupported operation: getAnnotationMirrors"
+  end
+
+  def asElement:Element
+    raise "Unsupported operation: asElement"
+  end
+
+  def getEnclosingType:TypeMirror
+    raise "Unsupported operation: getEnclosingType"
+  end
+
 end
 
 class AsyncMirror < BaseType
