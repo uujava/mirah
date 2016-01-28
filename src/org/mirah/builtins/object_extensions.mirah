@@ -225,10 +225,37 @@ class ObjectExtensions
   end
 
   macro def lambda(type:TypeName, block:Block)
-    SyntheticLambdaDefinition.new(@call.position, type, block)
+    SyntheticLambdaDefinition.new(@call.position, TypeName(type), nil, block)
   end
 
   macro def self.lambda(type:TypeName, block:Block)
-    SyntheticLambdaDefinition.new(@call.position, type, block)
+    SyntheticLambdaDefinition.new(@call.position, TypeName(type), nil, block)
   end
+
+  macro def lambda(type:TypeName, *args:Node)
+    if args.length == 0 or !args[args.length-1].kind_of? Block
+      return ErrorNode.new(@call.position, "Missing block for lambda")
+    end
+    parameters = []
+    i = 0
+    while i < args.length-1
+      parameters.add args[i]
+      i+=1
+    end
+    SyntheticLambdaDefinition.new(@call.position, TypeName(type), parameters, Block(args[args.length-1]))
+  end
+
+  macro def self.lambda(type:TypeName, *args:Node)
+    if args.length == 0 or !args[args.length-1].kind_of? Block
+      return ErrorNode.new(@call.position, "Missing block for lambda")
+    end
+    parameters = []
+    i = 0
+    while i < args.length-1
+      parameters.add args[i]
+      i+=1
+    end
+    SyntheticLambdaDefinition.new(@call.position, TypeName(type), parameters, Block(args[args.length-1]))
+  end
+
 end

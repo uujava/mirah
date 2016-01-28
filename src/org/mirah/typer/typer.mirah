@@ -1308,6 +1308,9 @@ class Typer < SimpleNodeVisitor
   def visitSyntheticLambdaDefinition(node, expression)
     supertype = infer(node.supertype)
     block     = BlockFuture(infer(node.block))
+    if node.parameters
+      inferAll node.parameters
+    end
     SyntheticLambdaFuture.new(supertype,block,node.position)
   end
 
@@ -1331,6 +1334,10 @@ class Typer < SimpleNodeVisitor
     @macros.buildExtension(defn)
     #defn.parent.removeChild(defn)
     @types.getVoidType()
+  end
+
+  def visitErrorNode(error, expression)
+    ErrorType.new([[error.message, error.position]])
   end
 
   # Look for special blocks in the loop body and move them into the loop node.
