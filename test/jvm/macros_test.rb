@@ -685,5 +685,42 @@ class MacrosTest < Test::Unit::TestCase
       EOF
     assert_run_output("public abstract int TestAcc.a()\npublic abstract void TestAcc.a_set(int)\n", cls)
   end
+
+  def test_macro_varargs
+    cls, = compile(<<-CODE)
+      class MacroWithVarargs
+        macro def  self.vararg(first:Node, *args:Node)
+         list = NodeList.new
+         list.add quote do
+           puts `first`
+         end
+
+         args.each do |arg:Node|
+           m = if arg.kind_of? Block
+            body = Block(arg).body
+            quote do
+              puts `body`
+            end
+            else
+            quote do
+              puts `arg`
+            end
+           end
+           list.add m
+         end
+        list
+      end
+
+      def self.main(*args:String):void
+        vararg 1
+        vararg 1, 2
+        vararg 1, 2, 3
+        vararg 1,2 {"test"}
+      end
+    end
+    CODE
+
+    assert_run_output("1\n1\n2\n1\n2\n3\n1\n2\ntest\n", cls)
+  end
 end
 
