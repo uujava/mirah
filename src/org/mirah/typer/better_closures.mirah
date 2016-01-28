@@ -252,13 +252,14 @@ class BetterClosureBuilder
       @@log.log(Level.FINE, "Inferred AST:\n{0}", AstFormatter.new(enclosing_b))
       @@log.log(Level.FINE, "Inferred types:\n{0}", LazyTypePrinter.new(typer, enclosing_b))
       
-
-      buf = java::io::ByteArrayOutputStream.new
-      ps = java::io::PrintStream.new(buf)
-      printer = TypePrinter2.new(@typer, ps)
-      printer.scan(enclosing_b, nil)
-      ps.close()
-      @@log.fine("Inferred types for expr:\n#{String.new(buf.toByteArray)}")
+      if @@log.fine?
+        buf = java::io::ByteArrayOutputStream.new
+        ps = java::io::PrintStream.new(buf)
+        printer = TypePrinter2.new(@typer, ps)
+        printer.scan(enclosing_b, nil)
+        ps.close()
+        @@log.fine("Inferred types for expr:\n#{String.new(buf.toByteArray)}")
+      end
     end
   end
 

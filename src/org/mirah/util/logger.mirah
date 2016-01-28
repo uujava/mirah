@@ -139,4 +139,28 @@ class Logger
   def self.getLogger(name:String)
     self.new(java::util::logging::Logger.getLogger(name))
   end
+
+  def fine?
+    internal_logger.isLoggable(Level.FINE)
+  end
+
+  def finer?
+    internal_logger.isLoggable(Level.FINER)
+  end
+
+  def finest?
+    internal_logger.isLoggable(Level.FINEST)
+  end
+
+  def info?
+    internal_logger.isLoggable(Level.INFO)
+  end
+
+  def warning?
+    internal_logger.isLoggable(Level.WARNING)
+  end
+
+  def severe?
+    internal_logger.isLoggable(Level.SEVERE)
+  end
 end
