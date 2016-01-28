@@ -1,6 +1,8 @@
 package org.mirah.util
 
 import java.lang.reflect.Modifier
+import java.lang.reflect.InvocationTargetException
+import java.util.List
 
 class Test
   macro def assertEquals(expected:Node, block:Block):Node
@@ -31,6 +33,10 @@ class Test
     value
   end
 
+  def fail(message:String):void
+    raise AssertionError.new message
+  end
+
   def self.main(*args:String):void
     # todo setup/teardown
     setup = nil
@@ -59,6 +65,17 @@ class Test
             ax.method = name
             ax.clazz = clazz
             errors.add ax
+            print "E"
+          rescue InvocationTargetException => ex
+            failed +=1
+            ax = if ex.getTargetException.kind_of? AssertionError
+              AssertionError ex.getTargetException
+            else
+              AssertionError.new ex, ""
+            end
+            ax.method = name
+            ax.clazz = clazz
+            errors.add ax
             print "F"
           rescue Throwable => ex
             failed +=1
@@ -70,6 +87,7 @@ class Test
           end
         end
       end
+      puts "\nError details:" if errors.size > 0
       errors.each do |err:AssertionError|
         puts err.message
       end
@@ -82,28 +100,48 @@ class Test
 end
 
 class AssertionError < RuntimeException
- attr_reader expected:Object,
+  attr_reader expected:Object,
              actual:Object,
              src: String
 
- attr_accessor clazz:Class, method:String
+  attr_accessor clazz:Class, method:String
 
- def initialize(expected:Object, actual:Object, src: String)
-   @expected = expected
-   @actual = actual
-   @src = src
- end
+  def initialize(expected:Object, actual:Object, src: String)
+    @expected = expected
+    @actual = actual
+    @src = src
+  end
 
- def initialize(ex:Throwable,src: String):void
-   @src = src
-   @ex = ex
- end
+  def initialize(ex:Throwable,src: String):void
+    super(ex)
+    @src = src
+  end
 
- def message:String
-   if @ex
-     return "Test: #{clazz} method: #{method}\nFailure:#{@ex.getMessage}\nSource:#{@src}"
-   else
-     return "Test: #{clazz} method: #{method}\nexpected:#{@expected}\nactual#{@actual}\nSource:#{@src}"
-   end
- end
+  def initialize(message: String):void
+    @expected = ""
+    @actual = message
+    @src = ""
+  end
+
+  def message:String
+    ex = getCause
+    if ex
+      stack = unwrapMessages(ex)
+      return "Test: #{clazz} method: #{method}\nFailure:#{ex}->#{stack}\nSource:#{@src}"
+    else
+      return "Test: #{clazz} method: #{method}\nexpected:#{@expected}\nactual:#{@actual}\nSource:#{@src}"
+    end
+  end
+
+  def unwrapMessages(ex:Throwable, causes:List = []):List
+    causes.add "#{ex.getMessage}  at #{ex.getStackTrace[0]}" if ex.getMessage
+    if ex.kind_of? InvocationTargetException
+      unwrapMessages InvocationTargetException(ex).getTargetException, causes
+    elsif ex.kind_of? AssertionError
+       causes.add AssertionError(ex).message
+    elsif ex.getCause
+      unwrapMessages ex.getCause, causes
+    end
+    causes
+  end
 end
