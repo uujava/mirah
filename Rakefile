@@ -298,6 +298,7 @@ def bootstrap_mirah_from(old_jar, new_jar, options={})
 
   file new_jar => mirah_srcs + extensions_srcs + ant_srcs + [old_jar, 'javalib/mirah-asm-5.jar', 'javalib/mirah-parser.jar'] do
     build_dir = 'build/bootstrap'+new_jar.gsub(/[.-\/]/, '_')
+    cp "#{new_jar}", "#{new_jar}.prev" rescue nil
     rm_rf build_dir
     mkdir_p build_dir
     mkdir_p "#{build_dir}/META-INF/services"
@@ -353,7 +354,7 @@ def bootstrap_mirah_from(old_jar, new_jar, options={})
     end
 
     report.print
-
+    rm_f "#{new_jar}.prev"
   end
 end
 
