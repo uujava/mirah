@@ -258,6 +258,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
       import mirah.lang.ast.CallSite
       import mirah.lang.ast.Node
       import mirah.lang.ast.*
+      import java.util.*
 
       $MacroDef[name: `macroDef.name`, arguments: `argdef`, isStatic: `isStatic`]
       class `name` implements Macro
@@ -300,6 +301,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
         def gensym: String
           @mirah.scoper.getScope(@call).temp('$gensym')
         end
+
       end
     end
     preamble = NodeList.new
