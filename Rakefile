@@ -170,11 +170,11 @@ task :clean_downloads do
   rm_f 'javalib/jarjar.jar'
 end
 
-task :compile => 'dist/mirahc.jar'
+task :compile, [:verbose] => 'dist/mirahc.jar'
 task :jvm_backend => 'dist/mirahc.jar'
 
 desc "build backwards-compatible ruby jar"
-task :jar => :compile do
+task :jar,[:verbose] => :compile do |task, args|
   ant.jar 'jarfile' => 'dist/mirah.jar' do
     fileset 'dir' => 'lib'
     fileset 'dir' => 'build'
@@ -296,7 +296,8 @@ def bootstrap_mirah_from(old_jar, new_jar, options={})
 
   ant_srcs        =    ['src/org/mirah/ant/compile.mirah']
 
-  file new_jar => mirah_srcs + extensions_srcs + ant_srcs + [old_jar, 'javalib/mirah-asm-5.jar', 'javalib/mirah-parser.jar'] do
+  file new_jar, [:verbose] => mirah_srcs + extensions_srcs + ant_srcs + [old_jar, 'javalib/mirah-asm-5.jar', 'javalib/mirah-parser.jar'] do |task, task_args|
+    task_args.with_defaults(:verbose => false)
     build_dir = 'build/bootstrap'+new_jar.gsub(/[.-\/]/, '_')
     cp "#{new_jar}", "#{new_jar}.prev" rescue nil
     rm_rf build_dir
@@ -325,25 +326,27 @@ def bootstrap_mirah_from(old_jar, new_jar, options={})
 
     report = Measure.measure do |x|
       x.report "Compile Mirah core" do
-        args = ['-classpath', default_class_path]
+        args = task_args[:verbose] == 'true' ? ['-V'] : []
+        args += ['-classpath', default_class_path]
         run_mirahc("core-#{old_jar}", old_jar, *(args + optargs + mirah_srcs))
       end
 
       x.report "compile ant stuff" do
         args = ['-classpath', [build_class_path,ant_classpath].join(File::PATH_SEPARATOR)]
         ant_sources = ['src/org/mirah/ant']
-
         run_mirahc("ant-#{old_jar}", build_class_path, *(args + optargs + ant_sources))
       end
 
       x.report "compile extensions" do
-        args = [ '-classpath', build_class_path ]
+        args = task_args[:verbose] == 'true' ? ['-V'] : []
+        args += [ '-classpath', build_class_path ]
         run_mirahc("ext-#{old_jar}", build_class_path, *(args + optargs + extensions_srcs))
         cp_r 'src/org/mirah/builtins/services', "#{build_dir}/META-INF"
       end
 
       x.report "compile plugins" do
-        args = [ '-classpath', build_class_path]
+        args = task_args[:verbose] == 'true' ? ['-V'] : []
+        args += [ '-classpath', build_class_path]
         run_mirahc("plugins-#{old_jar}", build_class_path, *(args + optargs + plugin_srcs))
         cp_r 'src/org/mirah/plugin/impl/services', "#{build_dir}/META-INF"
       end
@@ -385,7 +388,7 @@ end
 
 def run_mirahc(step, mirahc_jar, *args)
   file_name = step.gsub /[\/\\]/, '_'
-  run_java '-Xms712m', '-Xmx712m', '-XX:+PrintGC','-XX:+PrintGCDetails','-XX:+PrintGCDateStamps',"-Xloggc:build/#{file_name}_gc.log", '-cp', mirahc_jar, 'org.mirah.MirahCommand' ,*args
+  run_java '-Xms712m', '-Xmx712m', '-XX:+PrintGC','-XX:+PrintGCDetails','-XX:+PrintGCDateStamps',"-Xloggc:build/#{file_name}_gc.log", '-cp', mirahc_jar, 'org.mirah.MirahCommand', *args
 end
 
 class Measure
