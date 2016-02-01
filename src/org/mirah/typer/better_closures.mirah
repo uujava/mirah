@@ -165,24 +165,54 @@ class BetterClosureBuilder < ClosureBuilderHelper
       closure_klass = build_class(block.position, parent_type, closure_name)
 
       # build closure class
+      has_block_parent = block.findAncestor { |node| node.parent.kind_of?(Block) || node.parent.kind_of?(ClosureDefinition) } # block, or converted block
+      constructor_args = []
+      constructor_params = []
       binding_list = Collection(blockToBindings.get(uncloned_block)) || Collections.emptyList
-      binding_args = binding_list.map do |name: String|
-        RequiredArgument.new(SimpleString.new(name), SimpleString.new(ResolvedType(bindingLocalNamesToTypes[name]).name))
+      binding_list.each do |name: String|
+        constructor_args.add RequiredArgument.new(SimpleString.new(name), SimpleString.new(ResolvedType(bindingLocalNamesToTypes[name]).name))
+        constructor_param = if has_block_parent && !name.equals(parent_scope_to_binding_name[parent_scope])
+          FieldAccess.new(SimpleString.new(name))
+        else
+          LocalAccess.new(SimpleString.new(name))
+        end
+        constructor_params.add(constructor_param)
       end
 
+      constructor_body = binding_list.map do |name: String|
+        FieldAssign.new(SimpleString.new(name), LocalAccess.new(SimpleString.new(name)), nil, [Modifier.new(closure_klass.position, 'PROTECTED')])
+      end
+
+      # pass lambda parameters to constructor
+      if block.parent.kind_of?(SyntheticLambdaDefinition)
+        lambda_params =  (SyntheticLambdaDefinition block.parent).parameters
+        super_params = []
+
+        if lambda_params
+          i = 0
+          lambda_params.each do |param:Node|
+            lambda_arg_type = typer.infer(param).resolve
+            lambda_arg = "$lambda_arg"+i
+            constructor_args.add RequiredArgument.new(SimpleString.new(lambda_arg), SimpleString.new(ResolvedType(lambda_arg_type).name))
+            super_params.add LocalAccess.new(SimpleString.new(lambda_arg))
+            constructor_params.add param
+            i+=1
+          end
+          constructor_body.add Super.new(super_params, nil)
+        end
+      end
+
+
       args = Arguments.new(closure_klass.position,
-                           binding_args,
+                           constructor_args,
                            Collections.emptyList,
                            nil,
                            Collections.emptyList,
                            nil)
-      binding_assigns = binding_list.map do |name: String|
-        FieldAssign.new(SimpleString.new(name), LocalAccess.new(SimpleString.new(name)), nil, [Modifier.new(closure_klass.position, 'PROTECTED')])
-      end
 
       constructor = ConstructorDefinition.new(
         SimpleString.new('initialize'), args,
-        SimpleString.new('void'), binding_assigns, nil, nil, nil)
+        SimpleString.new('void'), constructor_body, nil, nil, nil)
       closure_klass.body.add(constructor)
 
       enclosing_b  = find_enclosing_body block
@@ -197,20 +227,11 @@ class BetterClosureBuilder < ClosureBuilderHelper
 
       closure_type = infer(closure_klass) # FIXME: this re-infers also the body of the method (which is the ex-body of the block), which is probably duplicate work.
 
-      has_block_parent = block.findAncestor { |node| node.parent.kind_of?(Block) || node.parent.kind_of?(ClosureDefinition) } # block, or converted block
-
-      binding_locals = binding_list.map do |name: String|
-        if has_block_parent && !name.equals(parent_scope_to_binding_name[parent_scope])
-          FieldAccess.new(SimpleString.new(name))
-        else
-          LocalAccess.new(SimpleString.new(name))
-        end
-      end
       target = makeTypeName(block.position, closure_type.resolve)
       new_node = Call.new(
         block.position, target,
         SimpleString.new("new"), 
-        binding_locals, nil)
+        constructor_params, nil)
       typer.workaroundASTBug new_node
 
       

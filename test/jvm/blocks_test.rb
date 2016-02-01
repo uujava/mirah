@@ -957,6 +957,30 @@ class BlocksTest < Test::Unit::TestCase
   end
 
 
+  def test_lambda_with_parameters
+    # Note! there is an issue in lambda - it requires to use self for method resolution
+    cls, = compile(<<-EOF)
+      abstract class Parametrized
+        attr_reader arg:String
+        def initialize(arg:int):void
+          @arg = ""+arg
+        end
+        def initialize(arg:String):void
+          @arg = arg
+        end
+        abstract def foo: void; end
+      end
+      x = lambda(Parametrized, 'foo') do
+        puts self.arg + " foo"
+      end
+      x.foo
+      x = lambda(Parametrized, 1) do
+        puts self.arg + " foo"
+      end
+      x.foo
+    EOF
+    assert_run_output("foo foo\n1 foo\n", cls)
+  end
 
   # nested nlr scopes
 
