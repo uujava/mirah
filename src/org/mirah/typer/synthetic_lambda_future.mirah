@@ -24,7 +24,7 @@ class SyntheticLambdaFuture < BaseTypeFuture
   def initialize(supertype:TypeFuture, block:BlockFuture, position:Position)
     super(position)
     supertype.onUpdate do |x,resolved|
-      block.resolved(resolved)
+      block.resolved(MirrorType(resolved).unmeta)
     end
     selff = self
     block.onUpdate do |x,resolved|

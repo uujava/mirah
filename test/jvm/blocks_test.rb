@@ -968,16 +968,16 @@ class BlocksTest < Test::Unit::TestCase
         def initialize(arg:String):void
           @arg = arg
         end
-        abstract def foo: void; end
+        abstract def foo:void; end
       end
       x = lambda(Parametrized, 'foo') do
-        puts self.arg + " foo"
+        puts arg + " foo"
       end
       x.foo
-      x = lambda(Parametrized, 1) do
+      y = lambda(Parametrized, 1) do
         puts self.arg + " foo"
       end
-      x.foo
+      y.foo
     EOF
     assert_run_output("foo foo\n1 foo\n", cls)
   end
