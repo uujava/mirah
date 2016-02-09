@@ -40,6 +40,7 @@ class GenericsTest < Test::Unit::TestCase
   java_import 'mirah.objectweb.asm.Type'
 
   def setup
+    super
     @types = MirrorTypeSystem.new
     @type_utils = @types.context.get(Types.java_class)
     @tpi = TypeParameterInference.new(@type_utils)
@@ -795,6 +796,20 @@ class GenericsTest < Test::Unit::TestCase
   def test_type_invoker_array_as_type_parameter_signature
     invoker = invoker_for_signature('<T:Ljava/lang/Object;>Ljava/lang/Class<[TT;>;')
     assert_equal(1,invoker.getFormalTypeParameters.size)
+  end
+  
+  def test_type_invoker_class_with_self_referential_bounds
+    invoker = invoker_for_signature('<P:LAnotherClassWithSelfReferencingTypeParameter<TP;>;>Ljava/lang/Object;')
+    assert_equal(1,invoker.getFormalTypeParameters.size)
+  end
+  
+  def test_ClassWithSelfReferencingTypeParameter
+    cls, = compile(%q[
+      import org.foo.ClassWithSelfReferencingTypeParameter
+      
+      ClassWithSelfReferencingTypeParameter.new.foo.bar.baz
+    ])
+    assert_run_output("baz\n", cls)
   end
   
   def test_type_invoker_recursive_reference_signature
