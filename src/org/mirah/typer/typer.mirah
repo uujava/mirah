@@ -1127,26 +1127,26 @@ class Typer < SimpleNodeVisitor
 
     selfType = selfTypeOf(block)
 
-  ret_future = AssignableTypeFuture.new(block.position)
-  rtype = BaseTypeFuture.new(block.position)
-  rtype.resolved((method_type.returnType))
-  ret_future.declare(rtype, block.position)
+    ret_future = AssignableTypeFuture.new(block.position)
+    rtype = BaseTypeFuture.new(block.position)
+    rtype.resolved((method_type.returnType))
+    ret_future.declare(rtype, block.position)
 
 
-  type = MethodFuture.new(
-    method_type.name,
-    method_type.parameterTypes,
-    ret_future,
-    method_type.isVararg,
-    block.position)
+    type = MethodFuture.new(
+      method_type.name,
+      method_type.parameterTypes,
+      ret_future,
+      method_type.isVararg,
+      block.position)
 
     @futures[block] = type
-   # TODO default arg versions, what do default args even mean for blocks?
-   # maybe null -> default?
-   # declareOptionalMethods(selfType,
-   #                        block,
-   #                        parameters,
-   #                        type.returnType)
+    # TODO default arg versions, what do default args even mean for blocks?
+    # maybe null -> default?
+    # declareOptionalMethods(selfType,
+    #                        block,
+    #                        parameters,
+    #                        type.returnType)
 
     # TODO deal with overridden methods?
     # TODO throws
