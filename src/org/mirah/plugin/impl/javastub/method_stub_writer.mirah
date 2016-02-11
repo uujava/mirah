@@ -61,7 +61,7 @@ class MethodStubWriter < StubWriter
         modifier = value.toLowerCase
       else
         if value == 'SYNTHETIC' or value == 'BRIDGE'
-            this.writeln StubWriter.TAB, '// ', value
+            this.writeln StubWriter.TAB, '// ', value unless @preserve_lines
             this.synthetic = true
         else
             flags.add value.toLowerCase
