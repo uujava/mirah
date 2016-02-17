@@ -293,12 +293,13 @@ class MirahCompiler implements JvmBackend
 
   def createTypeSystems(classpath: URL[], bootcp: URL[], macrocp: URL[]): void
     # Construct a loader with the standard Java classes plus the classpath
-
+    classpath ||= URL[0]
     classloader = createClassLoader(classpath, bootcp)
 
     # Now one for macros: These will be loaded into this JVM,
     # so we don't support bootclasspath.
     macrocp ||= classpath
+
     macroloader = createMacroLoader(macrocp)
 
     macro_class_loader = URLClassLoader.new(
