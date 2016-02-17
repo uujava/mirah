@@ -263,22 +263,6 @@ class MirahCompiler implements JvmBackend
   end
 
 
-  def createBootLoader(bootcp: URL[])
-    # Construct a loader with the standard Java classes plus the classpath
-    bootloader = if bootcp
-      ClassLoaderResourceLoader.new(IsolatedResourceLoader.new(bootcp))
-    else
-      # Make sure our internal classes don't sneak in here
-      NegativeFilteredResources.new(
-          ClassResourceLoader.new(System.class),
-          Pattern.compile("^/?(mirah/|org/mirah|org/jruby)"))
-    end
-    # Annotations used by the compiler also need to be loadable
-    FilteredResources.new(
-        ClassResourceLoader.new(Mirahc.class),
-        Pattern.compile("^/?org/mirah/jvm/(types/(Flags|Member|Modifiers))|compiler/Cleaned"), bootloader)
-  end
-
   def createMacroLoader(macrocp: URL[])
     bootloader = ClassResourceLoader.new(System.class)
     macroloader = ClassLoaderResourceLoader.new(
@@ -289,12 +273,28 @@ class MirahCompiler implements JvmBackend
             bootloader))
   end
 
+  def createClassLoader(classpath: URL[], bootcp: URL[]):ClassLoaderResourceLoader
+    # Construct a loader with the standard Java classes plus the classpath
+    boot = if bootcp
+      ClassLoaderResourceLoader.new(IsolatedResourceLoader.new(bootcp))
+    else
+      # Make sure our internal classes don't sneak in here
+      NegativeFilteredResources.new(
+          ClassResourceLoader.new(System.class),
+          Pattern.compile("^/?(mirah/|org/mirah|org/jruby)"))
+    end
+    # Annotations used by the compiler also need to be loadable
+    bootloader = FilteredResources.new(
+        ClassResourceLoader.new(Mirahc.class),
+        Pattern.compile("^/?org/mirah/jvm/(types/(Flags|Member|Modifiers))|compiler/Cleaned"), boot)
+    ClassLoaderResourceLoader.new(
+            IsolatedResourceLoader.new(classpath), bootloader)
+  end
+
   def createTypeSystems(classpath: URL[], bootcp: URL[], macrocp: URL[]): void
     # Construct a loader with the standard Java classes plus the classpath
-    bootloader = createBootLoader(bootcp)
 
-    classloader = ClassLoaderResourceLoader.new(
-        IsolatedResourceLoader.new(classpath), bootloader)
+    classloader = createClassLoader(classpath, bootcp)
 
     # Now one for macros: These will be loaded into this JVM,
     # so we don't support bootclasspath.
