@@ -55,13 +55,14 @@ class MethodStubWriter < StubWriter
     flags = []
     static = @node.kind_of?(StaticMethodDefinition) || @append_self
     this = self
+    preserve_lines = @preserve_lines
     process_modifiers(HasModifiers(@node)) do |atype:int, value:String|
       # workaround for PRIVATE and PUBLIC annotations for class constants
       if atype == ModifierVisitor.ACCESS
         modifier = value.toLowerCase
       else
         if value == 'SYNTHETIC' or value == 'BRIDGE'
-            this.writeln StubWriter.TAB, '// ', value unless @preserve_lines
+            this.writeln StubWriter.TAB, '// ', value unless preserve_lines
             this.synthetic = true
         else
             flags.add value.toLowerCase
