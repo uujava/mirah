@@ -284,15 +284,17 @@ end
 
 def bootstrap_mirah_from(old_jar, new_jar, options={})
   optargs = options[:optargs] ||[]
-  mirah_srcs = Dir['src/org/mirah/{jvm/types,macros,util,}/*.mirah'].sort +
-      Dir['src/org/mirah/typer/**/*.mirah'].sort +
-      Dir['src/org/mirah/jvm/{compiler,mirrors,model}/**/*.mirah'].sort +
-      Dir['src/org/mirah/tool/*.mirah'].sort +
+  mirah_srcs = Dir['src/org/mirah/*.mirah'].sort +
+      Dir['src/org/mirah/jvm/types/'] +
+      Dir['src/org/mirah/{macros,util}/'] +
+      Dir['src/org/mirah/typer/'] +
+      Dir['src/org/mirah/jvm/{compiler,mirrors,model}/'] +
+      Dir['src/org/mirah/tool/'] +
       Dir['src/org/mirah/plugin/*.mirah'].sort
 
-  extensions_srcs = Dir['src/org/mirah/builtins/*.mirah'].sort
+  extensions_srcs = Dir['src/org/mirah/builtins/'].sort
 
-  plugin_srcs = Dir['src/org/mirah/plugin/impl/**/*.mirah'].sort
+  plugin_srcs = Dir['src/org/mirah/plugin/impl/'].sort
 
   ant_srcs        =    ['src/org/mirah/ant/compile.mirah']
 
