@@ -218,12 +218,18 @@ class BlocksTest < Test::Unit::TestCase
             puts "outer foo"
             create do |m: Nestable|
               puts "in foo #{m}"
+              create do |m: Nestable|
+                puts "deeper in foo #{m}"
+              end
+            end
+            create do |m: Nestable|
+              puts "in foo 1 #{m}"
             end
           end
         end
       end
 })
-      assert_output "outer foo\ncreate nestable\nin foo nestable\n" do
+      assert_output "outer foo\ncreate nestable\nin foo nestable\ncreate nestable\ndeeper in foo nestable\ncreate nestable\nin foo 1 nestable\n" do
         main.main([])
       end
     # end
