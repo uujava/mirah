@@ -2,7 +2,7 @@ package org.mirah.util
 
 import java.util.logging.Level
 import java.util.logging.Handler
-
+import java.util.logging.Logger as JavaLogger
 #
 # Nearly transparent optimized implementation of java.util.logging.Logger.
 #
@@ -12,10 +12,10 @@ import java.util.logging.Handler
 # is more beautiful than explicitly calling @@log.isLoggable() each time @@log.log is to be called.
 #
 class Logger
-  attr_reader internal_logger:java.util.logging.Logger
+  attr_reader internal_logger:JavaLogger
   
   def initialize(internal_logger:Object) # old compiler cannot handle def initialize(internal_logger:java.util.logging.Logger) 
-    @internal_logger = java::util::logging::Logger(internal_logger)
+    @internal_logger = JavaLogger(internal_logger)
   end
 
   macro def finest(arg)
