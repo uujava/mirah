@@ -298,7 +298,7 @@ class MirahArguments
         end
       end
     else
-      @logger.fine "adding code source: #{f.getPath}"
+      @logger.info "adding code source: #{f.getPath}"  if @logger
       code_sources.add(EncodedCodeSource.new(f.getPath, encoding))
     end
   end
