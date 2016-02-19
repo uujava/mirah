@@ -58,6 +58,8 @@ import org.mirah.util.TooManyErrorsException
 import org.mirah.util.LazyTypePrinter
 import org.mirah.util.Context
 import org.mirah.util.OptionParser
+import java.util.Arrays
+import java.util.Comparator
 
 class MirahArguments
   @@VERSION = "0.1.5.dev"
@@ -256,7 +258,9 @@ class MirahArguments
     ) { |v| compiler_args.plugins = v }
 
     begin
-      parser.parse(args).each do |filename: String|
+      files_compile = parser.parse(args)
+      self.setup_logging
+      files_compile.each do |filename: String|
         f = File.new(filename)
         addFileOrDirectory(f)
       end
@@ -264,8 +268,6 @@ class MirahArguments
       puts e.getMessage
       prep_for_exit 1
     end
-
-    self.setup_logging
 
     self.diagnostics.setMaxErrors(max_errors)
 
@@ -283,12 +285,20 @@ class MirahArguments
       raise IllegalArgumentException, "No such file #{f.getPath}"
     end
     if f.isDirectory
+      files = f.listFiles
+
+      Arrays.sort(files) do |a,b|
+        f1 = File(a); f2 = File(b)
+        f1.getName.compareTo f2.getName
+      end
+
       f.listFiles.each do |c|
         if c.isDirectory || c.getPath.endsWith(".mirah")
           addFileOrDirectory(c)
         end
       end
     else
+      @logger.fine "adding code source: #{f.getPath}"
       code_sources.add(EncodedCodeSource.new(f.getPath, encoding))
     end
   end
