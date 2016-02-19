@@ -98,7 +98,7 @@ namespace :test do
     task :all do
       run_tests ["test:jvm:mirror_compilation", "test:jvm:mirrors"]
     end
-    
+
     desc "run tests for mirror type system"
     Rake::TestTask.new :mirrors  => "dist/mirahc.jar" do |t|
       t.libs << 'test'
@@ -161,9 +161,13 @@ task :clean do
   rm_rf 'pkg'
 end
 
+desc "clean mirah prev"
+task :clean_mirah_prev do
+  rm_f 'javalib/mirahc-prev.jar'
+end
+
 desc "clean downloaded dependencies"
-task :clean_downloads do
-  rm_f "javalib/mirahc-prev.jar"
+task :clean_downloads => 'javalib/mirahc-prev.jar' do
   rm_f 'javalib/jruby-complete.jar'
   rm_f 'javalib/asm-5.jar'
   rm_f 'javalib/mirah-asm-5.jar'
@@ -243,7 +247,8 @@ end
 
 file_create 'javalib/mirahc-prev.jar' do
   require 'open-uri'
-  url = 'https://search.maven.org/remotecontent?filepath=org/mirah/mirah/0.1.3/mirah-0.1.3.jar'
+
+  url = ENV['MIRAH_PREV_PATH'] || 'https://search.maven.org/remotecontent?filepath=org/mirah/mirah/0.1.3/mirah-0.1.3.jar'
 
   puts "Downloading mirahc-prev.jar from #{url}"
 
@@ -255,17 +260,17 @@ file_create 'javalib/mirahc-prev.jar' do
 end
 
 file_create 'javalib/jarjar.jar' do
-	require 'open-uri'
-	puts "Downloading jarjar.jar"
-	url = 'https://search.maven.org/remotecontent?filepath=com/googlecode/jarjar/jarjar/1.3/jarjar-1.3.jar'
-	open(url, 'rb') do |src|
-		open('javalib/jarjar.jar', 'wb') do |dest|
-			dest.write(src.read)
-		end
-	end
-	open('javalib/rename-asm.jarjar', 'wb') do |dest|
-		dest.write("rule org.objectweb.** mirah.objectweb.@1")
-	end
+  require 'open-uri'
+  puts "Downloading jarjar.jar"
+  url = 'https://search.maven.org/remotecontent?filepath=com/googlecode/jarjar/jarjar/1.3/jarjar-1.3.jar'
+  open(url, 'rb') do |src|
+    open('javalib/jarjar.jar', 'wb') do |dest|
+      dest.write(src.read)
+    end
+  end
+  open('javalib/rename-asm.jarjar', 'wb') do |dest|
+    dest.write("rule org.objectweb.** mirah.objectweb.@1")
+  end
 end
 
 def build_jar(new_jar, build_dir)
@@ -284,15 +289,17 @@ end
 
 def bootstrap_mirah_from(old_jar, new_jar, options={})
   optargs = options[:optargs] ||[]
-  mirah_srcs = Dir['src/org/mirah/{jvm/types,macros,util,}/*.mirah'].sort +
-      Dir['src/org/mirah/typer/**/*.mirah'].sort +
-      Dir['src/org/mirah/jvm/{compiler,mirrors,model}/**/*.mirah'].sort +
-      Dir['src/org/mirah/tool/*.mirah'].sort +
+  mirah_srcs = Dir['src/org/mirah/*.mirah'].sort +
+      Dir['src/org/mirah/jvm/types/'] +
+      Dir['src/org/mirah/{macros,util}/'] +
+      Dir['src/org/mirah/typer/'] +
+      Dir['src/org/mirah/jvm/{compiler,mirrors,model}/'] +
+      Dir['src/org/mirah/tool/'] +
       Dir['src/org/mirah/plugin/*.mirah'].sort
 
-  extensions_srcs = Dir['src/org/mirah/builtins/*.mirah'].sort
+  extensions_srcs = Dir['src/org/mirah/builtins/'].sort
 
-  plugin_srcs = Dir['src/org/mirah/plugin/impl/**/*.mirah'].sort
+  plugin_srcs = Dir['src/org/mirah/plugin/impl/'].sort
 
   ant_srcs        =    ['src/org/mirah/ant/compile.mirah']
 
@@ -418,4 +425,3 @@ class Measure
     puts "Total time: #{total}sec"
   end
 end
-
