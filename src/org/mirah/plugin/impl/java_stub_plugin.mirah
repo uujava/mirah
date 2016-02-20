@@ -60,6 +60,7 @@ class JavaStubPlugin < CompilerPluginAdapter
     @writers = []
     @copy_src = false
     @stub_dir = args.destination
+    @imports = []
     read_params param, args
   end
 
@@ -88,7 +89,9 @@ class JavaStubPlugin < CompilerPluginAdapter
   def exitScript(node, ctx)
     iter = @writers.iterator
     while iter.hasNext
-       ClassStubWriter(iter.next).generate
+       writer = ClassStubWriter(iter.next)
+       writer.add_imports @imports
+       writer.generate
     end
     clear
     node
@@ -98,6 +101,7 @@ class JavaStubPlugin < CompilerPluginAdapter
     @package = nil
     @defs.clear
     @writers.clear
+    @imports.clear
   end
 
   def current:ClassStubWriter
@@ -166,6 +170,17 @@ class JavaStubPlugin < CompilerPluginAdapter
 
   def enterMacroDefinition(node, ctx)
     @@log.fine "enterMacroDefinition #{node}"
+    false
+  end
+
+  def enterImport(node,ctx)
+    if node.parent and node.parent.parent
+      scope_parent = node.parent.parent
+      if scope_parent and
+         (scope_parent.kind_of? InterfaceDeclaration or scope_parent.kind_of? ClassDefinition or scope_parent.kind_of? Script)
+        @imports.add node
+      end
+    end
     false
   end
 

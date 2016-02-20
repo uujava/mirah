@@ -95,14 +95,16 @@ abstract class StubWriter
      end
   end
 
-  def writeln(target_line:int):void
+  def writeln(position:Position):void
+    return if node.position.source != position.source
+    target_line = position.startLine - 1
     if parent
-      parent.writeln target_line
+      parent.writeln position
       return
     end
     offset = target_line - @line
     if offset < 0
-      @@log.warning "wrong line #{@line} offset: #{offset} target line: #{target_line}"
+      @@log.warning "wrong line #{@line} offset: #{offset} target position: #{position} node: #{@node.position}"
     else
       this = self
       offset.times { this.writeln }

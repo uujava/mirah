@@ -33,14 +33,14 @@ class MethodStubWriter < StubWriter
     @@log = Logger.getLogger MethodStubWriter.class.getName
   end
 
-  attr_reader start_line:int
+  attr_reader start_position:Position
   attr_writer synthetic:boolean
   attr_writer preserve_lines:boolean
 
   def initialize(plugin:JavaStubPlugin, parent:StubWriter, class_name:String, node:MethodDefinition, append_self:boolean)
     super(plugin, parent, node)
     @node = node # hide superclass field to avoid casts!!!
-    @start_line = @node.position.startLine
+    @start_position = @node.position
     @class_name = class_name
     @append_self = append_self
     @synthetic = false
@@ -75,7 +75,7 @@ class MethodStubWriter < StubWriter
     return if type.name.endsWith 'init>' and static
 
     writeln JavaDoc(@node.java_doc).value if @node.java_doc
-    writeln(start_line - 1) if @preserve_lines
+    writeln(start_position) if @preserve_lines
     write StubWriter.TAB, modifier, ' '
     #constructor
     if type.name.endsWith 'init>'
@@ -120,7 +120,7 @@ class MethodStubWriter < StubWriter
 
   def write_arg(arg:Node):void
     type = getInferredType(arg).resolve
-    writeln(arg.position.startLine - 1) if @preserve_lines
+    writeln(arg.position) if @preserve_lines
     write  type.name, ' ' , Named(arg).name.identifier
   end
 
