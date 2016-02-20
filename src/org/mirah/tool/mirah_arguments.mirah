@@ -62,7 +62,6 @@ import java.util.Arrays
 import java.util.Comparator
 
 class MirahArguments
-  @@VERSION = "0.1.5.dev"
 
   attr_accessor logger_color: boolean,
                 code_sources: List,
@@ -162,9 +161,8 @@ class MirahArguments
       compiler_args.code_sources.add(StringCodeSource.new('DashE', c))
     end
 
-    version = @@VERSION
     parser.addFlag(['v', 'version'], 'Print the version.') do
-      puts "Mirah v#{version}"
+      puts "Mirah v#{Mirahc.VERSION}"
       compiler_args.prep_for_exit 0
     end
     

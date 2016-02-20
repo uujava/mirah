@@ -18,8 +18,10 @@ package org.mirah.tool
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import org.mirah.Version
 
 class Mirahc < MirahTool
+  VERSION = Version.VERSION
 
   def consumeClass(filename:String, bytes:byte[]):void
     file = File.new(destination, "#{filename.replace(?., ?/)}.class")

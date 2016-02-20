@@ -287,9 +287,40 @@ def build_jar(new_jar, build_dir)
   end
 end
 
+desc "create version file from ENV MIRAH_MAJOR_VERSION, MIRAH_MINOR_VERSION"
+task :mirah_version => "build/generated/"
+file "build/generated/"  do
+  major=ENV["MIRAH_VERSION_MAJOR"] || "0.1.5"
+  minor=ENV["MIRAH_VERSION_MINOR"] || "dev"
+
+  genpath = "build/generated/org/mirah"
+  mkdir_p genpath
+  File.open("#{genpath}/Version.mirah", 'w') do |dest|
+       dest.write("package org.mirah
+class Version
+   attr_reader minor:String
+   attr_reader major:String
+   VERSION = Version.new('#{major}', '#{minor}')
+
+   private def initialize(major:String, minor:String)
+     @major = major
+     @minor = minor
+     @str =  major +'-'+ minor
+   end
+
+   def toString
+     @str
+   end
+  end
+")
+    end
+end
+
+
 def bootstrap_mirah_from(old_jar, new_jar, options={})
   optargs = options[:optargs] ||[]
-  mirah_srcs = Dir['src/org/mirah/*.mirah'].sort +
+  mirah_srcs = Dir['build/generated/'] +
+      Dir['src/org/mirah/*.mirah'].sort +
       Dir['src/org/mirah/jvm/types/'] +
       Dir['src/org/mirah/{macros,util}/'] +
       Dir['src/org/mirah/typer/'] +
@@ -303,7 +334,7 @@ def bootstrap_mirah_from(old_jar, new_jar, options={})
 
   ant_srcs        =    ['src/org/mirah/ant/compile.mirah']
 
-  file new_jar, [:verbose] => mirah_srcs + extensions_srcs + ant_srcs + [old_jar, 'javalib/mirah-asm-5.jar', 'javalib/mirah-parser.jar'] do |task, task_args|
+  file new_jar, [:verbose] => mirah_srcs + extensions_srcs + ant_srcs + [old_jar, 'javalib/mirah-asm-5.jar', 'javalib/mirah-parser.jar'] + [:mirah_version] do |task, task_args|
     task_args.with_defaults(:verbose => false)
     build_dir = 'build/bootstrap'+new_jar.gsub(/[.-\/]/, '_')
     cp "#{new_jar}", "#{new_jar}.prev" rescue nil
