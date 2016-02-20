@@ -150,7 +150,7 @@ class PrimitiveLoader < SimpleMirrorLoader
 
   def defineNumber(desc:String, supertype:MirrorType)
     type = Type.getType(desc)
-    @mirrors[type] = Number.new(@context, type, supertype, self)
+    @mirrors[type] = NumberType.new(@context, type, supertype, self)
   end
 
   def defineBoolean

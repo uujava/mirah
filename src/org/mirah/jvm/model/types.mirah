@@ -24,7 +24,7 @@ import javax.lang.model.type.DeclaredType
 #import javax.lang.model.type.NoType
 #import javax.lang.model.type.NullType
 import org.mirah.jvm.mirrors.NullType
-import org.mirah.jvm.mirrors.Number
+import org.mirah.jvm.mirrors.NumberType
 import org.mirah.jvm.mirrors.VoidType
 import org.mirah.jvm.mirrors.ArrayType
 import javax.lang.model.type.PrimitiveType
@@ -67,7 +67,7 @@ class Types implements TypesModel
   end
 
   def boxedClass(p)
-    TypeElement.new(MirrorType(Number(p).box))
+    TypeElement.new(MirrorType(NumberType(p).box))
   end
 
   def getArrayType(component)

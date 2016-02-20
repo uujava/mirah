@@ -22,7 +22,7 @@ import javax.lang.model.type.PrimitiveType
 import javax.lang.model.type.TypeKind
 import org.mirah.util.Context
 
-class Number < BaseType implements PrimitiveType
+class NumberType < BaseType implements PrimitiveType
   def self.initialize:void
     @@kind_map = {
       Z: TypeKind.BOOLEAN,

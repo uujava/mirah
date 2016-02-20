@@ -18,7 +18,7 @@ package org.mirah.jvm.mirrors
 import mirah.objectweb.asm.Type
 import org.mirah.util.Context
 
-class BooleanType < Number
+class BooleanType < NumberType
   def initialize(context:Context, loader:MirrorLoader)
     super(context, Type.getType('Z'), nil, loader)
   end
