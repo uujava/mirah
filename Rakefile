@@ -274,7 +274,7 @@ file_create 'javalib/jarjar.jar' do
 end
 
 def build_jar(new_jar, build_dir)
-  # Build the jar                    
+  # Build the jar
   ant.jar 'jarfile' => new_jar do
     fileset 'dir' => build_dir, 'excludes' => 'META-INF/*'
     zipfileset 'src' => 'javalib/mirah-asm-5.jar', 'includes' => 'mirah/objectweb/**/*'
@@ -289,15 +289,17 @@ end
 
 def bootstrap_mirah_from(old_jar, new_jar, options={})
   optargs = options[:optargs] ||[]
-  mirah_srcs = Dir['src/org/mirah/{jvm/types,macros,util,}/*.mirah'].sort +
-      Dir['src/org/mirah/typer/**/*.mirah'].sort +
-      Dir['src/org/mirah/jvm/{compiler,mirrors,model}/**/*.mirah'].sort +
-      Dir['src/org/mirah/tool/*.mirah'].sort +
+  mirah_srcs = Dir['src/org/mirah/*.mirah'].sort +
+      Dir['src/org/mirah/jvm/types/'] +
+      Dir['src/org/mirah/{macros,util}/'] +
+      Dir['src/org/mirah/typer/'] +
+      Dir['src/org/mirah/jvm/{compiler,mirrors,model}/'] +
+      Dir['src/org/mirah/tool/'] +
       Dir['src/org/mirah/plugin/*.mirah'].sort
 
-  extensions_srcs = Dir['src/org/mirah/builtins/*.mirah'].sort
+  extensions_srcs = Dir['src/org/mirah/builtins/']
 
-  plugin_srcs = Dir['src/org/mirah/plugin/impl/**/*.mirah'].sort
+  plugin_srcs = Dir['src/org/mirah/plugin/impl/']
 
   ant_srcs        =    ['src/org/mirah/ant/compile.mirah']
 
