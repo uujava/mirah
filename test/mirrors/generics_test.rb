@@ -815,6 +815,7 @@ class GenericsTest < Test::Unit::TestCase
   end
 
   def test_refix_417
+    omit_if JVMCompiler::JVM_VERSION.to_f < 1.8
     cls, = compile(%q[
 import java.util.function.BiConsumer
 import java.util.Map

@@ -1,6 +1,5 @@
 # -*- encoding: utf-8 -*-
 $: << './lib'
-require 'mirah/version'
 
 files = Dir["{bin,lib,test,examples}/**/*"] \
         + ['dist/mirahc.jar']               \
@@ -19,8 +18,10 @@ end
 
 
 Gem::Specification.new do |s|
+  $CLASSPATH << mirahc_jar
+  java_import 'org.mirah.tool.Mirahc'
   s.name = 'mirah'
-  s.version = Mirah::VERSION
+  s.version = Mirahc::VERSION.to_s
   s.license = 'Apache-2.0'
   s.authors = ["Charles Oliver Nutter", "Ryan Brown", "Nick Howard"]
   s.email = ["headius@headius.com", "ribrdb@google.com", "ndh@baroquebobcat.com"]

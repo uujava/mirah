@@ -18,7 +18,6 @@ require 'rbconfig'
 
 $CLASSPATH << ENV.fetch('MIRAHC_JAR',File.expand_path("../../dist/mirahc.jar",__FILE__))
 
-require 'mirah/version'
 require 'mirah/transform'
 require 'mirah/env'
 require 'mirah/errors'
@@ -30,6 +29,8 @@ require "mirah/util/logging"
 module Mirah
   java_import 'org.mirah.tool.RunCommand'
   java_import 'org.mirah.tool.Mirahc'
+
+  VERSION = Mirahc::VERSION.to_s
 
   def self.run(*args)
     Mirah::RunCommand.run(args)

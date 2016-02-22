@@ -33,6 +33,7 @@ require 'ant'
 # building the .gem file. Otherwise, the gem may not contain the jars.
 task :gem => :compile
 
+# depends on dist/mirahc.jar
 Gem::PackageTask.new Gem::Specification.load('mirah.gemspec') do |pkg|
   pkg.need_zip = true
   pkg.need_tar = true
@@ -205,7 +206,9 @@ end
 
 desc "Build a distribution zip file"
 task :zip => 'jar:complete' do
-  basedir = "tmp/mirah-#{Mirah::VERSION}"
+  $CLASSPATH << "dist/mirahc.jar"
+  java_import "org.mirah.tool.Mirahc"
+  basedir = "tmp/mirah-#{Mirahc::VERSION}"
   mkdir_p "#{basedir}/lib"
   mkdir_p "#{basedir}/bin"
   cp 'dist/mirah-complete.jar', "#{basedir}/lib"
@@ -219,7 +222,7 @@ task :zip => 'jar:complete' do
   cp 'LICENSE', "#{basedir}"
   cp 'COPYING', "#{basedir}"
   cp 'History.txt', "#{basedir}"
-  sh "sh -c 'cd tmp ; zip -r ../dist/mirah-#{Mirah::VERSION}.zip mirah-#{Mirah::VERSION}/*'"
+  sh "sh -c 'cd tmp ; zip -r ../dist/mirah-#{Mirahc::VERSION}.zip mirah-#{Mirahc::VERSION}/*'"
   rm_rf 'tmp'
 end
 
