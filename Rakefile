@@ -66,6 +66,11 @@ task :test do
   run_tests [ 'test:core', 'test:plugins', 'test:jvm', 'test:artifacts' ]
 end
 
+Rake::TestTask.new :single_test  => ["dist/mirahc.jar", :compile] do |t|
+  t.libs << 'test'
+  t.test_files = FileList["test/single_test.rb"]
+end
+
 namespace :test do
 
   desc "run the core tests"
@@ -322,13 +327,13 @@ end
 
 def bootstrap_mirah_from(old_jar, new_jar, options={})
   optargs = options[:optargs] ||[]
-  mirah_srcs = Dir['build/generated/'] +
+  mirah_srcs = ['build/generated/'] +
       Dir['src/org/mirah/*.mirah'].sort +
-      Dir['src/org/mirah/jvm/types/'] +
+      ['src/org/mirah/jvm/types/'] +
       Dir['src/org/mirah/{macros,util}/'] +
-      Dir['src/org/mirah/typer/'] +
+      ['src/org/mirah/typer/'] +
       Dir['src/org/mirah/jvm/{compiler,mirrors,model}/'] +
-      Dir['src/org/mirah/tool/'] +
+      ['src/org/mirah/tool/'] +
       Dir['src/org/mirah/plugin/*.mirah'].sort
 
   extensions_srcs = Dir['src/org/mirah/builtins/']

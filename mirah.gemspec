@@ -1,12 +1,14 @@
 # -*- encoding: utf-8 -*-
 $: << './lib'
 
+mirahc_jar = 'dist/mirahc.jar'
+
 files = Dir["{bin,lib,test,examples}/**/*"] \
-        + ['dist/mirahc.jar']               \
+        + [mirahc_jar]               \
         + Dir["{*.md,*.txt,Rakefile}"]      \
         - Dir["{examples/wiki/**/*}"]
 
-mirahc_jar = 'dist/mirahc.jar'
+
 if $PROGRAM_NAME.match(/gem$/) && !files.include?(mirahc_jar)
   $stderr.puts "-"*80
   $stderr.puts "ERROR: Can't build gem: missing generated file #{mirahc_jar}"
