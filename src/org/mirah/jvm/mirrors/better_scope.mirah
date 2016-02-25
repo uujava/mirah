@@ -35,6 +35,7 @@ import org.mirah.typer.LocalFuture
 import org.mirah.typer.ErrorType
 import org.mirah.typer.ResolvedType
 import org.mirah.typer.Scope
+import org.mirah.typer.ScopeFilter
 import org.mirah.typer.Scoper
 import org.mirah.typer.simple.ScopeFactory
 import org.mirah.typer.TypeFuture
@@ -248,6 +249,13 @@ class BetterScope
   def flush_selfType: void; end
   def flush_imports: void; end
   def children; @children; end
+
+  def find_parent(filter:ScopeFilter):Scope
+    return nil unless filter
+    p = self.parent
+    return nil unless p
+    filter.matches(p)? p : p.find_parent(filter)
+  end
 
   macro def self.defers_temp
     quote do

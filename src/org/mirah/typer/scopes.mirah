@@ -48,6 +48,7 @@ interface Scope do
   # type of the binding for exactly this scope
   def declared_binding_type: ResolvedType; end
   def declared_binding_type=(type: ResolvedType): void; end
+  def find_parent(filter:ScopeFilter):Scope;end
 end
 
 interface Scoper do
@@ -59,4 +60,8 @@ interface Scoper do
   def getIntroducedScope(node: Node): Scope; end
   def copyScopeFrom(from: Node, to: Node): void; end
   def setScope(node: Node, scope: Scope): void; end 
+end
+
+interface ScopeFilter
+  def matches(scope:Scope):boolean;end
 end

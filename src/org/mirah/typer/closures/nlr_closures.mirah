@@ -100,9 +100,10 @@ class NlrClosureBuilder < ClosureBuilderHelper
   end
 
   def define_nlr_exception(block: Block): ClosureDefinition
+    outer_data = OuterData.new block, typer
     build_class block.position,
                 types.getBaseExceptionType.resolve,
-                temp_name_from_outer_scope(block, "NLRException")
+                outer_data.temp_name("NLRException")
   end
 
   def finish_nlr_exception(block: Node, nlr_klass: ClosureDefinition, return_value_type: ResolvedType)

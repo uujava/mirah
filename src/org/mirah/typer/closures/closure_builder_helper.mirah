@@ -28,19 +28,6 @@ class ClosureBuilderHelper
     @macros = macros
   end
 
-  def temp_name_from_outer_scope block: Node,  scoped_name: String
-    class_or_script = block.findAncestor {|node| node.kind_of?(ClassDefinition) || node.kind_of?(Script) }
-    enclosing_method = block.findAncestor {|node| node.kind_of?(MethodDefinition)}
-    enclosing_method_name = enclosing_method ? MethodDefinition(enclosing_method).name.identifier : 'anon'
-    outer_name = if class_or_script.kind_of? ClassDefinition
-                   ClassDefinition(class_or_script).name.identifier
-                 else
-                   @@log.fine "#{class_or_script} is not a class"
-                   MirrorTypeSystem.getMainClassName(Script(class_or_script))
-                 end
-      get_scope(class_or_script).temp "#{outer_name}$#{enclosing_method_name}$#{scoped_name}"
-   end
-
   def insert_into_body enclosing_body: NodeList, node: Node
     enclosing_body.insert(0, node)
   end
@@ -202,22 +189,22 @@ class ClosureBuilderHelper
   end
 
   def build_closure_class block: Block, parent_type: ResolvedType, parent_scope: Scope
-
-    klass = build_class(block.position, parent_type, temp_name_from_outer_scope(block, "Closure"))
+    outer_data = OuterData.new block, typer
+    klass = build_class(block.position, parent_type, outer_data.temp_name("Closure"))
 
     enclosing_body  = find_enclosing_body block
 
     block_scope = get_scope block.body
     @@log.fine "block body scope #{block_scope.getClass} #{MirrorScope(block_scope).capturedLocals}"
 
-
-    block_scope = get_scope block
+    outer_data = OuterData.new(block, typer)
+    block_scope = outer_data.block_scope
     @@log.fine "block scope #{block_scope} #{MirrorScope(block_scope).capturedLocals}"
     @@log.fine "parent scope #{parent_scope} #{MirrorScope(parent_scope).capturedLocals}"
     enclosing_scope = get_scope(enclosing_body)
     @@log.fine "enclosing scope #{enclosing_scope} #{MirrorScope(enclosing_scope).capturedLocals}"
     parent_scope.binding_type ||= begin
-                                    name = temp_name_from_outer_scope(block, "Binding")
+                                    name = outer_data.temp_name("Binding")
                                     captures = MirrorScope(parent_scope).capturedLocals
                                     @@log.fine("building binding #{name} with captures #{captures}")
                                     binding_klass = build_class(klass.position,

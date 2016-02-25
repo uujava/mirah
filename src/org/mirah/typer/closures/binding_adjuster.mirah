@@ -87,7 +87,8 @@ class BindingAdjuster < NodeScanner
     end
 
     # construct binding
-    name = @builder.temp_name_from_outer_scope(node, "ZBinding")
+    outer_data = OuterData.new node, builder.typer
+    name = outer_data.temp_name("ZBinding")
 
     @@log.fine("building binding #{name} with captures #{@captured}")
     binding_klass = @builder.build_class(

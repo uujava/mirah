@@ -988,6 +988,170 @@ class BlocksTest < Test::Unit::TestCase
     assert_run_output("foo foo\n1 foo\n", cls)
   end
 
+  def test_single_outer_methods
+    cls, = compile(%q[
+package closure
+class OuterTest1
+  attr_reader attr:int
+
+  def initialize
+    @attr = 1
+  end
+
+  def run_code code:Runnable
+    code.run
+  end
+
+  def test
+    run_code do
+      puts "foo: #{attr}"
+    end
+  end
+end
+
+OuterTest1.new.test
+])
+    assert_run_output("foo: 1\n", cls)
+  end
+
+  def test_lambda_outer_methods
+
+  end
+
+  def test_nested_outer_methods
+    cls, = compile(%q[
+package closure
+class OuterTest2
+  attr_reader attr1:int
+  attr_reader attr2:int
+
+  def initialize
+    @attr1 = 1
+    @attr2 = 2
+  end
+
+  def run_code code:Runnable
+    code.run
+  end
+
+  def test
+    run_code do
+      puts "n1: #{attr1}"
+      run_code do
+        puts "n11: #{attr2}"
+      end
+      run_code do
+        puts "n12: #{attr2}"
+        run_code do
+          puts "n121: #{attr2}"
+        end
+      end
+    end
+    run_code do
+      puts "n2: #{attr1}"
+      run_code do
+        puts "n21: #{attr2}"
+      end
+      run_code do
+        puts "n21: #{attr2}"
+      end
+    end
+  end
+end
+
+OuterTest2.new.test
+])
+    assert_run_output("n1: 1\nn11: 2\nn12: 2\nn121: 2\nn2: 1\nn21: 2\nn21: 2\n", cls)
+  end
+
+  def test_outer_methods_in_script
+    pend "ability define methods in script" do
+    cls, = compile(%q[
+package closure
+class OuterRaiseTest1
+
+run_code do
+      puts "foo: #{attr}"
+end
+
+])
+    assert_run_output("foo: 1\n", cls)
+    end
+  end
+
+  def test_static_outer_access_instance_methods
+    exception = assert_raises Mirah::MirahError do
+      compile(%q[
+package closure
+
+class OuterRisesTest1
+
+  attr_reader attr:int
+
+  def initialize
+    @attr = 1
+  end
+
+  def self.run_code code:Runnable
+    code.run
+  end
+
+  def self.test
+    run_code do
+      puts "foo: #{attr}"
+    end
+  end
+end])
+    end
+    assert_equal 'Undefined variable attr',
+                 exception.message
+  end
+
+  def test_static_outer_methods
+    cls, = compile(%q[
+package closure
+class StaticOuterTest1
+  def self.attr1
+    1
+  end
+
+  def self.attr2
+    2
+  end
+
+  def self.run_code code:Runnable
+    code.run
+  end
+
+  def self.test
+    run_code do
+      puts "n1: #{attr1}"
+      run_code do
+        puts "n11: #{attr2}"
+      end
+      run_code do
+        puts "n12: #{attr2}"
+        run_code do
+          puts "n121: #{attr2}"
+        end
+      end
+    end
+    run_code do
+      puts "n2: #{attr1}"
+      run_code do
+        puts "n21: #{attr2}"
+      end
+      run_code do
+        puts "n21: #{attr2}"
+      end
+    end
+  end
+end
+
+StaticOuterTest1.new.test
+])
+    assert_run_output("n1: 1\nn11: 2\nn12: 2\nn121: 2\nn2: 1\nn21: 2\nn21: 2\n", cls)
+  end
   # nested nlr scopes
 
 # works with script as end

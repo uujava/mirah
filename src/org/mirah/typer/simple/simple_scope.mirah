@@ -77,4 +77,10 @@ class SimpleScope; implements Scope
   def shadow(name:String):void
     raise UnsupportedOperationException, "Simple scope doesn't know how to shadow."
   end
+  def find_parent(filter:ScopeFilter):Scope
+    return nil unless filter
+    p = self.parent
+    return nil unless p
+    filter.matches(p)? p : p.find_parent(filter)
+  end
 end

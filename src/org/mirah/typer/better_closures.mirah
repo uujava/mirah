@@ -113,7 +113,6 @@ class BetterClosureBuilder < ClosureBuilderHelper
     end
 
     self.parent_scope_to_binding_name = {}
-
     closures.each do |entry: Entry|
       i += 1
       @@log.fine "adjust bindings for block #{entry.getKey} #{entry.getValue} #{i}"
@@ -160,18 +159,36 @@ class BetterClosureBuilder < ClosureBuilderHelper
         @@log.fine "  enclosing node was nil, removing  #{entry.getKey} #{entry.getValue} #{i}"
         next
       end
+      outer_data = OuterData.new(block, typer)
 
-      closure_name = temp_name_from_outer_scope(block, "Closure")
+      if outer_data.is_meta
+        @@log.fine "  adjust outer for meta scope:  #{outer_data}"
+        StaticOuterAdjuster.new(outer_data).adjust block
+      end
+
+      closure_name = outer_data.temp_name("Closure")
       closure_klass = build_class(block.position, parent_type, closure_name)
 
       # build closure class
-      has_block_parent = block.findAncestor { |node| node.parent.kind_of?(Block) || node.parent.kind_of?(ClosureDefinition) } # block, or converted block
       constructor_args = []
       constructor_params = []
+      outer_scanner = OuterAccessScanner.new
+      block.body.accept outer_scanner, nil if block.body
+      if outer_scanner.accessed
+        # access outer scope - add $outer field assignment
+        outer_type = outer_data.outer_type
+        constructor_args.add RequiredArgument.new(SimpleString.new("$outer"), SimpleString.new(outer_type.name))
+        if outer_data.has_block_parent
+          constructor_params.add FieldAccess.new(SimpleString.new("$outer"))
+        else
+          constructor_params.add Self.new block.position
+        end
+      end
+
       binding_list = Collection(blockToBindings.get(uncloned_block)) || Collections.emptyList
       binding_list.each do |name: String|
         constructor_args.add RequiredArgument.new(SimpleString.new(name), SimpleString.new(ResolvedType(bindingLocalNamesToTypes[name]).name))
-        constructor_param = if has_block_parent && !name.equals(parent_scope_to_binding_name[parent_scope])
+        constructor_param = if outer_data.has_block_parent && !name.equals(parent_scope_to_binding_name[parent_scope])
           FieldAccess.new(SimpleString.new(name))
         else
           LocalAccess.new(SimpleString.new(name))
@@ -181,6 +198,10 @@ class BetterClosureBuilder < ClosureBuilderHelper
 
       constructor_body = binding_list.map do |name: String|
         FieldAssign.new(SimpleString.new(name), LocalAccess.new(SimpleString.new(name)), nil, [Modifier.new(closure_klass.position, 'PROTECTED')])
+      end
+
+      if outer_scanner.accessed
+        constructor_body.add FieldAssign.new(SimpleString.new("$outer"), LocalAccess.new(SimpleString.new("$outer")), nil, [Modifier.new(closure_klass.position, 'PROTECTED')])
       end
 
       # pass lambda parameters to constructor

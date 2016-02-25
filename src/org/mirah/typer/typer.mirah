@@ -54,6 +54,7 @@ import org.mirah.jvm.mirrors.*
 # This typer is type system independent. It relies on a TypeSystem and a Scoper
 # to provide the types for methods, literals, variables, etc.
 class Typer < SimpleNodeVisitor
+
   def self.initialize:void
     @@log = Logger.getLogger(Typer.class.getName)
   end
@@ -204,6 +205,18 @@ class Typer < SimpleNodeVisitor
                             Node(call.parameters.get(0).clone)))
     end
     children.add(call)
+
+    scope = scopeOf(call)
+    # support calls to outer methods for closures
+    if scope.kind_of? ClosureScope
+      outer = FieldAccess.new(call.position, SimpleString.new(call.position, '$outer'))
+      outer_scope = scope.find_parent { |s| !s.kind_of? ClosureScope }
+      @futures[outer] = outer_scope.selfType
+      params = []
+      call.parameters.each { |p| params.add p }
+      children.add Call.new(call.position, outer, call.name, params, call.block)
+    end
+
     proxy.setChildren(children)
 
     @futures[proxy] = proxy.inferChildren(expression != nil)
