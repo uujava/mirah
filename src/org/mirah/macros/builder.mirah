@@ -259,6 +259,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
       import mirah.lang.ast.Node
       import mirah.lang.ast.*
       import java.util.*
+      import java.lang.reflect.Array as ReflectArray
 
       $MacroDef[name: `macroDef.name`, arguments: `argdef`, isStatic: `isStatic`]
       class `name` implements Macro
@@ -276,24 +277,23 @@ class MacroBuilder; implements org.mirah.macros.Compiler
         end
 
         def _varargs(index:int, type:Class ):Object
-          import java.lang.reflect.Array
           parameters = @call.parameters
           block = @call.block
           vsize = parameters.size - index
 
           vargs = if block
-            Array.newInstance type, vsize + 1
+            ReflectArray.newInstance(type, vsize + 1)
           else
-            Array.newInstance type, vsize
+            ReflectArray.newInstance(type, vsize)
           end
 
           # add block as last item
-          Array.set(vargs, vsize, type.cast(block)) if block
+          ReflectArray.set(vargs, vsize, type.cast(block)) if block
 
           # downcount
           while vsize > 0
             vsize -= 1
-            Array.set(vargs, vsize, type.cast(parameters.get(index + vsize)))
+            ReflectArray.set(vargs, vsize, type.cast(parameters.get(index + vsize)))
           end
           vargs
         end
@@ -301,7 +301,6 @@ class MacroBuilder; implements org.mirah.macros.Compiler
         def gensym: String
           @mirah.scoper.getScope(@call).temp('$gensym')
         end
-
       end
     end
     preamble = NodeList.new

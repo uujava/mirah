@@ -674,7 +674,7 @@ class MacrosTest < Test::Unit::TestCase
 
     assert_run_output("nil\ntest\nself nil\nself test\n", cls)
   end
-
+  
   def test_attr_accessor_for_interfaces
     cls, = compile(<<-EOF)
         interface TestAcc
@@ -682,7 +682,7 @@ class MacrosTest < Test::Unit::TestCase
         end
         puts TestAcc.class.getMethod('a') rescue puts false
         puts TestAcc.class.getMethod('a_set', [Integer.TYPE].toArray(Class[1])) rescue puts false
-      EOF
+    EOF
     assert_run_output("public abstract int TestAcc.a()\npublic abstract void TestAcc.a_set(int)\n", cls)
   end
 
