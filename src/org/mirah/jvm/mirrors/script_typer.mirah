@@ -51,7 +51,7 @@ class ScriptTyper < SafeTyper
   def visitMethodDefinition(mdef, expression)
     @@log.entering("ScriptTyper", "visitMethodDefinition", mdef)
 
-    if !static_def?(mdef)
+    if !static_def?(mdef) and !constructor?(mdef)
       static_mdef = StaticMethodDefinition.new(mdef.position)
       static_mdef.name = mdef.name
       static_mdef.arguments = mdef.arguments
@@ -79,6 +79,10 @@ class ScriptTyper < SafeTyper
      else
        super
      end
+   end
+
+   def constructor?(mdef:MethodDefinition):boolean
+     !mdef.kind_of? StaticMethodDefinition and 'initialize'.equals mdef.name.identifier
    end
 
    def static_def?(mdef:MethodDefinition):boolean
