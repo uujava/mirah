@@ -40,6 +40,28 @@ class JVMCommandsTest < Test::Unit::TestCase
     end
   end
 
+  def test_dash_e_with_macro
+    assert_output "1\n" do
+      Mirah.run('-e','
+       macro def sprint(node):void
+         quote { puts x }
+       end
+
+       sprint 1
+      ')
+    end
+  end
+
+  def test_dash_e_with_closure
+    assert_output "1\n" do
+      Mirah.run('-e','
+       t = Thread.new {puts 1}
+       t.start
+       t.join
+      ')
+    end
+  end
+
   def test_force_verbose_has_logging
     out = capture_output do
       Mirah.run('-V', '-e','puts 1')
