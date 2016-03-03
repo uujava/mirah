@@ -112,7 +112,7 @@ class MirahCompiler implements JvmBackend
         debugger, @macro_context, @macro_types, @scoper, self, @parser)
 
     context[Typer] = @typer = createTyper(
-        debugger, context, @types, @scoper, self, @parser)
+        debugger, context, @types, @scoper, self, @parser, context[MirahArguments].script_mode)
 
     # Make sure macros are compiled using the correct type system.
     @typer.macro_compiler = @macro_typer.macro_compiler
@@ -141,9 +141,9 @@ class MirahCompiler implements JvmBackend
   end
 
   def createTyper(debugger:DebuggerInterface, context:Context, types:TypeSystem,
-                  scopes:Scoper, jvm_backend:JvmBackend, parser:MirahParser)
+                  scopes:Scoper, jvm_backend:JvmBackend, parser:MirahParser, script_mode:boolean = false)
     if debugger.nil?
-      if context[MirahArguments].script_mode
+      if script_mode
          ScriptTyper.new(context, types, scopes, jvm_backend, parser)
       else
          SafeTyper.new(context, types, scopes, jvm_backend, parser)
