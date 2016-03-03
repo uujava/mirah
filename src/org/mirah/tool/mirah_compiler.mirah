@@ -48,6 +48,7 @@ import org.mirah.jvm.mirrors.ClassLoaderResourceLoader
 import org.mirah.jvm.mirrors.FilteredResources
 import org.mirah.jvm.mirrors.NegativeFilteredResources
 import org.mirah.jvm.mirrors.SafeTyper
+import org.mirah.jvm.mirrors.ScriptTyper
 import org.mirah.jvm.mirrors.debug.DebuggerInterface
 import org.mirah.jvm.mirrors.debug.DebugTyper
 import org.mirah.macros.JvmBackend
@@ -142,7 +143,11 @@ class MirahCompiler implements JvmBackend
   def createTyper(debugger:DebuggerInterface, context:Context, types:TypeSystem,
                   scopes:Scoper, jvm_backend:JvmBackend, parser:MirahParser)
     if debugger.nil?
-      SafeTyper.new(context, types, scopes, jvm_backend, parser)
+      if context[MirahArguments].script_mode
+         ScriptTyper.new(context, types, scopes, jvm_backend, parser)
+      else
+         SafeTyper.new(context, types, scopes, jvm_backend, parser)
+      end
     else
       DebugTyper.new(debugger, context, types, scopes, jvm_backend, parser)
     end
