@@ -96,7 +96,7 @@ class BaseCompiler < SimpleNodeVisitor
   end
 
   def getInferredType(node:Node):JVMType
-    type = @typer.getInferredType(node).resolve
+    type = @typer.getResolvedType(node)
     return nil if type.kind_of?(UnreachableType)
     if type.kind_of?(ErrorType)
       reportError(type:ErrorType.message.toString, node.position)
@@ -108,7 +108,7 @@ class BaseCompiler < SimpleNodeVisitor
   end
 
   def getInferredType(mdef:MethodDefinition):MethodType
-    typer.getInferredType(mdef).resolve:MethodType
+    @typer.getResolvedType(mdef):MethodType
   rescue Exception => ex
     raise reportICE(ex, mdef.name.position)
   end

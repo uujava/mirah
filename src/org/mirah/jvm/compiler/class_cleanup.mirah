@@ -43,7 +43,7 @@ class ClassCleanup < NodeScanner
     @static_init_nodes = ArrayList.new
     @init_nodes = ArrayList.new
     @constructors = ArrayList.new
-    @type = @typer.getInferredType(@klass).resolve:JVMType
+    @type = @typer.getResolvedType(@klass):JVMType
     @field_collector = FieldCollector.new(context, @type)
     @field_annotation_requestss = {}
     @methods = ArrayList.new
@@ -124,7 +124,8 @@ class ClassCleanup < NodeScanner
   
   def declareFields:void
     return if @alreadyCleaned
-    @type.getDeclaredFields.each do |f|
+    type = JVMType(@typer.getInferredType(@klass).resolve)
+    type.getDeclaredFields.each do |f|
       @@log.finest "creating field declaration for #{f.name}"
       name = f.name
       decl = FieldDeclaration.new(SimpleString.new(name), makeTypeRef(f.returnType), nil, Collections.emptyList)
@@ -174,7 +175,7 @@ class ClassCleanup < NodeScanner
     MethodCleanup.new(@context, node).clean
     @methods.add(node)
     addMethodState(MethodState.new(
-        node, @typer.getInferredType(node).resolve:MethodType))
+        node, @typer.getResolvedType(node):MethodType))
     false
   end
 
@@ -186,7 +187,7 @@ class ClassCleanup < NodeScanner
     @methods.add(node)
     MethodCleanup.new(@context, node).clean
     addMethodState(MethodState.new(
-        node, @typer.getInferredType(node).resolve:MethodType))
+        node, @typer.getResolvedType(node):MethodType))
     false
   end
 
@@ -209,7 +210,7 @@ class ClassCleanup < NodeScanner
     MethodCleanup.new(@context, node).clean
     @methods.add(node)
     addMethodState(MethodState.new(
-        node, @typer.getInferredType(node).resolve:MethodType))
+        node, @typer.getResolvedType(node):MethodType))
     false
   end
   

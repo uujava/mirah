@@ -47,7 +47,7 @@ class MethodCleanup < NodeScanner
   end
 
   def enterClosureDefinition(node, arg)
-    if @typer.getInferredType(node).resolve.equals(@scope.binding_type) && node.body_size == 0
+    if @typer.getResolvedType(node).equals(@scope.binding_type) && node.body_size == 0
       @scope.capturedLocals.each do |name|
         type:JVMType = @typer.type_system.getLocalType(@scope, name:String, node.position).resolve
         if type.kind_of?(MirrorType)
