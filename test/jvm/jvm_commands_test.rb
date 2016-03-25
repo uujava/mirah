@@ -44,7 +44,7 @@ class JVMCommandsTest < Test::Unit::TestCase
     assert_output "1\n" do
       Mirah.run('-e','
        macro def sprint(node):void
-         quote { puts x }
+         quote { puts `node` }
        end
 
        sprint 1
