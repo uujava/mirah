@@ -20,7 +20,7 @@ end
 
 
 Gem::Specification.new do |s|
-  java_import 'org.mirah.tool.Mirahc'
+  java_import 'org.mirah.tool.Mirahc' rescue nil
   s.name = 'mirah'
   s.version = Mirahc::VERSION.to_s rescue "0.1.5.dev"
   s.license = 'Apache-2.0'
