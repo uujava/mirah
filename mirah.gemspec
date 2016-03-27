@@ -20,7 +20,6 @@ end
 
 
 Gem::Specification.new do |s|
-  $CLASSPATH << mirahc_jar
   java_import 'org.mirah.tool.Mirahc'
   s.name = 'mirah'
   s.version = Mirahc::VERSION.to_s rescue "0.1.5.dev"
