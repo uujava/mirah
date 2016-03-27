@@ -36,7 +36,7 @@ abstract class StubWriter
     @@log = Logger.getLogger StubWriter.class.getName
   end
 
-  attr_reader typer:Typer, plugin:JavaStubPlugin, line:int, parent:StubWriter, node:Node
+  attr_reader typer: Typer, plugin: JavaStubPlugin, line: int, parent: StubWriter, node: Node
 
   def initialize(plugin:JavaStubPlugin, parent: StubWriter, node: Node)
     @typer = plugin.typer

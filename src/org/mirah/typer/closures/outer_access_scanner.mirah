@@ -20,7 +20,7 @@ import org.mirah.typer.Typer
 
 class OuterAccessScanner < NodeScanner
 
-  attr_accessor accessed:boolean
+  attr_accessor accessed: boolean
 
   def enterDefault
     return false if @accessed

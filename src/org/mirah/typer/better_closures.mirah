@@ -77,9 +77,9 @@ class BetterClosureBuilder < ClosureBuilderHelper
     @scripts = LinkedHashSet.new
   end
 
-  attr_accessor blockCloneMapOldNew:IdentityHashMap
-  attr_accessor blockCloneMapNewOld:IdentityHashMap
-  attr_accessor parent_scope_to_binding_name:Map
+  attr_accessor blockCloneMapOldNew: IdentityHashMap
+  attr_accessor blockCloneMapNewOld: IdentityHashMap
+  attr_accessor parent_scope_to_binding_name: Map
 
   def finish
     closures = []
@@ -197,11 +197,11 @@ class BetterClosureBuilder < ClosureBuilderHelper
       end
 
       constructor_body = binding_list.map do |name: String|
-        FieldAssign.new(SimpleString.new(name), LocalAccess.new(SimpleString.new(name)), nil, [Modifier.new(closure_klass.position, 'PROTECTED')])
+        FieldAssign.new(SimpleString.new(name), LocalAccess.new(SimpleString.new(name)), nil, [Modifier.new(closure_klass.position, 'PROTECTED')], nil)
       end
 
       if outer_scanner.accessed
-        constructor_body.add FieldAssign.new(SimpleString.new("$outer"), LocalAccess.new(SimpleString.new("$outer")), nil, [Modifier.new(closure_klass.position, 'PROTECTED')])
+        constructor_body.add FieldAssign.new(SimpleString.new("$outer"), LocalAccess.new(SimpleString.new("$outer")), nil, [Modifier.new(closure_klass.position, 'PROTECTED')], nil)
       end
 
       # pass lambda parameters to constructor

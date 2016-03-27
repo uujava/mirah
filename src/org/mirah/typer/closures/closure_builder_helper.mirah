@@ -166,7 +166,7 @@ class ClosureBuilderHelper
                          nil,
                          Collections.emptyList,
                          nil)
-    body = FieldAssign.new(SimpleString.new('binding'), LocalAccess.new(SimpleString.new('binding')), nil, nil)
+    body = FieldAssign.new(SimpleString.new('binding'), LocalAccess.new(SimpleString.new('binding')), nil,  nil, nil)
     constructor = ConstructorDefinition.new(SimpleString.new('initialize'), args, SimpleString.new('void'), [body], nil)
     klass.body.add(constructor)
   end

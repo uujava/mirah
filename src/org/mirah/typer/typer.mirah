@@ -530,12 +530,20 @@ class Typer < SimpleNodeVisitor
 
   def visitFieldAssign(field, expression)
     inferAnnotations field
-    value = infer(field.value, true)
+    _value = field.value
+    if field.type_hint
+       _value = replaceSelf(_value, Cast.new(_value.position, field.type_hint, _value))
+    end
+    value = infer(_value, true)
     getFieldTypeOrDeclare(field).assign(value, field.position)
   end
 
   def visitConstantAssign(field, expression)
-    newField = FieldAssign.new field.name, field.value, nil, [Modifier.new(field.position, "PUBLIC"), Modifier.new(field.position, "FINAL")]
+    newField = FieldAssign.new field.name,
+                 field.value,
+                 nil,
+                 [Modifier.new(field.position, "PUBLIC"), Modifier.new(field.position, "FINAL")],
+                 field.type_hint
     newField.isStatic = true
     newField.position = field.position
 
@@ -855,7 +863,11 @@ class Typer < SimpleNodeVisitor
   end
 
   def visitLocalAssignment(local, expression)
-    value = infer(local.value, true)
+    _value = local.value
+    if local.type_hint
+      _value = replaceSelf(_value, Cast.new(_value.position, local.type_hint, _value))
+    end
+    value = infer(_value, true)
     getLocalType(local).assign(value, local.position)
   end
 
@@ -969,7 +981,7 @@ class Typer < SimpleNodeVisitor
     object = node.unquote.object
     if object.kind_of?(FieldAccess)
       fa = FieldAccess(Object(node.name))
-      replacement = FieldAssign.new(fa.position, fa.name, node.value, nil, nil)
+      replacement = FieldAssign.new(fa.position, fa.name, node.value, nil, nil, nil)
     else
       replacement = LocalAssignment.new(node.position, node.name, node.value)
     end

@@ -33,9 +33,9 @@ class MethodStubWriter < StubWriter
     @@log = Logger.getLogger MethodStubWriter.class.getName
   end
 
-  attr_reader start_position:Position
-  attr_writer synthetic:boolean
-  attr_writer preserve_lines:boolean
+  attr_reader start_position: Position
+  attr_writer synthetic: boolean
+  attr_writer preserve_lines: boolean
 
   def initialize(plugin:JavaStubPlugin, parent:StubWriter, class_name:String, node:MethodDefinition, append_self:boolean)
     super(plugin, parent, node)

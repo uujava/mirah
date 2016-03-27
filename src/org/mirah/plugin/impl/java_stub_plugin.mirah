@@ -43,11 +43,11 @@ class JavaStubPlugin < CompilerPluginAdapter
     super('stub')
   end
 
-  attr_reader typer:Typer,
-              copy_src:boolean,
-              preserve_lines:boolean,
-              encoding:String,
-              stub_dir:String
+  attr_reader typer: Typer,
+              copy_src: boolean,
+              preserve_lines: boolean,
+              encoding: String,
+              stub_dir: String
 
   def start(param, context)
     super(param, context)

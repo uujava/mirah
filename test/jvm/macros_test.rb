@@ -408,7 +408,7 @@ class MacrosTest < Test::Unit::TestCase
   def test_protected_attr_accessor
     script, cls = compile(<<-EOF)
       class ProtectedAttrAccessorTest
-        protected_methods attr_accessor foo:int
+        protected_methods attr_accessor foo: int
         
         def selfreflect
           puts self.getClass.getDeclaredMethod("foo").getModifiers
@@ -678,7 +678,7 @@ class MacrosTest < Test::Unit::TestCase
   def test_attr_accessor_for_interfaces
     cls, = compile(<<-EOF)
         interface TestAcc
-          attr_accessor a:int
+          attr_accessor a: int
         end
         puts TestAcc.class.getMethod('a') rescue puts false
         puts TestAcc.class.getMethod('a_set', [Integer.TYPE].toArray(Class[1])) rescue puts false

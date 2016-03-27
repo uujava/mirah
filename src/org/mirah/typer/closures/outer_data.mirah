@@ -34,18 +34,18 @@ class OuterData
 
   @@log = Logger.getLogger OuterData.class.getName
 
-  attr_accessor class_node:Node, #class or script
-                class_name:String,
-                class_scope:Scope,
-                method_node:Node, #class or script outer method or nil
-                method_name:String,
-                method_scope:Scope,
-                block_scope:Scope,
-                enclosing_class:Node, #closure or class
-                enclosing_class_name:String,
-                enclosing_method_node:Node,
-                enclosing_method_name:String,
-                has_block_parent:boolean
+  attr_accessor class_node: Node, #class or script
+                class_name: String,
+                class_scope: Scope,
+                method_node: Node, #class or script outer method or nil
+                method_name: String,
+                method_scope: Scope,
+                block_scope: Scope,
+                enclosing_class: Node, #closure or class
+                enclosing_class_name: String,
+                enclosing_method_node: Node,
+                enclosing_method_name: String,
+                has_block_parent: boolean
 
   def initialize(inner_node:Node, typer: Typer):void
     @inner_node = inner_node

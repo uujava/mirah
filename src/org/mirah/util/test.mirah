@@ -100,11 +100,11 @@ class Test
 end
 
 class AssertionError < RuntimeException
-  attr_reader expected:Object,
-             actual:Object,
+  attr_reader expected: Object,
+             actual: Object,
              src: String
 
-  attr_accessor clazz:Class, method:String
+  attr_accessor clazz: Class, method: String
 
   def initialize(expected:Object, actual:Object, src: String)
     @expected = expected

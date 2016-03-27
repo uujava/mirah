@@ -967,7 +967,7 @@ class BlocksTest < Test::Unit::TestCase
     # Note! there is an issue in lambda - it requires to use self for method resolution
     cls, = compile(<<-EOF)
       abstract class Parametrized
-        attr_reader arg:String
+        attr_reader arg: String
         def initialize(arg:int):void
           @arg = ""+arg
         end
@@ -992,7 +992,7 @@ class BlocksTest < Test::Unit::TestCase
     cls, = compile(%q[
 package closure
 class OuterTest1
-  attr_reader attr:int
+  attr_reader attr: int
 
   def initialize
     @attr = 1
@@ -1022,8 +1022,8 @@ OuterTest1.new.test
     cls, = compile(%q[
 package closure
 class OuterTest2
-  attr_reader attr1:int
-  attr_reader attr2:int
+  attr_reader attr1: int
+  attr_reader attr2: int
 
   def initialize
     @attr1 = 1
@@ -1086,7 +1086,7 @@ package closure
 
 class OuterRisesTest1
 
-  attr_reader attr:int
+  attr_reader attr: int
 
   def initialize
     @attr = 1

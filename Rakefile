@@ -306,8 +306,8 @@ file "build/generated/"  do
   File.open("#{genpath}/Version.mirah", 'w') do |dest|
        dest.write("package org.mirah
 class Version
-   attr_reader minor:String
-   attr_reader major:String
+   attr_reader minor: String
+   attr_reader major: String
    VERSION = Version.new('#{major}', '#{minor}')
 
    private def initialize(major:String, minor:String)

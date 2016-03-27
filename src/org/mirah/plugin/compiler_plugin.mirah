@@ -46,8 +46,8 @@ end
 abstract class AbstractCompilerPlugin < NodeScanner
   implements CompilerPlugin
 
-  attr_reader context:Context,
-              param:String
+  attr_reader context: Context,
+              param: String
 
   def key:String
     @key

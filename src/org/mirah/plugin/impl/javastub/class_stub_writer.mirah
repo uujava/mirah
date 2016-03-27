@@ -33,7 +33,7 @@ class ClassStubWriter < StubWriter
     @@log = Logger.getLogger ClassStubWriter.class.getName
   end
 
-  attr_accessor append_self:boolean
+  attr_accessor append_self: boolean
 
   def initialize(plugin:JavaStubPlugin, node:ClassDefinition)
     super(plugin, nil, node)

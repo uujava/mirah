@@ -50,9 +50,9 @@ class NlrClosureBuilder < ClosureBuilderHelper
     @scripts = LinkedHashSet.new
   end
 
-  attr_accessor blockCloneMapOldNew:IdentityHashMap
-  attr_accessor blockCloneMapNewOld:IdentityHashMap
-  attr_accessor parent_scope_to_binding_name:Map
+  attr_accessor blockCloneMapOldNew: IdentityHashMap
+  attr_accessor blockCloneMapNewOld: IdentityHashMap
+  attr_accessor parent_scope_to_binding_name: Map
 
   def prepare_non_local_return_closure(block: Block, parent_type: ResolvedType): Node
     # generates closure classes, AND an exception type
@@ -120,7 +120,7 @@ class NlrClosureBuilder < ClosureBuilderHelper
                          Collections.emptyList,
                          nil)
     body = unless void_type? return_value_type
-             [FieldAssign.new(SimpleString.new('return_value'), LocalAccess.new(SimpleString.new('return_value')), nil, [Modifier.new(block.position, 'PROTECTED')])]
+             [FieldAssign.new(SimpleString.new('return_value'), LocalAccess.new(SimpleString.new('return_value')), nil, [Modifier.new(block.position, 'PROTECTED')], nil)]
            else
              Collections.emptyList
            end

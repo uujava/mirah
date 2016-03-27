@@ -156,7 +156,7 @@ class ObjectExtensions
       attr_writer `args`
     end
   end
-  
+
   macro def self.attr_reader(hash:Hash)
     methods = NodeList.new
     i = 0
@@ -188,7 +188,7 @@ class ObjectExtensions
     end
     methods
   end
-  
+
   macro def self.attr_writer(hash:Hash)
     methods = NodeList.new
     i = 0
