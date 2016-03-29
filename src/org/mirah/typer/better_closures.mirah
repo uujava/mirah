@@ -105,7 +105,7 @@ class BetterClosureBuilder < ClosureBuilderHelper
     i = 0
 
     closures.each do |entry: Entry|
-      block = Block(entry.getKey)
+      block = entry.getKey:Block
       on_clone = BlockCloneListener.new self
       block.whenCloned on_clone
       blockCloneMapOldNew.put(block,block)
@@ -116,7 +116,7 @@ class BetterClosureBuilder < ClosureBuilderHelper
     closures.each do |entry: Entry|
       i += 1
       @@log.fine "adjust bindings for block #{entry.getKey} #{entry.getValue} #{i}"
-      uncloned_block = Block(entry.getKey)
+      uncloned_block = entry.getKey:Block
       block = Block(blockCloneMapOldNew.get(uncloned_block))
       @@log.fine "#{typer.sourceContent block}"
       enclosing_node = find_enclosing_node(block)
@@ -153,7 +153,7 @@ class BetterClosureBuilder < ClosureBuilderHelper
       AstChecker.maybe_check(scripts)
   
       block = Block(blockCloneMapOldNew.get(entry.getKey))
-      parent_type = ResolvedType(entry.getValue)
+      parent_type = entry.getValue:ResolvedType
 
       unless get_body(find_enclosing_node(block))
         @@log.fine "  enclosing node was nil, removing  #{entry.getKey} #{entry.getValue} #{i}"
@@ -187,7 +187,7 @@ class BetterClosureBuilder < ClosureBuilderHelper
 
       binding_list = Collection(blockToBindings.get(uncloned_block)) || Collections.emptyList
       binding_list.each do |name: String|
-        constructor_args.add RequiredArgument.new(SimpleString.new(name), SimpleString.new(ResolvedType(bindingLocalNamesToTypes[name]).name))
+        constructor_args.add RequiredArgument.new(SimpleString.new(name), SimpleString.new(bindingLocalNamesToTypes[name]:ResolvedType.name))
         constructor_param = if outer_data.has_block_parent && !name.equals(parent_scope_to_binding_name[parent_scope])
           FieldAccess.new(SimpleString.new(name))
         else
@@ -214,7 +214,7 @@ class BetterClosureBuilder < ClosureBuilderHelper
           lambda_params.each do |param:Node|
             lambda_arg_type = typer.infer(param).resolve
             lambda_arg = "$lambda_arg"+i
-            constructor_args.add RequiredArgument.new(SimpleString.new(lambda_arg), SimpleString.new(ResolvedType(lambda_arg_type).name))
+            constructor_args.add RequiredArgument.new(SimpleString.new(lambda_arg), SimpleString.new(lambda_arg_type:ResolvedType.name))
             super_params.add LocalAccess.new(SimpleString.new(lambda_arg))
             constructor_params.add param
             i+=1
@@ -258,10 +258,10 @@ class BetterClosureBuilder < ClosureBuilderHelper
       
 
       if block.parent.kind_of?(CallSite)
-        parent = CallSite(block.parent)
+        parent = block.parent:CallSite
         replace_block_with_closure_in_call parent, block, new_node
       elsif block.parent.kind_of?(SyntheticLambdaDefinition) 
-        replace_synthetic_lambda_definiton_with_closure(SyntheticLambdaDefinition(block.parent),new_node)
+        replace_synthetic_lambda_definiton_with_closure(block.parent:SyntheticLambdaDefinition,new_node)
       else
         raise "Cannot handle parent #{block.parent} of block #{block}."
       end
@@ -323,8 +323,8 @@ class BetterClosureBuilder < ClosureBuilderHelper
   def replace_synthetic_lambda_definiton_with_closure(parent: SyntheticLambdaDefinition, new_node: Node): void
     parentparent = parent.parent
     new_node.setParent(nil)
-    if parentparent.kind_of?(CallSite) && CallSite(parentparent).target!=parent # then the SyntheticLambdaDefinition is not a child of the CallSite itself, but (most likely?) a child of its arguments. FIXME: It is weird that the parent of a child of X is not X. 
-      CallSite(parentparent).parameters.replaceChild(parent,new_node)
+    if parentparent.kind_of?(CallSite) && parentparent:CallSite.target!=parent # then the SyntheticLambdaDefinition is not a child of the CallSite itself, but (most likely?) a child of its arguments. FIXME: It is weird that the parent of a child of X is not X.
+      parentparent:CallSite.parameters.replaceChild(parent,new_node)
     else
       parentparent.replaceChild(parent,new_node)
     end

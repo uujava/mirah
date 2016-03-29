@@ -51,7 +51,7 @@ class AsyncTypeBuilder < SignatureVisitor
   end
 
   def visitTypeVariable(name)
-    @type = TypeFuture(@typeVariables[name])
+    @type = @typeVariables[name]:TypeFuture
   end
 
   def visitArrayType
@@ -81,7 +81,7 @@ class AsyncTypeBuilder < SignatureVisitor
     @typeArguments.add(lambda(AsyncTypeBuilderResult) do
       if builder.future
         DerivedFuture.new(builder.future) do |resolved|
-          type = MirrorType(resolved)
+          type = resolved:MirrorType
           if kind == ?=
             type
           elsif kind == ?-
@@ -110,7 +110,7 @@ class AsyncTypeBuilder < SignatureVisitor
     # TODO: handle inner types properly
     args = @typeArguments.map do |a|
       if a.kind_of?(AsyncTypeBuilderResult)
-        AsyncTypeBuilderResult(a).getResult
+        a:AsyncTypeBuilderResult.getResult
       else
         a
       end

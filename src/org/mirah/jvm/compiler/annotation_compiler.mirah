@@ -113,7 +113,7 @@ class AnnotationCompiler < BaseCompiler
     type = getInferredType(anno)
     anno.values_size.times do |i|
       entry = anno.values(i)
-      name = Identifier(entry.key).identifier
+      name = entry.key:Identifier.identifier
       value = entry.value
       method = type.getMethod(name, Collections.emptyList)
       unless method
@@ -145,9 +145,9 @@ class AnnotationCompiler < BaseCompiler
   
   def compileArray(visitor:AnnotationVisitor, name:String, value:Node, type:JVMType):void
     if value.kind_of?(Unquote)
-      values = Unquote(value).nodes
+      values = value:Unquote.nodes
     elsif value.kind_of?(Array)
-      values = Array(value).values
+      values = value:Array.values
     else
       reportError("Expected an array, found #{value.getClass}", value.position)
       return
@@ -164,7 +164,7 @@ class AnnotationCompiler < BaseCompiler
       reportError("Expected an identifier, found #{value.getClass}", value.position)
       return
     end
-    value_name = Identifier(value).identifier
+    value_name = value:Identifier.identifier
     unless type.hasStaticField(value_name)
       reportError("Cannot find enum value #{type.name}.#{value_name}", value.position)
       return
@@ -174,7 +174,7 @@ class AnnotationCompiler < BaseCompiler
   
   def compileAnnotation(visitor:AnnotationVisitor, name:String, value:Node, type:JVMType):void
     if value.kind_of?(Unquote)
-      value = Unquote(value).node
+      value = value:Unquote.node
     end
     unless value.kind_of?(Annotation)
       reportError("Expected an annotation, found #{value.getClass}", value.position)
@@ -183,13 +183,13 @@ class AnnotationCompiler < BaseCompiler
     subtype = getInferredType(value)
     # TODO(ribrdb): check compatibility
     child = visitor.visitAnnotation(name, subtype.getAsmType.getDescriptor)
-    compileValues(Annotation(value), child)
+    compileValues(value:Annotation, child)
     child.visitEnd
   end
   
   def compilePrimitive(visitor:AnnotationVisitor, name:String, value:Node, type:JVMType):void
     if value.kind_of?(Unquote)
-      value = Unquote(value).node
+      value = value:Unquote.node
     end
     if "boolean".equals(type.name)
       compileBool(visitor, name, value)
@@ -205,7 +205,7 @@ class AnnotationCompiler < BaseCompiler
       reportError("Expected a boolean, found #{value.getClass}", value.position)
       return
     end
-    visitor.visit(name, java::lang::Boolean.valueOf(mirah::lang::ast::Boolean(value).value))
+    visitor.visit(name, java::lang::Boolean.valueOf( value:mirah::lang::ast::Boolean.value))
   end
   
   def compileFloat(visitor:AnnotationVisitor, name:String, value:Node, type:JVMType):void
@@ -213,7 +213,7 @@ class AnnotationCompiler < BaseCompiler
       reportError("Expected a float, found #{value.getClass}", value.position)
       return
     end
-    double_value = mirah::lang::ast::Float(value).value
+    double_value =  value:mirah::lang::ast::Float.value
     if "float".equals(type.name)
       asm_value = java::lang::Float.valueOf(float(double_value))
     else
@@ -227,7 +227,7 @@ class AnnotationCompiler < BaseCompiler
       reportError("Expected a #{type.name} literal, found #{value.getClass}", value.position)
       return
     end
-    long_value = Fixnum(value).value
+    long_value = value:Fixnum.value
     min = Long.MIN_VALUE
     max = Long.MAX_VALUE
     if "byte".equals(type.name)
@@ -261,13 +261,13 @@ class AnnotationCompiler < BaseCompiler
   
   def compileString(visitor:AnnotationVisitor, name:String, value:Node):void
     if value.kind_of?(Unquote)
-      value = Unquote(value).node
+      value = value:Unquote.node
     end
     unless value.kind_of?(SimpleString)
       reportError("Expected a string literal, found #{value.getClass}", value.position)
       return
     end
-    visitor.visit(name, SimpleString(value).value)
+    visitor.visit(name, value:SimpleString.value)
   end
   
   def compileClass(visitor:AnnotationVisitor, name:String, value:Node):void
@@ -275,12 +275,12 @@ class AnnotationCompiler < BaseCompiler
       reportError("Expected a class, found #{value.getClass}", value.position)
       return
     end
-    typeref = TypeName(value).typeref
+    typeref = value:TypeName.typeref
     klass = context[TypeSystem].get(getScope(value), typeref).resolve
     if klass.isError
       reportError("Cannot find class #{typeref.name}", value.position)
       return
     end
-    visitor.visit(name, JVMType(klass).getAsmType)
+    visitor.visit(name, klass:JVMType.getAsmType)
   end
 end

@@ -110,7 +110,7 @@ class ClassStubWriter < StubWriter
   end
 
   def write_definition:void
-    writeln JavaDoc(@node.java_doc).value if @node.java_doc
+    writeln @node.java_doc:JavaDoc.value if @node.java_doc
     modifier = 'public'
     flags = HashSet.new
     process_modifiers(@node) do |atype:int, value:String|

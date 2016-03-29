@@ -70,7 +70,7 @@ class NlrClosureBuilder < ClosureBuilderHelper
     enclosing_node = find_enclosing_node block
     return_type = if enclosing_node.kind_of? MethodDefinition
                     methodType = infer(enclosing_node)
-                    MethodFuture(methodType).returnType
+                    methodType:MethodFuture.returnType
                   elsif enclosing_node.kind_of? Script
                     future = AssignableTypeFuture.new block.position
                     future.assign(infer(enclosing_node), block.position)
@@ -157,7 +157,7 @@ class NlrClosureBuilder < ClosureBuilderHelper
                       nil
                       ))
     else
-      Node(ImplicitNil.new)
+      ImplicitNil.new:Node
     end
     Rescue.new(block.position,
                [call],
@@ -176,7 +176,7 @@ class NlrClosureBuilder < ClosureBuilderHelper
   def convert_returns_to_raises block: Block, nlr_klass: ClosureDefinition, nlr_return_type: AssignableTypeFuture
     # block = Block(block.clone) # I'd like to do this, but it's ...
     return_nodes(block).each do |_n|
-      node = Return(_n)
+      node = _n:Return
 
       type = if node.value
                infer(node.value)

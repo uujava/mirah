@@ -105,12 +105,12 @@ class ObjectExtensions
       node = work.poll
       if node.kind_of?(MethodDefinition)
         anno = Modifier.new(node.position, 'PROTECTED')
-        MethodDefinition(node).modifiers ||= ModifierList.new
-        MethodDefinition(node).modifiers.add(anno)
+        node:MethodDefinition.modifiers ||= ModifierList.new
+        node:MethodDefinition.modifiers.add(anno)
       elsif node.kind_of?(ProxyNode)
-        work.add(ProxyNode(node).get(0))
+        work.add(node:ProxyNode.get(0))
       elsif node.kind_of?(NodeList)
-        list = NodeList(node)
+        list = node:NodeList
         i = 0
         while i < list.size
           work.add(list.get(i))
@@ -132,12 +132,12 @@ class ObjectExtensions
       node = work.poll
       if node.kind_of?(MethodDefinition)
         anno = Modifier.new(node.position, 'PRIVATE')
-        MethodDefinition(node).modifiers ||= ModifierList.new
-        MethodDefinition(node).modifiers.add(anno)
+        node:MethodDefinition.modifiers ||= ModifierList.new
+        node:MethodDefinition.modifiers.add(anno)
       elsif node.kind_of?(ProxyNode)
-        work.add(ProxyNode(node).get(0))
+        work.add(node:ProxyNode.get(0))
       elsif node.kind_of?(NodeList)
-        list = NodeList(node)
+        list = node:NodeList
         i = 0
         while i < list.size
           work.add(list.get(i))
@@ -196,7 +196,7 @@ class ObjectExtensions
     while i < size
       e = hash.get(i)
       i += 1
-      name = "#{Identifier(e.key).identifier}_set"
+      name = "#{e.key:Identifier.identifier}_set"
       isClass = true
       parent = hash.parent
       while parent
@@ -223,11 +223,11 @@ class ObjectExtensions
   end
 
   macro def lambda(type:TypeName, block:Block)
-    SyntheticLambdaDefinition.new(@call.position, TypeName(type), nil, block)
+    SyntheticLambdaDefinition.new(@call.position, type:TypeName, nil, block)
   end
 
   macro def self.lambda(type:TypeName, block:Block)
-    SyntheticLambdaDefinition.new(@call.position, TypeName(type), nil, block)
+    SyntheticLambdaDefinition.new(@call.position, type:TypeName, nil, block)
   end
 
   macro def lambda(type:TypeName, *args:Node)
@@ -240,7 +240,7 @@ class ObjectExtensions
       parameters.add args[i]
       i+=1
     end
-    SyntheticLambdaDefinition.new(@call.position, TypeName(type), parameters, Block(args[args.length-1]))
+    SyntheticLambdaDefinition.new(@call.position, type:TypeName, parameters, args[args.length-1]:Block)
   end
 
   macro def self.lambda(type:TypeName, *args:Node)
@@ -253,7 +253,7 @@ class ObjectExtensions
       parameters.add args[i]
       i+=1
     end
-    SyntheticLambdaDefinition.new(@call.position, TypeName(type), parameters, Block(args[args.length-1]))
+    SyntheticLambdaDefinition.new(@call.position, type:TypeName, parameters, args[args.length-1]:Block)
   end
 
 end

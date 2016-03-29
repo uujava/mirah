@@ -98,7 +98,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
     @backend = backend
     @extension_counters = HashMap.new
     @parser = parser || MirahParser.new
-    @loader = Typer(nil)
+    @loader = nil:Typer
   end
 
   def self.initialize: void
@@ -134,7 +134,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
         end
 
 
-        cloned  = MacroDefinition(macroDef.clone)
+        cloned  = macroDef.clone:MacroDefinition
         cloned.arguments = Arguments.new(macroDef.position, required_list, Collections.emptyList, nil, Collections.emptyList, nil)
 
         local_list.each do |opt_arg:OptionalArgument|
@@ -217,7 +217,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
 
   def deserializeAst(filename: String, startLine: int, startCol: int, code: String, values: List): Node
     script = Script(@parser.parse(StringCodeSource.new(filename, code, startLine, startCol)))
-    # TODO(ribrdb) scope
+    # ribrdb:TODO scope
     ValueSetter.new(values).scan(script)
     node = if script.body_size == 1
       script.body(0)
@@ -309,14 +309,14 @@ class MacroBuilder; implements org.mirah.macros.Compiler
       preamble.add(Package.new(SimpleString.new(scope.package), nil))
     end
     scope.search_packages.each do |pkg|
-      preamble.add(Import.new(SimpleString.new(String(pkg)), SimpleString.new('*')))
+      preamble.add(Import.new(SimpleString.new(pkg:String), SimpleString.new('*')))
     end
     imports = scope.imports
     imports.keySet.each do |key|
       future = @types.get scope, SimpleString.new(String(imports.get(key))).typeref
       if future.isResolved
         preamble.add(Import.new(SimpleString.new(String(imports.get(key))),
-                                SimpleString.new(String(key))))
+                                SimpleString.new(key:String)))
       end
     end
     script.body.insert(0, preamble)
@@ -386,7 +386,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
       if i == args.required_size() - 1 && arg.type.typeref.name.endsWith("Block")
         casts.add(fetchMacroBlock)
       else
-        casts.add(Cast.new(TypeName(arg.type.clone), fetchMacroArg(i)))
+        casts.add(Cast.new(arg.type.clone:TypeName, fetchMacroArg(i)))
       end
       i += 1
     end
@@ -445,7 +445,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
     if classdef.nil?
       return
     end
-    extensions = Annotation(nil)
+    extensions = nil:Annotation
     classdef.annotations_size.times do |i|
       anno = classdef.annotations(i)
       if anno.type.typeref.name.equals('org.mirah.macros.anno.Extensions')

@@ -52,11 +52,11 @@ class FieldCollector < NodeScanner
   end
 
   def getAnnotations(field:String):AnnotationList
-    AnnotationList(@field_annotations[field]) || AnnotationList.new
+    @field_annotations[field]:AnnotationList || AnnotationList.new
   end
 
   def getModifiers(field:String):ModifierList
-    ModifierList(@field_modifiers[field]) || ModifierList.new
+    @field_modifiers[field]:ModifierList || ModifierList.new
   end
   
   def enterFieldAssign(node, parent)
@@ -77,7 +77,7 @@ class FieldCollector < NodeScanner
          node.modifiers = ModifierList.new
       end
     end
-    validate(node, Node(parent))
+    validate(node, parent:Node)
     false
   end
   

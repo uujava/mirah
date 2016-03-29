@@ -50,7 +50,7 @@ class OuterData
   def initialize(inner_node:Node, typer: Typer):void
     @inner_node = inner_node
     has_block_parent = false
-    enclosing_class = Node(nil)
+    enclosing_class = nil:Node
     class_node = inner_node.findAncestor do |node|
       if node.kind_of?(ClosureDefinition)
         has_block_parent = true
@@ -108,22 +108,22 @@ class OuterData
   def outer_type:JVMType
     outer_type = JVMType @method_scope.selfType.resolve
     if outer_type.kind_of?(MirrorType)
-       outer_type = JVMType(Object(MirrorType(outer_type).erasure))
+       outer_type = outer_type:MirrorType.erasure:Object:JVMType
     end
     outer_type
   end
 
   def self.class_name node:Node
     if node.kind_of? ClassDefinition
-      ClassDefinition(node).name.identifier
+      node:ClassDefinition.name.identifier
     else
       @@log.fine "#{node} is not a class"
-      MirrorTypeSystem.getMainClassName(Script(node))
+      MirrorTypeSystem.getMainClassName(node:Script)
     end
   end
 
   def self.method_name node:Node
-     node ? MethodDefinition(node).name.identifier : 'anon'
+     node ? node:MethodDefinition.name.identifier : 'anon'
   end
 
   def toString:String

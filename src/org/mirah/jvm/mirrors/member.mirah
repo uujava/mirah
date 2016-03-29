@@ -144,7 +144,7 @@ class AsyncMember < Member
 
   def returnType
     # TODO: Should this convert errors?
-    JVMType(@returnType.resolve)
+    @returnType.resolve:JVMType
   end
 
   def asyncArgument(index)
@@ -171,6 +171,6 @@ class AsyncMember < Member
   end
 
   def invalidate:void
-    MirrorType(self.declaringClass).invalidateMethod(self.name)
+    self.declaringClass:MirrorType.invalidateMethod(self.name)
   end
 end

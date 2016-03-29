@@ -53,7 +53,7 @@ class AstFormatter < NodeScanner
   end
 
   def startNode(node: Node)
-    count = Integer(@childCounts.removeLast)
+    count = @childCounts.removeLast:Integer
     @childCounts.addLast(Integer.valueOf(count.intValue + 1))
     @childCounts.addLast(Integer.valueOf(0))
     append("[#{node.getClass.getSimpleName}")
@@ -68,7 +68,7 @@ class AstFormatter < NodeScanner
 
   def exitDefault(node, arg)
     dedent
-    childCount = Integer(@childCounts.removeLast).intValue    
+    childCount = @childCounts.removeLast:Integer.intValue
     lastIndex = @out.length - 1
     if lastIndex > 0 && @out.charAt(lastIndex) == ?\n &&
        (@out.charAt(lastIndex -1) == ?[ || @out.charAt(lastIndex - 1) == ?])
@@ -113,7 +113,7 @@ class AstFormatter < NodeScanner
   end
 
   def enterSimpleString(node, arg)
-    count = Integer(@childCounts.peekLast).intValue
+    count = @childCounts.peekLast:Integer.intValue
     if count == 0
       @newline = false
       @out.setCharAt(@out.length - 1, ' '.charAt(0))
@@ -137,7 +137,7 @@ class AstFormatter < NodeScanner
   end
 
   def enterNodeList(node, arg)
-    count = Integer(@childCounts.removeLast)
+    count = @childCounts.removeLast:Integer
     @childCounts.addLast(Integer.valueOf(count.intValue + 1))
     @childCounts.addLast(Integer.valueOf(0))
     appendLine "["
@@ -173,9 +173,9 @@ class AstFormatter < NodeScanner
     object = node.object
     if object
       if object.kind_of?(Node)
-        scan(Node(object), arg)
-      elsif object.kind_of?(List) && List(object).all? {|i| i.kind_of?(Node)}
-        List(object).each {|o| scan(Node(o), arg)}
+        scan(object:Node, arg)
+      elsif object.kind_of?(List) && object:List.all? {|i| i.kind_of?(Node)}
+        object:List.each {|o| scan(o:Node, arg)}
       else
         append "<"
         append node.object.toString

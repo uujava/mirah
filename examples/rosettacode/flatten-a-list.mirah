@@ -24,7 +24,7 @@ def flatten(source: Collection, result: List)
 
     source.each do |x|
         if (Collection.class.isAssignableFrom(x.getClass()))
-            flatten(Collection(x), result)
+            flatten(x:Collection, result)
         else
             result.add(x)
             result  # if branches must return same type

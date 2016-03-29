@@ -20,9 +20,7 @@ end
 
 
 Gem::Specification.new do |s|
-  java_import 'org.mirah.tool.Mirahc' rescue nil
   s.name = 'mirah'
-  s.version = Mirahc::VERSION.to_s rescue "0.1.5.dev"
   s.license = 'Apache-2.0'
   s.authors = ["Charles Oliver Nutter", "Ryan Brown", "Nick Howard"]
   s.email = ["headius@headius.com", "ribrdb@google.com", "ndh@baroquebobcat.com"]

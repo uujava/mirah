@@ -56,7 +56,7 @@ class MethodStubWriter < StubWriter
     static = @node.kind_of?(StaticMethodDefinition) || @append_self
     this = self
     preserve_lines = @preserve_lines
-    process_modifiers(HasModifiers(@node)) do |atype:int, value:String|
+    process_modifiers(@node:HasModifiers) do |atype:int, value:String|
       # workaround for PRIVATE and PUBLIC annotations for class constants
       if atype == ModifierVisitor.ACCESS
         modifier = value.toLowerCase
@@ -74,7 +74,7 @@ class MethodStubWriter < StubWriter
 
     return if type.name.endsWith 'init>' and static
 
-    writeln JavaDoc(@node.java_doc).value if @node.java_doc
+    writeln @node.java_doc:JavaDoc.value if @node.java_doc
     writeln(start_position) if @preserve_lines
     write StubWriter.TAB, modifier, ' '
     #constructor
@@ -92,7 +92,7 @@ class MethodStubWriter < StubWriter
       writeln ');'
     else
       write '){'
-      write_body JVMType(type.returnType)
+      write_body type.returnType:JVMType
       writeln '}'
     end
   end
@@ -102,7 +102,7 @@ class MethodStubWriter < StubWriter
     first = write_args(true, args.required)
     first = write_args(first, args.optional)
     if args.rest
-      write_arg Node(args.rest)
+      write_arg args.rest:Node
       first = false
     end
     first = write_args(first, args.required2)
@@ -113,7 +113,7 @@ class MethodStubWriter < StubWriter
     while iterator.hasNext
       write ',' unless first
       first = false
-      write_arg Node(iterator.next)
+      write_arg iterator.next:Node
     end
     first
   end
@@ -121,7 +121,7 @@ class MethodStubWriter < StubWriter
   def write_arg(arg:Node):void
     type = getInferredType(arg).resolve
     writeln(arg.position) if @preserve_lines
-    write  type.name, ' ' , Named(arg).name.identifier
+    write  type.name, ' ' , arg:Named.name.identifier
   end
 
   def write_body(type:JVMType):void

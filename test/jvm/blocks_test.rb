@@ -146,10 +146,10 @@ class BlocksTest < Test::Unit::TestCase
       list = ArrayList.new(["a", "ABC", "Cats", "b"])
       Collections.sort(list) do
         def equals(a:Object, b:Object)
-          String(a).equalsIgnoreCase(String(b))
+          a:String.equalsIgnoreCase(b:String)
         end
         def compare(a:Object, b:Object)
-          String(a).compareToIgnoreCase(String(b))
+          a:String.compareToIgnoreCase(b:String)
         end
       end
       list.each {|x| puts x }
@@ -166,7 +166,7 @@ class BlocksTest < Test::Unit::TestCase
       import java.util.List
       def sort(l:List)
         Collections.sort(l) do |a:Object, b:Object|
-          String(a).compareToIgnoreCase(String(b))
+          a:String.compareToIgnoreCase(b:String)
         end
         l
       end

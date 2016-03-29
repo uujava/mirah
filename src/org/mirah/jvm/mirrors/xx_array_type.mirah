@@ -70,7 +70,7 @@ class ArrayType < BaseType implements ArrayModel
       supertypes = @componentType.directSupertypes
       interfaces = TypeFuture[supertypes.size]
       supertypes.map do |x|
-         BaseTypeFuture.new.resolved(ArrayType.new(@context, MirrorType(x)))
+         BaseTypeFuture.new.resolved(ArrayType.new(@context, x:MirrorType))
       end.toArray(interfaces)
       interfaces
     end
@@ -81,7 +81,7 @@ class ArrayType < BaseType implements ArrayModel
                  returnType:ResolvedType,
                  kind:MemberKind):void
     add(Member.new(
-        Opcodes.ACC_PUBLIC, self, name, args, MirrorType(returnType), kind))
+        Opcodes.ACC_PUBLIC, self, name, args, returnType:MirrorType, kind))
   end
 
   def load_methods
@@ -113,11 +113,11 @@ class ArrayType < BaseType implements ArrayModel
   def isSameType(other)
     result = if other.getKind == TypeKind.ARRAY
       cast_type = if other.kind_of? MirrorProxy
-                    MirrorProxy(other)
+                    other:MirrorProxy
                   elsif other.kind_of? ArrayType
-                    ArrayType(other)
+                    other:ArrayType
                   end
-      @componentType.isSameType(MirrorType(cast_type.getComponentType))
+      @componentType.isSameType(cast_type.getComponentType:MirrorType)
     else
       false
     end
@@ -143,7 +143,7 @@ class ArrayType < BaseType implements ArrayModel
       if @componentType == component
         self
       else
-        ArrayType.new(@context, MirrorType(component))
+        ArrayType.new(@context, component:MirrorType)
       end
     end
   end

@@ -65,7 +65,7 @@ class MetaType < BaseType
 
   def getDeclaredField(name)
     field = unmeta.getDeclaredField(name)
-    if field && Opcodes.ACC_STATIC == (Member(field).flags & Opcodes.ACC_STATIC)
+    if field && Opcodes.ACC_STATIC == (field:Member.flags & Opcodes.ACC_STATIC)
       field
     else
       nil

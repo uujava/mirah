@@ -261,12 +261,12 @@ class CastTest < Test::Unit::TestCase
 
   def test_no_errors_for_interface_casts
     cls, = compile(<<-EOF)
-      a = Runnable(nil)
-      b = java::io::Serializable(nil)
-      a = Runnable(b)
+      a = nil:Runnable
+      b:java::io::Serializable = nil
+      a = b:Runnable
       c = Number.new
-      a = Runnable(c)
-      c = Number(b)
+      a = c:Runnable
+      c = b:Number
     EOF
   rescue Exception => ex
     fail "casts for interfaces #{ex} #{ex.backtrace.join "\n"}"

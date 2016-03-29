@@ -59,15 +59,15 @@ class TypeParameterInference
                                formalParameter:TypeMirror,
                                typeParameters:Map):void
     if argument.kind_of?(MirrorType) &&
-        JVMTypeUtils.isPrimitive(MirrorType(argument))
-      argument = MirrorType(MirrorType(argument).box)
+        JVMTypeUtils.isPrimitive(argument:MirrorType)
+      argument = argument:MirrorType.box:MirrorType
     end
     tpi = self
     visitor = lambda(SimpleTypeVisitor6) do
       def visitTypeVariable(t, p)
         # T :> A
-        a = TypeMirror(p)
-        c = Constraints(typeParameters[t.toString])
+        a = p:TypeMirror
+        c = typeParameters[t.toString]:Constraints
         c.addSuper(a) if c
       end
 
@@ -75,7 +75,7 @@ class TypeParameterInference
         arg_visitor = lambda(SimpleTypeVisitor6) do
           def visitArray(v, x)
             # Recurse if argument is an array type
-            ArrayType(x).getComponentType.accept(visitor, v.getComponentType)
+            x:ArrayType.getComponentType.accept(visitor, v.getComponentType)
           end
           
           # Or if argument is a type variable with an array upper bound
@@ -83,16 +83,16 @@ class TypeParameterInference
             v.getUpperBound.accept(self, x)
           end
         end
-        TypeMirror(p).accept(arg_visitor, t)
+        p:TypeMirror.accept(arg_visitor, t)
       end
 
       def visitDeclared(t, p)
         return nil if t.getTypeArguments.isEmpty
         params = t.getTypeArguments.iterator
-        args = tpi.findExtendsTypeArguments(TypeMirror(p), t).iterator
+        args = tpi.findExtendsTypeArguments(p:TypeMirror, t).iterator
         while args.hasNext
-          arg = TypeMirror(args.next)
-          param = TypeMirror(params.next)
+          arg = args.next:TypeMirror
+          param = params.next:TypeMirror
           if param.getKind != TypeKind.WILDCARD
             tpi.processEqualConstraint(arg, param, typeParameters)
           else
@@ -140,15 +140,15 @@ class TypeParameterInference
     tpi = self
     visitor = lambda(SimpleTypeVisitor6) do
       def visitTypeVariable(t, p)
-        c = Constraints(typeParameters[t.toString])
-        c.addEqual(TypeMirror(p)) if c
+        c = typeParameters[t.toString]:Constraints
+        c.addEqual(p:TypeMirror) if c
       end
 
       def visitArray(t, p)
         arg_visitor = lambda(SimpleTypeVisitor6) do
           def visitArray(v, x)
             # Recurse if argument is an array type
-            ArrayType(x).getComponentType.accept(visitor, v.getComponentType)
+            x:ArrayType.getComponentType.accept(visitor, v.getComponentType)
           end
           
           # Or if argument is a type variable with an array upper bound
@@ -156,17 +156,17 @@ class TypeParameterInference
             v.getUpperBound.accept(self, x)
           end
         end
-        TypeMirror(p).accept(arg_visitor, t)
+        p:TypeMirror.accept(arg_visitor, t)
       end
       
       def visitDeclared(t, p)
         return nil if t.getTypeArguments.isEmpty
         params = t.getTypeArguments.iterator
         args = tpi.findEqualTypeArguments(
-            TypeMirror(p), t).iterator
+            p:TypeMirror, t).iterator
         while args.hasNext
-          arg = TypeMirror(args.next)
-          param = TypeMirror(params.next)
+          arg = args.next:TypeMirror
+          param = params.next:TypeMirror
           if param.getKind != TypeKind.WILDCARD
             tpi.processEqualConstraint(arg, param, typeParameters)
           else
@@ -206,15 +206,15 @@ class TypeParameterInference
     visitor = lambda(SimpleTypeVisitor6) do
       def visitTypeVariable(t, p)
         # T <: A
-        c = Constraints(typeParameters[t.toString])
-        c.addExtends(TypeMirror(p)) if c
+        c = typeParameters[t.toString]:Constraints
+        c.addExtends(p:TypeMirror) if c
       end
 
       def visitArray(t, p)
         arg_visitor = lambda(SimpleTypeVisitor6) do
           def visitArray(v, x)
             # Recurse if argument is an array type
-            ArrayType(x).getComponentType.accept(visitor, v.getComponentType)
+            x:ArrayType.getComponentType.accept(visitor, v.getComponentType)
           end
           
           # Or if argument is a type variable with an array upper bound
@@ -222,17 +222,17 @@ class TypeParameterInference
             v.getUpperBound.accept(self, x)
           end
         end
-        TypeMirror(p).accept(arg_visitor, t)
+        p:TypeMirror.accept(arg_visitor, t)
       end
       
       def visitDeclared(t, p)
-        types2 = tpi.findMatchingGenericSupertypes(TypeMirror(p), t)
+        types2 = tpi.findMatchingGenericSupertypes(p:TypeMirror, t)
         return nil if types2.nil? # FIXME: a compiler bug prevents types2 being called types.
         args = types2[0].getTypeArguments.iterator
         params = types2[1].getTypeArguments.iterator
         while args.hasNext
-          arg = TypeMirror(args.next)
-          param = TypeMirror(params.next)
+          arg = args.next:TypeMirror
+          param = params.next:TypeMirror
           wildcard_arg = tpi.wildcard(arg)
           if param.getKind != TypeKind.WILDCARD
             if wildcard_arg.nil?
@@ -283,7 +283,7 @@ class TypeParameterInference
   def findEqualTypeArguments(arg:TypeMirror, param:DeclaredType):List
     if arg.getKind == TypeKind.DECLARED
       if @types.asElement(arg).equals(@types.asElement(param))
-        return DeclaredType(arg).getTypeArguments
+        return arg:DeclaredType.getTypeArguments
       end
     end
     Collections.emptyList
@@ -295,10 +295,10 @@ class TypeParameterInference
     types = LinkedList.new
     types.add(subtype)
     while types.size > 0
-      t = TypeMirror(types.removeFirst)
+      t = types.removeFirst:TypeMirror
       if t.getKind == TypeKind.DECLARED
         if @types.asElement(t).equals(super_elem)
-          return DeclaredType(t)
+          return t:DeclaredType
         end
       end
       types.addAll(@types.directSupertypes(t))
@@ -309,7 +309,7 @@ class TypeParameterInference
   def findMatchingGenericSupertypes(arg:TypeMirror,
                                     param:DeclaredType):DeclaredType[]
     if arg.getKind == TypeKind.DECLARED
-      argType = DeclaredType(arg)
+      argType = arg:DeclaredType
       unless argType.getTypeArguments.isEmpty
         param = findMatchingSupertype(param, argType)
         result = DeclaredType[2]
@@ -323,7 +323,7 @@ class TypeParameterInference
   
   def wildcard(type:TypeMirror):WildcardType
     if type.getKind == TypeKind.WILDCARD
-      WildcardType(type)
+      type:WildcardType
     end
   end
 end

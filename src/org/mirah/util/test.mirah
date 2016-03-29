@@ -136,9 +136,9 @@ class AssertionError < RuntimeException
   def unwrapMessages(ex:Throwable, causes:List = []):List
     causes.add "#{ex.getMessage}  at #{ex.getStackTrace[0]}" if ex.getMessage
     if ex.kind_of? InvocationTargetException
-      unwrapMessages InvocationTargetException(ex).getTargetException, causes
+      unwrapMessages ex:InvocationTargetException.getTargetException, causes
     elsif ex.kind_of? AssertionError
-       causes.add AssertionError(ex).message
+       causes.add ex:AssertionError.message
     elsif ex.getCause
       unwrapMessages ex.getCause, causes
     end

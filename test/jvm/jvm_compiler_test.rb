@@ -1942,7 +1942,7 @@ class JVMCompilerTest < Test::Unit::TestCase
 
   def test_double_equals_cast_nil_ref_equals_nil_literal
     cls, = compile(<<-EOF)
-      a = Object(nil)
+      a = nil:Object
       puts a == nil
     EOF
     assert_run_output("true\n", cls)

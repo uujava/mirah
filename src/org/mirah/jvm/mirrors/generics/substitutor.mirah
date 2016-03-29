@@ -71,7 +71,7 @@ class Substitutor < SimpleTypeVisitor6
     if @type_parameters.isEmpty
       nil
     else
-      TypeFuture(@type_parameters.removeFirst).resolve
+      @type_parameters.removeFirst:TypeFuture.resolve
     end
   end
 
@@ -83,7 +83,7 @@ class Substitutor < SimpleTypeVisitor6
     array = if saved == @substitutions
       t
     else
-      ArrayType.new(@context, MirrorType(c2.resolve))
+      ArrayType.new(@context, c2.resolve:MirrorType)
     end
     future(array)
   end
@@ -107,7 +107,7 @@ class Substitutor < SimpleTypeVisitor6
     begin
       @type_parameters = LinkedList.new
       if t.kind_of?(MirrorType)
-        erasure = DeclaredMirrorType(MirrorType(Object(t)).erasure)
+        erasure = t:Object:MirrorType.erasure:DeclaredMirrorType
         @type_parameters.addAll(erasure.getTypeVariableMap.values)
       end
       @@log.fine("Type parameters for #{t} = #{@type_parameters}")
@@ -118,7 +118,7 @@ class Substitutor < SimpleTypeVisitor6
         future(t)
       else
         # If any type parameters were substituted, re-invoke the type
-        @types.parameterize(future(MirrorType(Object(t)).erasure), newArgs)
+        @types.parameterize(future(t:Object:MirrorType.erasure), newArgs)
       end
     ensure
       @type_parameters = saved_parameters
@@ -127,21 +127,21 @@ class Substitutor < SimpleTypeVisitor6
 
   def visitWildcard(t, p)
     # Apply capture conversion.
-    param = TypeVariable(popTypeParam)
-    upper = MirrorType(param.getUpperBound)
+    param = popTypeParam:TypeVariable
+    upper = param.getUpperBound:MirrorType
     lower = param.getLowerBound
     if t.getSuperBound
       lower = t.getSuperBound
     end
-    if t.getExtendsBound && !upper.isSameType(MirrorType(t.getExtendsBound))
+    if t.getExtendsBound && !upper.isSameType(t.getExtendsBound:MirrorType)
       lub = LubFinder.new(@context)
       upper = MirrorType(Object(lub.leastUpperBound([upper, t.getExtendsBound])))
     end
     @substitutions += 1
-    future(CapturedWildcard.new(@context, upper, MirrorType(lower)))
+    future(CapturedWildcard.new(@context, upper, lower:MirrorType))
   end
 
   def future(t:Object)
-    BaseTypeFuture.new.resolved(ResolvedType(t))
+    BaseTypeFuture.new.resolved(t:ResolvedType)
   end
 end

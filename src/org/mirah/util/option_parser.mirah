@@ -50,7 +50,7 @@ class OptionParser
   def parse(options:String[]):List
     options_finished = false
     filenames = ArrayList.new
-    value_parser = OptionCallback(nil)
+    value_parser = nil:OptionCallback
     options.each do |arg|
       if options_finished
         filenames.add(arg)
@@ -71,7 +71,7 @@ class OptionParser
   end
 
   def parseOption(arg:String, dashes:String)
-    option = CommandLineOption(@flagMap[arg])
+    option = @flagMap[arg]:CommandLineOption
     if option.nil?
       raise IllegalArgumentException, "Unrecognized flag: #{dashes}#{arg}"
     end

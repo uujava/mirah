@@ -93,11 +93,11 @@ class ClosureBuilderHelper
   def get_body node: Node
     # TODO create an interface for nodes with bodies
     if node.kind_of?(MethodDefinition)
-      MethodDefinition(node).body
+      node:MethodDefinition.body
     elsif node.kind_of?(Script)
-      Script(node).body
+      node:Script.body
     elsif node.kind_of?(Block)
-      Block(node).body
+      node:Block.body
     else
       raise "Unknown type for finding a body #{node.getClass}"
     end
@@ -114,7 +114,7 @@ class ClosureBuilderHelper
   end
 
   def method_for(iface: ResolvedType): MethodType
-    return MethodType(iface) if iface.kind_of? MethodType
+    return iface:MethodType if iface.kind_of? MethodType
 
     methods = types.getAbstractMethods(iface)
     if methods.size == 0
@@ -123,7 +123,7 @@ class ClosureBuilderHelper
     elsif methods.size > 1
       raise UnsupportedOperationException, "Multiple abstract methods in #{iface}: #{methods}"
     end
-    MethodType(List(methods).get(0))
+    MethodType(methods:List.get(0))
   end
 
   # Copies MethodDefinition nodes from block to klass.
@@ -133,7 +133,7 @@ class ClosureBuilderHelper
       # TODO warn if there are non method definition nodes
       # they won't be used at all currently--so it'd be nice to note that.
       if node.kind_of?(MethodDefinition)
-        cloned = MethodDefinition(node.clone)
+        cloned = node.clone:MethodDefinition
         set_parent_scope cloned, parent_scope
         klass.body.add(cloned)
       end
@@ -195,17 +195,17 @@ class ClosureBuilderHelper
     enclosing_body  = find_enclosing_body block
 
     block_scope = get_scope block.body
-    @@log.fine "block body scope #{block_scope.getClass} #{MirrorScope(block_scope).capturedLocals}"
+    @@log.fine "block body scope #{block_scope.getClass} #{block_scope:MirrorScope.capturedLocals}"
 
     outer_data = OuterData.new(block, typer)
     block_scope = outer_data.block_scope
-    @@log.fine "block scope #{block_scope} #{MirrorScope(block_scope).capturedLocals}"
-    @@log.fine "parent scope #{parent_scope} #{MirrorScope(parent_scope).capturedLocals}"
+    @@log.fine "block scope #{block_scope} #{block_scope:MirrorScope.capturedLocals}"
+    @@log.fine "parent scope #{parent_scope} #{parent_scope:MirrorScope.capturedLocals}"
     enclosing_scope = get_scope(enclosing_body)
-    @@log.fine "enclosing scope #{enclosing_scope} #{MirrorScope(enclosing_scope).capturedLocals}"
+    @@log.fine "enclosing scope #{enclosing_scope} #{enclosing_scope:MirrorScope.capturedLocals}"
     parent_scope.binding_type ||= begin
                                     name = outer_data.temp_name("Binding")
-                                    captures = MirrorScope(parent_scope).capturedLocals
+                                    captures = parent_scope:MirrorScope.capturedLocals
                                     @@log.fine("building binding #{name} with captures #{captures}")
                                     binding_klass = build_class(klass.position,
                                                                 nil,
@@ -216,7 +216,7 @@ class ClosureBuilderHelper
               # typer doesn't understand unquoted return types yet, perhaps
               # TODO write visitor to replace locals w/ calls to bound locals
              # captures.each do |bound_var: String|
-             #   bound_type = MirrorScope(parent_scope).getLocalType(bound_var, block.position).resolve
+             #   bound_type = parent_scope:MirrorScope.getLocalType(bound_var, block.position).resolve
              #   attr_def = @macros.quote do
              #     attr_accessor `bound_var` => `Constant.new(SimpleString.new(bound_type.name))`
              #   end
@@ -241,7 +241,7 @@ class ClosureBuilderHelper
 
     # TODO handle all arg types allowed
     args = if block.arguments
-             Arguments(block.arguments.clone)
+             block.arguments.clone:Arguments
            else
              Arguments.new(block.position, Collections.emptyList, Collections.emptyList, nil, Collections.emptyList, nil)
            end
@@ -265,9 +265,9 @@ class ClosureBuilderHelper
     i=0
     args.required.each do |a: RequiredArgument|
       if a.type
-        m_type = MirrorType(m_types[i])
+        m_type = m_types[i]:MirrorType
         a_type = types.get(parent_scope, a.type.typeref).resolve
-        if !a_type.equals(m_type) # && BaseType(m_type).assignableFrom(a_type) # could do this, then it'd only add the checkcast if it will fail...
+        if !a_type.equals(m_type) # && m_type:BaseType.assignableFrom(a_type) # could do this, then it'd only add the checkcast if it will fail...
           block_method.body.insert(0,
             Cast.new(a.position,
               Constant.new(SimpleString.new(m_type.name)), LocalAccess.new(a.position, a.name))
@@ -296,9 +296,9 @@ class ClosureBuilderHelper
     i=0
     args.required.each do |a: RequiredArgument|
       if a.type
-        m_type = MirrorType(m_types[i])
+        m_type = m_types[i]:MirrorType
         a_type = types.get(parent_scope, a.type.typeref).resolve
-        if !a_type.equals(m_type) # && BaseType(m_type).assignableFrom(a_type)
+        if !a_type.equals(m_type) # && m_type:BaseType.assignableFrom(a_type)
           @@log.fine("#{name} requires bridge method because declared type: #{a_type} != iface type: #{m_type}")
           requires_bridge = true
           break

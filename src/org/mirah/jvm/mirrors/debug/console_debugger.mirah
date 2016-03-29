@@ -151,7 +151,7 @@ class ConsoleDebugger implements DebugListener, Runnable
       command = split[0]
       unless command.nil? || "".equals(command)
         args = String[].cast(Arrays.copyOfRange(split, 1, split.length))
-        handler = Command(@commands[command])
+        handler = @commands[command]:Command
         if handler
           handler.run(args)
         else
@@ -232,7 +232,7 @@ class ConsoleDebugger implements DebugListener, Runnable
     index = Integer.parseInt(args[0])
     it = @controller.watches.keySet.iterator
     (index - 1).times { it.next }
-    @controller.clearWatch(BaseTypeFuture(it.next))
+    @controller.clearWatch(it.next:BaseTypeFuture)
   end
 
   def addWatch(args:String[]):void
@@ -249,7 +249,7 @@ class ConsoleDebugger implements DebugListener, Runnable
     if future.nil?
       @console.printf("Nothing to watch%n")
     else
-      @controller.watch(BaseTypeFuture(future), kind)
+      @controller.watch(future:BaseTypeFuture, kind)
     end
   end
 
@@ -270,7 +270,7 @@ class ConsoleDebugger implements DebugListener, Runnable
     index = Integer.parseInt(args[0])
     @controller.breakpoints.each do |b|
       if (index -= 1) < 0
-        @controller.clearBreakpoint(Breakpoint(b))
+        @controller.clearBreakpoint(b:Breakpoint)
         break
       end
     end
@@ -298,7 +298,7 @@ class ConsoleDebugger implements DebugListener, Runnable
   def dumpObject(args:String[]):void
     what = resolveObject(args, 0)
     if what.kind_of?(BaseTypeFuture)
-      dumpFuture(BaseTypeFuture(what))
+      dumpFuture(what:BaseTypeFuture)
     else
       printObject(args)
     end
@@ -359,7 +359,7 @@ class ConsoleDebugger implements DebugListener, Runnable
       index += 1
       prop = nil
       if value.kind_of?(BaseTypeFuture)
-        btf = BaseTypeFuture(value)
+        btf = value:BaseTypeFuture
         if "resolved".equals(name) && btf.isResolved
           prop = btf.resolve
         else
@@ -371,7 +371,7 @@ class ConsoleDebugger implements DebugListener, Runnable
         info.getPropertyDescriptors.each do |p|
           if name.equals(p.getName)
             if property_index != -1
-              method = IndexedPropertyDescriptor(p).getIndexedReadMethod
+              method = p:IndexedPropertyDescriptor.getIndexedReadMethod
               prop = method.invoke(value, property_index)
               property_index = -1
             else
@@ -390,7 +390,7 @@ class ConsoleDebugger implements DebugListener, Runnable
       end
       if property_index != -1
         if prop.kind_of?(List)
-          prop = List(prop).get(property_index)
+          prop = prop:List.get(property_index)
         elsif prop.getClass.isArray
           prop = Object[].cast(prop)[property_index]
         end

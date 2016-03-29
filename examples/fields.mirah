@@ -17,7 +17,7 @@ import java.util.ArrayList
 
 class Bar
   def initialize
-    @a = ArrayList(nil)
+    @a = nil:ArrayList
   end
 
   def list(a:ArrayList)

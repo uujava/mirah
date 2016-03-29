@@ -45,7 +45,7 @@ class ArrayExtensions
       type = arg.type if arg.type
     else
       x = gensym
-      type = TypeName(nil)
+      type = nil:TypeName
     end
     array = gensym
     i = gensym
@@ -103,7 +103,7 @@ class ArrayExtensions
     res           = gensym
     arraytype     = @call.target
     # basetype    = TypeName(arraytype).typeref.array_basetype
-    array_typeref = TypeName(arraytype).typeref
+    array_typeref = arraytype:TypeName.typeref
     basetype      = TypeRefImpl.new(array_typeref.name,false,array_typeref.isStatic,array_typeref.position)
     quote do
       `res` = `basetype`[`size`]
@@ -196,6 +196,6 @@ class ArrayExtensions
   end
 
   macro def self.cast(array)
-    Cast.new(@call.position, TypeName(@call.target), array)
+    Cast.new(@call.position, @call.target:TypeName, array)
   end
 end

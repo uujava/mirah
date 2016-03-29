@@ -46,11 +46,11 @@ class ProxyNode < NodeList implements TypeName, Identifier
 
   def clone
     #if @selectedNode
-    #  cloned = Node(@selectedNode.clone)
+    #  cloned = @selectedNode.clone:Node
     #  fireWasCloned(cloned)
     #  cloned
     #else
-      cloned = Node(@original.clone)
+      cloned = @original.clone:Node
       fireWasCloned(cloned)
       cloned
     #end
@@ -76,7 +76,7 @@ class ProxyNode < NodeList implements TypeName, Identifier
   def typeref
     @nodes.each do |n|
       if n.kind_of?(TypeName)
-        return TypeName(n).typeref
+        return n:TypeName.typeref
       end
     end
     nil
@@ -115,7 +115,7 @@ class ProxyNode < NodeList implements TypeName, Identifier
     @future = nil
 
     nodes.size.times do |i|
-      node = childAdded(Node(nodes[i]))
+      node = childAdded(nodes[i]:Node)
       newNodes.add(node)
     end
     @nodes = newNodes

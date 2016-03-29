@@ -68,11 +68,11 @@ class LocalFuture < AssignableTypeFuture
 
     if (forceIncludeChildren || assignments.size > 0) && includeChildren
       @children.each do |child|
-        assignments.addAll(LocalFuture(child).assignedValues(false, true, true))
+        assignments.addAll(child:LocalFuture.assignedValues(false, true, true))
       end
     end
 
-    Collection(assignments)
+    assignments:Collection
   end
 
   def toString

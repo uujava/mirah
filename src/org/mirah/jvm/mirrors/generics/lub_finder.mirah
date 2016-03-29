@@ -53,7 +53,7 @@ class LubFinder
 
   def leastUpperBound(types:Collection):DeclaredType
     if @cycles.containsKey(types)
-      DeclaredType(@cycles[types])
+      @cycles[types]:DeclaredType
     else
       cycle_guard = @cycles[types] = Cycle.new
       ecs = erasedCandidateSet(types)
@@ -63,14 +63,14 @@ class LubFinder
       supertypes = List(ecs.values.map {|x:Set| candidateInvocation(x)})
       @@log.fine("lub candidates(#{types}) = #{supertypes}")
       result = if supertypes.size == 1
-        DeclaredType(supertypes[0])
+        supertypes[0]:DeclaredType
       elsif supertypes.size == 0
         nil
       else
         IntersectionType.new(@context, supertypes)
       end
       @cycles.remove(types)
-      cycle_guard.target = MirrorType(Object(result))
+      cycle_guard.target = result:Object:MirrorType
       result
     end
   end
@@ -82,13 +82,13 @@ class LubFinder
     to_process = LinkedList.new
     to_process.add(t)
     until to_process.isEmpty
-      type = unwrap(TypeMirror(to_process.removeFirst))
+      type = unwrap(to_process.removeFirst:TypeMirror)
       next if processed.contains(type)
       erased = unwrap(@types.erasure(type))
       @@log.finest("Processing #{type}")
       processed.add(type)
       processed.add(erased)
-      instantiations = Set(supertypes[erased])
+      instantiations = supertypes[erased]:Set
       if instantiations.nil?
         instantiations = supertypes[erased] = HashSet.new
       end
@@ -101,7 +101,7 @@ class LubFinder
 
   def unwrap(t:TypeMirror):TypeMirror
     while t.kind_of?(MirrorProxy)
-      t = MirrorProxy(t).target
+      t = t:MirrorProxy.target
     end
     t
   end
@@ -110,9 +110,9 @@ class LubFinder
     return b if a.nil?
     it = a.entrySet.iterator
     while it.hasNext
-      e = java::util::Map::Entry(it.next)
+      e =  it.next:java::util::Map::Entry
       if b.containsKey(e.getKey)
-        Set(e.getValue).addAll(Set(b[e.getKey]))
+        e.getValue:Set.addAll(b[e.getKey]:Set)
       else
         it.remove
       end
@@ -125,7 +125,7 @@ class LubFinder
     candidates = nil
     types.each do |t|
       candidates = combineCandidates(
-          candidates, erasedSupertypes(TypeMirror(t)))
+          candidates, erasedSupertypes(t:TypeMirror))
     end
     candidates || Collections.emptyMap
   end
@@ -136,11 +136,11 @@ class LubFinder
     minimal = HashSet.new
     cit = candidates.iterator
     while cit.hasNext
-      c = TypeMirror(cit.next)
+      c = cit.next:TypeMirror
       mit = minimal.iterator
       isMinimal = true
       while mit.hasNext
-        m = TypeMirror(mit.next)
+        m = mit.next:TypeMirror
         # We're using a set, so we shouldn't need to check type equality
         if @types.isSubtype(m, c)
           isMinimal = false
@@ -159,7 +159,7 @@ class LubFinder
 
   def candidateInvocation(invocations:Collection):TypeMirror
     if invocations.size == 1
-      TypeMirror(invocations.iterator.next)
+      invocations.iterator.next:TypeMirror
     else
       invocations.reduce do |x:DeclaredType, y:DeclaredType|
         candidateInvocation2(x, y)
@@ -232,7 +232,7 @@ class LubFinder
 
   def wildcard(type:TypeMirror):WildcardType
     if type.getKind == TypeKind.WILDCARD
-      WildcardType(type)
+      type:WildcardType
     end
   end
 end

@@ -44,7 +44,7 @@ class SimpleDiagnostics; implements DiagnosticListener
 
   def report(diagnostic)
     @errors += 1 if Kind.ERROR == diagnostic.getKind
-    source = CodeSource(diagnostic.getSource) if diagnostic.getSource.kind_of?(CodeSource)
+    source = diagnostic.getSource:CodeSource if diagnostic.getSource.kind_of?(CodeSource)
     position = if source
       String.format("%s:%d:%n", source.name, diagnostic.getLineNumber)
     end

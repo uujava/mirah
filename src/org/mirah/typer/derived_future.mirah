@@ -30,7 +30,7 @@ end
 class DerivedFuture < BaseTypeFuture
   def initialize(target:TypeFuture, transformer:ResolvedTypeTransformer)
     if target.kind_of?(BaseTypeFuture)
-      self.position = BaseTypeFuture(target).position
+      self.position = target:BaseTypeFuture.position
     end
     @target = target
     @transformer = transformer

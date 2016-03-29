@@ -23,7 +23,7 @@ class AssignmentFuture < BaseTypeFuture
     @variable = variable
     @value = value
     assignment = self
-    TypeFuture(@variable).onUpdate do |x, resolved|
+    @variable:TypeFuture.onUpdate do |x, resolved|
       assignment.checkCompatibility
     end
   end

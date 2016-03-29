@@ -101,7 +101,7 @@ class BindingAdjuster < NodeScanner
       # in case the assertions are disabled
         raise "We have no type for captured variable \"#{cap}\"."
       end
-      is_array           = JVMTypeUtils.isArray(JVMType(type))
+      is_array           = JVMTypeUtils.isArray(type:JVMType)
       variable_type_name = type.name
       variable_type_name = variable_type_name.substring(0,variable_type_name.length-2) if is_array # chop off trailing "[]"
       variable_type_ref  = TypeRefImpl.new(variable_type_name, is_array, false, node.position)
@@ -123,8 +123,8 @@ class BindingAdjuster < NodeScanner
         binding_new_call)
 
     @@log.fine "inserted binding assign / binding class "
-    @builder.insert_into_body NodeList(node), assign_binding_dot_new
-    @builder.insert_into_body NodeList(node), binding_klass
+    @builder.insert_into_body node:NodeList, assign_binding_dot_new
+    @builder.insert_into_body node:NodeList, binding_klass
 
     binding_type = @builder.infer(binding_klass).resolve
 
@@ -144,9 +144,9 @@ class BindingAdjuster < NodeScanner
     block_parent = node.findAncestor { |n| n.kind_of? Block }
 
     arguments = if mdef
-      MethodDefinition(mdef).arguments
+      mdef:MethodDefinition.arguments
     elsif block_parent
-      Block(block_parent).arguments
+      block_parent:Block.arguments
     end
 
     node.accept self, 1
@@ -177,7 +177,7 @@ class BindingAdjuster < NodeScanner
         @builder.typer.workaroundASTBug addition
          # insert after binding class & binding instantiation
          # if we were less lazy, we'd find the binding construction, and insert after
-        NodeList(node).insert 2, addition
+        node:NodeList.insert 2, addition
 
         @builder.infer addition
       end
@@ -218,7 +218,7 @@ class BindingAdjuster < NodeScanner
 
   def maybeNoteBlockBinding
     @blocks.each do |block: Block|
-      Collection(@blockToBindings[@builder.blockCloneMapNewOld[block]]).add @bindingName
+      @blockToBindings[@builder.blockCloneMapNewOld[block]]:Collection.add @bindingName
     end
   end
 
@@ -240,7 +240,7 @@ class BindingAdjuster < NodeScanner
 
     maybeNoteBlockBinding
 
-    new_value = Node(local.value)
+    new_value = local.value:Node
     new_value.setParent(nil)
     replacement = Call.new(
       blockAccessNode(local.position),
@@ -280,7 +280,7 @@ class BindingAdjuster < NodeScanner
     @builder.typer.learnType replacement.target, @binding_type
 
     @@log.fine "does replacement have parent?: #{replacement.parent}"
-    @@log.fine "does replacement parent 0th child: #{NodeList(replacement.parent).get(0)}" if replacement.parent.kind_of? NodeList
+    @@log.fine "does replacement parent 0th child: #{replacement.parent:NodeList.get(0)}" if replacement.parent.kind_of? NodeList
     @@log.fine "does replacement have parent?: #{replacement.parent.parent}" if replacement.parent
     @builder.typer.infer replacement
   end

@@ -49,7 +49,7 @@ class CallFuture < BaseTypeFuture
     @name = name
     @paramTypes = paramTypes
     @params = paramNodes
-    @resolved_target = ResolvedType(nil)
+    @resolved_target = nil:ResolvedType
     @resolved_args = ArrayList.new(paramTypes.size)
     paramTypes.size.times do |i|
       @resolved_args.add(
@@ -74,7 +74,7 @@ class CallFuture < BaseTypeFuture
     out.printFuture(@target)
     out.writeLine("name: #{@name}")
     @paramTypes.each do |p|
-      out.printFuture(TypeFuture(p))
+      out.printFuture(p:TypeFuture)
     end
   end
 
@@ -183,7 +183,7 @@ class CallFuture < BaseTypeFuture
       param = @paramTypes.get(i)
       if param.kind_of?(BlockFuture)
         block_type = error || ResolvedType(type.parameterTypes.get(i))
-        BlockFuture(param).resolved(block_type)
+        param:BlockFuture.resolved(block_type)
       end
     end
   end
@@ -201,7 +201,7 @@ class CallFuture < BaseTypeFuture
     @@log.log(Level.FINER, "maybeUpdate(name=#{name}, target=#{@resolved_target}, args=#{@resolved_args})")
     if @resolved_target
       if @resolved_target.isError
-        @method = TypeFuture(nil)
+        @method = nil:TypeFuture
         resolved(@resolved_target)
         resolveBlocks(nil, @resolved_target)
       else
@@ -215,7 +215,7 @@ class CallFuture < BaseTypeFuture
           @method.onUpdate do |m, type|
             if m == call.currentMethodType
               if type.kind_of?(MethodType)
-                mtype = MethodType(type)
+                mtype = type:MethodType
                 call.resolveBlocks(mtype, nil)
                 is_void = void_type.equals(mtype.returnType)
                 if is_void
@@ -227,7 +227,7 @@ class CallFuture < BaseTypeFuture
                 unless type.isError
                   raise IllegalArgumentException, "Expected MethodType, got #{type}"
                 end
-                # TODO(ribrdb) should resolve blocks, return type
+                # ribrdb:TODO should resolve blocks, return type
                 error = call.getArgError || type
                 call.resolveBlocks(nil, error)
                 call.resolved(error)

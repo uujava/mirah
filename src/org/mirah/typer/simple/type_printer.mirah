@@ -81,7 +81,7 @@ class TypePrinter < NodeScanner
     super(node, arg)
     if node.object
       if node.object.kind_of?(Node)
-        Node(node.object).accept(self, arg)
+        node.object:Node.accept(self, arg)
       else
         printIndent
         @out.print node.object
@@ -362,7 +362,7 @@ class TypePrinter2 < NodeScanner
     super(node, arg)
     if node.object
       if node.object.kind_of?(Node)
-        Node(node.object).accept(self, arg)
+        node.object:Node.accept(self, arg)
       else
         printIndent
         @out.print node.object

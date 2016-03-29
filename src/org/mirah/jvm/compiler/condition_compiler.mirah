@@ -91,7 +91,7 @@ class ConditionCompiler < BaseCompiler
 
   def doComparison(label:Label)
     op = @negated ? @@NEGATED_OPS[@op] : @op
-    @bytecode.ifCmp(@type.getAsmType, CallCompiler.computeComparisonOp(String(op)), @negated, label)
+    @bytecode.ifCmp(@type.getAsmType, CallCompiler.computeComparisonOp(op:String), @negated, label)
   end
   
   def visitNot(node, expression)

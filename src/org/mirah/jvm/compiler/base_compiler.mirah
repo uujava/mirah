@@ -91,16 +91,16 @@ class BaseCompiler < SimpleNodeVisitor
       
       raise ReportedException.new(ex)
     end
-    RuntimeException(nil)  # unreachable
+    nil:RuntimeException  # unreachable
   end
 
   def getInferredType(node:Node):JVMType
     type = @typer.getInferredType(node).resolve
     return nil if type.kind_of?(UnreachableType)
     if type.kind_of?(ErrorType)
-      reportError(ErrorType(type).message.toString, node.position)
+      reportError(type:ErrorType.message.toString, node.position)
     end
-    JVMType(type)
+    type:JVMType
   rescue Exception => ex
     @@log.log Level.SEVERE, "this node: #{node}, #{node.position}"
     raise reportICE(ex, node.position)
@@ -116,9 +116,9 @@ class BaseCompiler < SimpleNodeVisitor
     args = Type[argTypes.size]
     args.length.times do |i|
       begin
-        args[i] = JVMType(argTypes[i]).getAsmType
+        args[i] = argTypes[i]:JVMType.getAsmType
       rescue ClassCastException
-        error = ErrorType(argTypes[i])
+        error = argTypes[i]:ErrorType
         e = List(error.message.get(0))
         ex = IllegalArgumentException.new(String(e.get(0)))
         raise reportICE(ex, Position(e.get(1)))
@@ -140,7 +140,7 @@ class BaseCompiler < SimpleNodeVisitor
     argTypes = method.argumentTypes
     args = Type[argTypes.size]
     args.length.times do |i|
-      args[i] = JVMType(argTypes[i]).getAsmType
+      args[i] = argTypes[i]:JVMType.getAsmType
     end
     Method.new(name, returnType, args)
   end

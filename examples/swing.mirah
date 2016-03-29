@@ -24,7 +24,7 @@ frame.add button
 frame.show
 
 button.addActionListener do |event|
-  JButton(event.getSource).setText "Mirah Rocks!"
+  event.getSource:JButton.setText "Mirah Rocks!"
 end
 frame.setVisible true
 frame.setDefaultCloseOperation JFrame.EXIT_ON_CLOSE

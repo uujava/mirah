@@ -72,7 +72,7 @@ class MethodSignatureReader < BaseSignatureReader
   end
 
   def genericReturnType
-    MirrorType(@forced_return || @returnType.future.resolve)
+    @forced_return || @returnType.future.resolve:MirrorType
   end
 
   def readMember(member:Member)

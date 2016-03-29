@@ -149,6 +149,6 @@ class ScriptCleanup < NodeScanner
       script.body.insert(0, @main_class)
       @typer.infer(@main_class, false)
     end
-    ClassDefinition(@main_class)
+    @main_class:ClassDefinition
   end
 end

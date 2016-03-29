@@ -58,7 +58,7 @@ class MirahApp < HttpServlet
     matcher = @escape_pattern.matcher(text)
     buffer = StringBuffer.new
     while matcher.find
-      replacement = String(@escaped.get(matcher.group))
+      replacement = @escaped.get(matcher.group):String
       matcher.appendReplacement(buffer, replacement)
     end
     matcher.appendTail(buffer)

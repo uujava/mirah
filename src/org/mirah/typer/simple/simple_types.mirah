@@ -27,7 +27,7 @@ import java.io.InputStreamReader
 import java.io.FileInputStream
 import java.io.PrintStream
 
-# TODO(nh) this appears unused
+# nh:TODO this appears unused
 # A minimal TypeSystem for the Typer tests.
 # The main TypeSystem is Mirah::JVM::Types::TypeFactory, in
 # lib/mirah/jvm/types/factory.rb
@@ -37,7 +37,7 @@ class SimpleTypes; implements TypeSystem
     [ :Null, :Void, :Exception, :Regex,
       :String, :Bool, :Int, :Char, :Float,
       :Hash
-      ].each { |t| @types[t] = SimpleType.new(String(t), false, false)}
+      ].each { |t| @types[t] = SimpleType.new(t:String, false, false)}
     @meta_types = {}
     @array_types = {}
     @methods = {}
@@ -46,7 +46,7 @@ class SimpleTypes; implements TypeSystem
     @types[main_type] = @main_type = SimpleType.new(main_type, false, false)
   end
   def lookup(name:String)
-    SpecialType(@types[name])
+    @types[name]:SpecialType
   end
   def getNullType
     lookup :Null
@@ -87,7 +87,7 @@ class SimpleTypes; implements TypeSystem
 
   def getMetaType(type:ResolvedType):ResolvedType
     return type if (type.isMeta || type.isError)
-    t = ResolvedType(@meta_types[type])
+    t = @meta_types[type]:ResolvedType
     unless t
       t = ResolvedType(SimpleType.new(type.name, true, false))
       @meta_types[type] = t
@@ -95,11 +95,11 @@ class SimpleTypes; implements TypeSystem
     t
   end
   def getMetaType(type:TypeFuture):TypeFuture
-    SpecialType(getMetaType(ResolvedType(SpecialType(type))))
+    SpecialType(getMetaType(type:SpecialType:ResolvedType))
   end
   def getArrayType(componentType:ResolvedType):ResolvedType
     # What about multi-dimensional arrays?
-    t = ResolvedType(@array_types[componentType])
+    t = @array_types[componentType]:ResolvedType
     unless t
       t = ResolvedType(SimpleType.new(componentType.name, false, true))
       @array_types[componentType] = t
@@ -155,7 +155,7 @@ class SimpleTypes; implements TypeSystem
     end
 
     key = [target, name, argTypes]
-    t = MethodFuture(@methods[key])
+    t = @methods[key]:MethodFuture
     unless t
       # Start with an error message in case it isn't found.
       return_type = AssignableTypeFuture.new(nil).resolved(ErrorType.new([
@@ -171,7 +171,7 @@ class SimpleTypes; implements TypeSystem
   end
   def getFieldType(target, name, position)
     key = [target.resolve, name]
-    t = AssignableTypeFuture(@fields[key])
+    t = @fields[key]:AssignableTypeFuture
     unless t
       t = AssignableTypeFuture.new(position)
       @fields[key] = t
@@ -180,7 +180,7 @@ class SimpleTypes; implements TypeSystem
   end
   def getLocalType(scope, name, position)
     key = [scope, name]
-    t = AssignableTypeFuture(@locals[key])
+    t = @locals[key]:AssignableTypeFuture
     unless t
       t = AssignableTypeFuture.new(position)
       @locals[key] = t

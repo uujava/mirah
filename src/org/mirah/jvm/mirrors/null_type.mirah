@@ -37,7 +37,7 @@ class NullType < BaseType implements NullTypeModel
   end
   def assignableFrom(other:ResolvedType):boolean
     return true if other.matchesAnything
-    return other.kind_of?(JVMType) && !JVMTypeUtils.isPrimitive(JVMType(other))
+    return other.kind_of?(JVMType) && !JVMTypeUtils.isPrimitive(other:JVMType)
   end
 
   def getKind

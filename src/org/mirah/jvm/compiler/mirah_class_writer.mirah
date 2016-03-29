@@ -30,7 +30,7 @@ class MirahClassWriter < ClassWriter
       resolved_a = MirrorType(@types.loadNamedType(a).resolve)
       resolved_b = MirrorType(@types.loadNamedType(b).resolve)
       wide = MirrorType(resolved_a.widen(resolved_b)).erasure
-      MirrorType(wide).getAsmType.getInternalName
+      wide:MirrorType.getAsmType.getInternalName
     else
       super
     end

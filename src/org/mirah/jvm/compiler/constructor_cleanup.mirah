@@ -108,8 +108,8 @@ class ConstructorCleanup < SimpleNodeVisitor
   
   def insertNodesAfter(node:Node, arg:Object):void
     if arg
-      parent = NodeList(node.parent)
-      parent.insert(1, Node(arg))
+      parent = node.parent:NodeList
+      parent.insert(1, arg:Node)
       @typer.infer(parent.get(1))
     end
   end

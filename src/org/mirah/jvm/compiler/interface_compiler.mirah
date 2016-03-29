@@ -26,11 +26,11 @@ import mirah.objectweb.asm.commons.Method
 
 class InterfaceCompiler < ClassCompiler
   def initialize(context:Context, classdef:InterfaceDeclaration)
-    super(context, ClassDefinition(classdef))
+    super(context, classdef:ClassDefinition)
   end
   
   def initialize(context:Context, classdef:InterfaceDeclaration, outerClass:JVMType, method:Method)
-    super(context, ClassDefinition(classdef), outerClass, method)
+    super(context, classdef:ClassDefinition, outerClass, method)
   end
   
   def flags

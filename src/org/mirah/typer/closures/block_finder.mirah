@@ -47,14 +47,14 @@ class BlockFinder < NodeScanner
       #if t.kind_of? MethodType
         parent_type_future = @typer.getInferredType(node.parent)
         unless parent_type_future
-          puts "#{CallSite(node.parent).name} call with block has no type at #{node.parent.position}"
+          puts "#{node.parent:CallSite.name} call with block has no type at #{node.parent.position}"
           puts "  block type: #{@typer.getInferredType(node)}"
         end
-        fs = CallFuture(parent_type_future).futures
+        fs = parent_type_future:CallFuture.futures
         TypeFuture(fs.get(fs.size-1)).resolve
       #else
       #end
     end
-    Map(notes).put node, type
+    notes:Map.put node, type
   end
 end

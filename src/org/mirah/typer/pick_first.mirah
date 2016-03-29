@@ -72,7 +72,7 @@ class PickFirst < BaseTypeFuture
 
   def dump(out)
     @items.each do |i|
-      out.printFuture(TypeFuture(i))
+      out.printFuture(i:TypeFuture)
     end
   end
 

@@ -38,7 +38,7 @@ abstract class BaseSignatureReader < SignatureVisitor
     @context = context
     @typeVariables = Collections.checkedMap({}, String.class, TypeFuture.class)
     @typeVariables.putAll(typeVariables) if typeVariables
-    @classbound = AsyncTypeBuilder(nil)
+    @classbound = nil:AsyncTypeBuilder
     @processed_signatures = processed_signatures
   end
 
@@ -59,13 +59,13 @@ abstract class BaseSignatureReader < SignatureVisitor
         MirrorType(@context[MirrorTypeSystem].loadNamedType(
             "java.lang.Object").resolve)
       elsif types.size == 1
-        MirrorType(types[0])
+        types[0]:MirrorType
       else
         IntersectionType.new(@context, types)
       end
       saveTypeParam(TypeVariable.new(@context, @typeParamName, bound))
     end
-    @typeParamName = String(nil)
+    @typeParamName = nil:String
   end
 
   def visitFormalTypeParameter(name)

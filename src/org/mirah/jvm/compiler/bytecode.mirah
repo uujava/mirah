@@ -110,7 +110,7 @@ class Bytecode < GeneratorAdapter
   end
   
   def loadLocal(name:String):void
-    info = LocalInfo(@locals[name])
+    info = @locals[name]:LocalInfo
     raise "missing local #{name} in list #{@locals.keySet}" if info.nil?
     visitVarInsn(info.type.getOpcode(Opcodes.ILOAD), info.index)
   end
@@ -119,7 +119,7 @@ class Bytecode < GeneratorAdapter
     if 0 == @flags & (Opcodes.ACC_NATIVE | Opcodes.ACC_ABSTRACT)
       mark(@endLabel)
       @locals.values.each do |info|
-        LocalInfo(info).declare(self)
+        info:LocalInfo.declare(self)
       end
     end
     super
@@ -136,7 +136,7 @@ class Bytecode < GeneratorAdapter
   end
   
   def pushNil:void
-    push(String(nil))
+    push(nil:String)
   end
   
   def pop(type:JVMType)

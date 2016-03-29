@@ -90,7 +90,7 @@ class TypeInvoker < BaseSignatureReader
     array = TypeFuture[@interfaces.size]
     it = @interfaces.iterator
     @interfaces.size.times do |i|
-      array[i] = AsyncTypeBuilder(it.next).future
+      array[i] = it.next:AsyncTypeBuilder.future
     end
     array
   end
@@ -101,7 +101,7 @@ class TypeInvoker < BaseSignatureReader
 
   def self.invoke(context:Context, type:MirrorType, args:List,
                   outerTypeArgs:Map, processed_signatures:Map):MirrorType
-    dtype = DeclaredMirrorType(type)
+    dtype = type:DeclaredMirrorType
     if dtype.signature.nil? || args.any? {|a| a.nil?}
       type
     else

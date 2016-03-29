@@ -30,7 +30,7 @@ class TypeElement implements TypeElementModel
 
   def equals(other)
     other.kind_of?(TypeElement) &&
-        descriptor.equals(TypeElement(other).descriptor)
+        descriptor.equals(other:TypeElement.descriptor)
   end
 
   def hashCode

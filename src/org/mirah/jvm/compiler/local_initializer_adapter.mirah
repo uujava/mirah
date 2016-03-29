@@ -167,7 +167,7 @@ class LocalInitializerAdapter < MethodVisitor
     array.length.times do |i|
       opcode = array[i].getOpcode
       if opcode >= Opcodes.ILOAD && opcode <= Opcodes.ALOAD
-        var = VarInsnNode(array[i]).var
+        var = array[i]:VarInsnNode.var
         frame = frames[i]
         next if frame.nil?
         next unless frame.getLocal(var) == BasicValue.UNINITIALIZED_VALUE
