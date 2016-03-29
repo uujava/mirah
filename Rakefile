@@ -29,12 +29,19 @@ require 'ant'
 # put run reqs in javalib
 # final artifacts got in dist
 
+version_major=ENV["MIRAH_VERSION_MAJOR"] || "0.1.5"
+version_minor=ENV["MIRAH_VERSION_MINOR"] || "dev"
+version_full="#{version_major}.#{version_minor}"
+
 # this definition ensures that the bootstrap tasks will be completed before
 # building the .gem file. Otherwise, the gem may not contain the jars.
-task :gem => :compile
+task :gem => 'dist/mirahc.jar'
 
 # depends on dist/mirahc.jar
-Gem::PackageTask.new Gem::Specification.load('mirah.gemspec') do |pkg|
+spec = Gem::Specification.load('mirah.gemspec')
+spec.version = version_full
+
+Gem::PackageTask.new spec do |pkg|
   pkg.need_zip = true
   pkg.need_tar = true
 end
@@ -211,9 +218,7 @@ end
 
 desc "Build a distribution zip file"
 task :zip => 'jar:complete' do
-  $CLASSPATH << "dist/mirahc.jar"
-  java_import "org.mirah.tool.Mirahc"
-  basedir = "tmp/mirah-#{Mirahc::VERSION}"
+  basedir = "tmp/mirah-#{version_full}"
   mkdir_p "#{basedir}/lib"
   mkdir_p "#{basedir}/bin"
   cp 'dist/mirah-complete.jar', "#{basedir}/lib"
@@ -227,7 +232,7 @@ task :zip => 'jar:complete' do
   cp 'LICENSE', "#{basedir}"
   cp 'COPYING', "#{basedir}"
   cp 'History.txt', "#{basedir}"
-  sh "sh -c 'cd tmp ; zip -r ../dist/mirah-#{Mirahc::VERSION}.zip mirah-#{Mirahc::VERSION}/*'"
+  sh "sh -c 'cd tmp ; zip -r ../dist/mirah-#{version_full}.zip mirah-#{version_full}/*'"
   rm_rf 'tmp'
 end
 
@@ -298,9 +303,6 @@ end
 desc "create version file from ENV MIRAH_MAJOR_VERSION, MIRAH_MINOR_VERSION"
 task :mirah_version => "build/generated/"
 file "build/generated/"  do
-  major=ENV["MIRAH_VERSION_MAJOR"] || "0.1.5"
-  minor=ENV["MIRAH_VERSION_MINOR"] || "dev"
-
   genpath = "build/generated/org/mirah"
   mkdir_p genpath
   File.open("#{genpath}/Version.mirah", 'w') do |dest|
@@ -308,7 +310,7 @@ file "build/generated/"  do
 class Version
    attr_reader minor: String
    attr_reader major: String
-   VERSION = Version.new('#{major}', '#{minor}')
+   VERSION = Version.new('#{version_major}', '#{version_minor}')
 
    private def initialize(major:String, minor:String)
      @major = major
