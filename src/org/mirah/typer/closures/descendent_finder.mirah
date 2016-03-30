@@ -21,7 +21,7 @@ import java.util.List
 
 
 # from commented out code in the parser
-# TODO(nh): put this back in the parser
+# nh:TODO: put this back in the parser
 class DescendentFinder2 < NodeScanner
   def initialize(children_only: boolean, only_one: boolean, filter: NodeFilter)
     @results = ArrayList.new
@@ -47,7 +47,7 @@ class DescendentFinder2 < NodeScanner
     if @results.size == 0
       nil
     else
-      Node(@results.get(0))
+      @results.get(0):Node
     end
   end
 end

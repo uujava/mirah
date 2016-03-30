@@ -43,7 +43,7 @@ class ClassCleanup < NodeScanner
     @static_init_nodes = ArrayList.new
     @init_nodes = ArrayList.new
     @constructors = ArrayList.new
-    @type = JVMType(@typer.getInferredType(@klass).resolve)
+    @type = @typer.getInferredType(@klass).resolve:JVMType
     @field_collector = FieldCollector.new(context, @type)
     @field_annotation_requestss = {}
     @methods = ArrayList.new
@@ -174,7 +174,7 @@ class ClassCleanup < NodeScanner
     MethodCleanup.new(@context, node).clean
     @methods.add(node)
     addMethodState(MethodState.new(
-        node, MethodType(@typer.getInferredType(node).resolve)))
+        node, @typer.getInferredType(node).resolve:MethodType))
     false
   end
 
@@ -186,7 +186,7 @@ class ClassCleanup < NodeScanner
     @methods.add(node)
     MethodCleanup.new(@context, node).clean
     addMethodState(MethodState.new(
-        node, MethodType(@typer.getInferredType(node).resolve)))
+        node, @typer.getInferredType(node).resolve:MethodType))
     false
   end
 
@@ -209,7 +209,7 @@ class ClassCleanup < NodeScanner
     MethodCleanup.new(@context, node).clean
     @methods.add(node)
     addMethodState(MethodState.new(
-        node, MethodType(@typer.getInferredType(node).resolve)))
+        node, @typer.getInferredType(node).resolve:MethodType))
     false
   end
   

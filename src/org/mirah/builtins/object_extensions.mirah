@@ -24,7 +24,7 @@ class ObjectExtensions
 
   macro def ==(node)
     # During the transition, alias == to === inside equals method definitions
-    mdef = MethodDefinition(@call.findAncestor(MethodDefinition.class))
+    mdef = @call.findAncestor(MethodDefinition.class):MethodDefinition
     if mdef && mdef.name.identifier.equals("equals")
       if @call.target.kind_of?(Self) || node.kind_of?(Self)
         System.out.println("WARNING: == is now an alias for Object#equals(), === is now used for identity.\nThis use of == with self in equals() definition may cause a stack overflow in next release!#{mdef.position.source.name}:")

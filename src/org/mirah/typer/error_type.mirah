@@ -57,8 +57,8 @@ class ErrorType < SpecialType
     new_message = ArrayList.new(message.size)
     message.each do |_pair|
       pair = _pair:List
-      text = String(pair.get(0))
-      position = pair.size > 1 ? Position(pair.get(1)) : nil
+      text = pair.get(0):String
+      position = pair.size > 1 ? pair.get(1):Position : nil
       new_pair = ArrayList.new(2)
       new_pair.add(text)
       new_pair.add(position)

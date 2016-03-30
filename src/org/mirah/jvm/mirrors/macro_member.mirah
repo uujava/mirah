@@ -43,14 +43,14 @@ class MacroMember < Member
   def self.makeReturnType(klass:Class)
     InlineCode.new do |node, typer|
       constructor = klass.getDeclaredConstructors[0]
-      macroimpl = Macro(constructor.newInstance(typer.macro_compiler, node))
+      macroimpl = constructor.newInstance(typer.macro_compiler, node):Macro
       macroimpl.expand || Noop.new(node.position)
     end
   end
 
   def self.create(klass:Class, declaringClass:JVMType, context:Context)
     flags = Opcodes.ACC_PUBLIC
-    macrodef = MacroDef(klass.getAnnotation(MacroDef.class))
+    macrodef = klass.getAnnotation(MacroDef.class):MacroDef
     flags |= Opcodes.ACC_STATIC if macrodef.isStatic
     
     types = context[MirrorTypeSystem]

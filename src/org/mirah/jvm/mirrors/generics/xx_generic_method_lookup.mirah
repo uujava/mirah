@@ -262,7 +262,7 @@ class GenericMethodLookup
 
   def substituteTypeVariables(type:TypeMirror, typevars:Map):MirrorType
     visitor = Substitutor.new(@context, typevars)
-    future = TypeFuture(visitor.visit(type))
+    future = visitor.visit(type):TypeFuture
     future.resolve:MirrorType
   end
 

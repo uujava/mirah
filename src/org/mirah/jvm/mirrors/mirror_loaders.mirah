@@ -175,7 +175,7 @@ class SimpleAsyncMirrorLoader implements AsyncMirrorLoader
   # Note that the order here is different from SimpleMirrorLoader:
   # We delegate to the parent after checking if we know about the type.
   def loadMirrorAsync(type:Type):TypeFuture
-    TypeFuture(@futures[type] ||= findMirrorAsync(type))
+    (@futures[type] ||= findMirrorAsync(type)):TypeFuture
   end
 
   def findMirrorAsync(type:Type):TypeFuture
@@ -381,7 +381,7 @@ class BytecodeMirrorLoader < SimpleMirrorLoader
     klass.invisibleAnnotations.each do |a|
       annotation = a:AnnotationNode
       if "Lorg/mirah/macros/anno/Extensions;".equals(annotation.desc)
-        return List(annotation.values.get(1))
+        return annotation.values.get(1):List
       end
     end if klass.invisibleAnnotations
     Collections.emptyList

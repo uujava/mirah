@@ -56,7 +56,7 @@ class IntersectionType < BaseType implements DeclaredType
   end
 
   def erasure
-    TypeMirror(@types.get(0))
+    @types.get(0):TypeMirror
   end
 
   def getKind

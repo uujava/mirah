@@ -27,9 +27,9 @@ class MirahClassWriter < ClassWriter
   end
   def getCommonSuperClass(a, b)
     if @types
-      resolved_a = MirrorType(@types.loadNamedType(a).resolve)
-      resolved_b = MirrorType(@types.loadNamedType(b).resolve)
-      wide = MirrorType(resolved_a.widen(resolved_b)).erasure
+      resolved_a = @types.loadNamedType(a).resolve:MirrorType
+      resolved_b = @types.loadNamedType(b).resolve:MirrorType
+      wide = resolved_a.widen(resolved_b):MirrorType.erasure
       wide:MirrorType.getAsmType.getInternalName
     else
       super

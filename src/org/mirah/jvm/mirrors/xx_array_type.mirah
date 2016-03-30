@@ -54,7 +54,7 @@ class ArrayType < BaseType implements ArrayModel
     @context = context
     @types = @context[MirrorTypeSystem]
     @types.extendArray(self)
-    @int_type = MirrorType(@types.wrap(Type.getType('I')).resolve)
+    @int_type:MirrorType = @types.wrap(Type.getType('I')).resolve
     @componentType = component
   end
 

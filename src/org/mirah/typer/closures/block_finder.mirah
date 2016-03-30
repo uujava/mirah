@@ -51,7 +51,7 @@ class BlockFinder < NodeScanner
           puts "  block type: #{@typer.getInferredType(node)}"
         end
         fs = parent_type_future:CallFuture.futures
-        TypeFuture(fs.get(fs.size-1)).resolve
+        fs.get(fs.size-1):TypeFuture.resolve
       #else
       #end
     end

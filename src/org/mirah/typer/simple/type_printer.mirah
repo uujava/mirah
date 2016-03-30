@@ -160,7 +160,7 @@ class TypePrinter2 < NodeScanner
     @out.print "$TODOAnnotations\n"  if node.annotations_size > 0
     printIndent
     @out.print "def "
-    @out.print "(self.)" # if MethodType(type).isStatic
+    @out.print "(self.)" # if type:MethodType.isStatic
     @out.print node.name.identifier
     node.arguments.accept(self, arg)
 

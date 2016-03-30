@@ -85,7 +85,7 @@ class MacrosTest < Test::Unit::TestCase
         mirah::lang::ast::Null.new
       end
 
-      puts(Object(foo()))
+      puts(foo():Object)
     EOF
 
     assert_run_output("null\n", cls)

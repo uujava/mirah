@@ -53,7 +53,7 @@ class Types implements TypesModel
     @context = context
     @types = context[MirrorTypeSystem]
     context[TypesModel] = self
-    @object = MirrorType(@types.loadNamedType('java.lang.Object').resolve)
+    @object:MirrorType = @types.loadNamedType('java.lang.Object').resolve
     @primitives = EnumMap.new(
       TypeKind.BOOLEAN => @types.loadNamedType('boolean').resolve,
       TypeKind.BYTE => @types.loadNamedType('byte').resolve,
@@ -71,7 +71,7 @@ class Types implements TypesModel
   end
 
   def getArrayType(component)
-    ArrayType(@types.getResolvedArrayType(component:MirrorType))
+    @types.getResolvedArrayType(component:MirrorType):ArrayType
   end
 
   def getNoType(kind)
@@ -115,7 +115,7 @@ class Types implements TypesModel
     args.each do |arg|
       arg_futures.add(BaseTypeFuture.new.resolved(arg:MirrorType))
     end
-    DeclaredMirrorType(@types.parameterize(type, arg_futures).resolve)
+    @types.parameterize(type, arg_futures).resolve:DeclaredMirrorType
   end
 
   def getWildcardType(extendsBound, superBound)

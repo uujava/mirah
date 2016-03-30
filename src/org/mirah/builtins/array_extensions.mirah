@@ -28,8 +28,8 @@ class ArrayExtensions
   #   1. both are null, or
   #   2. the element of the left array is an Object and that object's #equals() methods returns true given the element of the right array, or
   #   3. the element of the left array is a primitive type (except double and float) and it equals to the element of the right array, or
-  #   4. the element of the left array is a double and new Double(d1).equals(new Double(d2)) holds if d1 is the element of the left array and d2 is the element of the right array, or
-  #   5. the element of the left array is a float  and new Float(f1).equals(new Float(f2))   holds if f1 is the element of the left array and f2 is the element of the right array.
+  #   4. the element of the left array is a double and new d1:Double.equals(new Double(d2)) holds if d1 is the element of the left array and d2 is the element of the right array, or
+  #   5. the element of the left array is a float  and new f1:Float.equals(new Float(f2))   holds if f1 is the element of the left array and f2 is the element of the right array.
   #
   # Note that the basetype of each array does not need to be equal for the arrays to be considered equal.
   macro def ==(other_array)
@@ -102,7 +102,7 @@ class ArrayExtensions
     end
     res           = gensym
     arraytype     = @call.target
-    # basetype    = TypeName(arraytype).typeref.array_basetype
+    # basetype    = arraytype:TypeName.typeref.array_basetype
     array_typeref = arraytype:TypeName.typeref
     basetype      = TypeRefImpl.new(array_typeref.name,false,array_typeref.isStatic,array_typeref.position)
     quote do

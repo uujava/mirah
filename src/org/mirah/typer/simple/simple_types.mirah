@@ -89,31 +89,31 @@ class SimpleTypes; implements TypeSystem
     return type if (type.isMeta || type.isError)
     t = @meta_types[type]:ResolvedType
     unless t
-      t = ResolvedType(SimpleType.new(type.name, true, false))
+      t:ResolvedType = SimpleType.new(type.name, true, false)
       @meta_types[type] = t
     end
     t
   end
   def getMetaType(type:TypeFuture):TypeFuture
-    SpecialType(getMetaType(type:SpecialType:ResolvedType))
+    getMetaType(type:SpecialType:ResolvedType):SpecialType
   end
   def getArrayType(componentType:ResolvedType):ResolvedType
     # What about multi-dimensional arrays?
     t = @array_types[componentType]:ResolvedType
     unless t
-      t = ResolvedType(SimpleType.new(componentType.name, false, true))
+      t = SimpleType.new(componentType.name, false, true):ResolvedType
       @array_types[componentType] = t
     end
     t
   end
   def getArrayType(componentType:TypeFuture):TypeFuture
-    SpecialType(getArrayType(componentType.resolve))
+    getArrayType(componentType.resolve):SpecialType
   end
   def createType(name:String)
     if name.equals(name.toLowerCase())
-      TypeFuture(ErrorType.new([["Cannot find class #{name}"]]))
+      ErrorType.new([["Cannot find class #{name}"]]):TypeFuture
     else
-      TypeFuture(SimpleType.new(name, false, false))
+      SimpleType.new(name, false, false):TypeFuture
     end
   end
   
@@ -139,7 +139,7 @@ class SimpleTypes; implements TypeSystem
   def getMethodDefType(target, name, flags, argTypes, returnType, position)
     args = ArrayList.new(argTypes.size)
     argTypes.size.times do |i|
-      resolved = TypeFuture(argTypes.get(i)).resolve
+      resolved = argTypes.get(i):TypeFuture.resolve
       args.add(i, resolved)
     end
     result = getMethodTypeInternal(target.resolve, name, args, position)

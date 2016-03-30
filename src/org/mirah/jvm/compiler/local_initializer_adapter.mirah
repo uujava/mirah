@@ -62,7 +62,7 @@ class FlexibleFrame < Frame
     if i >= @locals.size
       BasicValue.UNINITIALIZED_VALUE
     else
-      Value(@locals.get(i))
+      @locals.get(i):Value
     end
   end
 
@@ -79,7 +79,7 @@ class FlexibleFrame < Frame
     if i >= @stack.size
       BasicValue.UNINITIALIZED_VALUE
     else
-      Value(@stack.get(i))
+      @stack.get(i):Value
     end
   end
 

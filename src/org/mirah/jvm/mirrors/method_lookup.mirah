@@ -261,14 +261,14 @@ class MethodLookup
     def getMethodArgument(arguments:List, index:int, isVararg:boolean)
       last_index = arguments.size - 1
       if isVararg && index >= last_index
-        type = ResolvedType(arguments.get(last_index))
+        type = arguments.get(last_index):ResolvedType
         if type.isError
           type
         else
           type:JVMType.getComponentType
         end
       else
-        ResolvedType(arguments.get(index))
+        arguments.get(index):ResolvedType
       end
     end
 
@@ -715,7 +715,7 @@ class LookupState
     if matches + macro_matches == 0
       if inaccessible != 0
         @context[MethodLookup].inaccessible(
-            @scope, Member(@inaccessible.get(0)), @position, self)
+            @scope, @inaccessible.get(0):Member, @position, self)
       elsif @context[DebuggerInterface]
         DebugError.new([["Can't find method #{@target}#{@params} II #{@methods}"]], @context, self)
       else

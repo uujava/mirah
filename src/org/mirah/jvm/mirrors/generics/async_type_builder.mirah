@@ -72,7 +72,7 @@ class AsyncTypeBuilder < SignatureVisitor
 
   def visitTypeArgument
     @typeArguments.add(BaseTypeFuture.new.resolved(
-        Wildcard(@type_utils.getWildcardType(nil, nil))))
+        @type_utils.getWildcardType(nil, nil):Wildcard))
   end
 
   def visitTypeArgument(kind)
@@ -85,9 +85,9 @@ class AsyncTypeBuilder < SignatureVisitor
           if kind == ?=
             type
           elsif kind == ?-
-            Wildcard(utils.getWildcardType(type, nil))
+            utils.getWildcardType(type, nil):Wildcard
           else
-            Wildcard(utils.getWildcardType(nil, type))
+            utils.getWildcardType(nil, type):Wildcard
           end
         end
       else
@@ -116,11 +116,11 @@ class AsyncTypeBuilder < SignatureVisitor
       end
     end
     utils = @type_utils
-    #TODO use {|ar: TypeFuture| !ar || MirrorType(utils.getWildcardType(nil, nil)).equals(ar.resolve) }
+    #TODO use {|ar: TypeFuture| !ar || utils.getWildcardType(nil, nil):MirrorType.equals(ar.resolve) }
     # once the parser is fixed to support it
     all_question_marks=args.all? do |ar: TypeFuture|
       if ar
-        Wildcard(utils.getWildcardType(nil, nil)).equals(ar.resolve)
+        utils.getWildcardType(nil, nil):Wildcard.equals(ar.resolve)
       else
         true
       end

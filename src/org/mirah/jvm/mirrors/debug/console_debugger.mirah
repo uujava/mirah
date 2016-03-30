@@ -244,7 +244,7 @@ class ConsoleDebugger implements DebugListener, Runnable
         kind = args[0]
       end
     end
-    future = BaseTypeFuture(resolveObject(args, nameIndex))
+    future:BaseTypeFuture = resolveObject(args, nameIndex)
 
     if future.nil?
       @console.printf("Nothing to watch%n")

@@ -52,7 +52,7 @@ class Member implements GenericMethod
   end
 
   def asyncArgument(index:int):TypeFuture
-    BaseTypeFuture.new(nil).resolved(ResolvedType(argumentTypes.get(index)))
+    BaseTypeFuture.new(nil).resolved(argumentTypes.get(index):ResolvedType)
   end
 
   def asyncReturnType:TypeFuture
@@ -148,7 +148,7 @@ class AsyncMember < Member
   end
 
   def asyncArgument(index)
-    TypeFuture(@futures.get(index))
+    @futures.get(index):TypeFuture
   end
 
   def asyncReturnType

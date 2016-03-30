@@ -40,9 +40,9 @@ interface Macro do
       @call.block.body
     end
     serialized = @mirah.serializeAst(node)
-    cast = quote {Cast(@mirah.deserializeAst(`serialized`))}
-    cast.name = SimpleString.new(node.getClass.getName)
-    cast
+    to_cast = quote { @mirah.deserializeAst(`serialized`) }
+    #anything function call replaced to node class
+    Cast.new to_cast.position, SimpleString.new(node.getClass.getName), to_cast
   end
 end
 
@@ -65,9 +65,8 @@ interface Compiler do
       @call.block.body
     end
     serialized = @mirah.serializeAst(node)
-    cast = quote {Cast(`@call.target`.deserializeAst(`serialized`))}
-    cast.name = SimpleString.new(node.getClass.getName)
-    cast
+    to_cast = quote { `@call.target`.deserializeAst(`serialized`) }
+    Cast.new to_cast.position, SimpleString.new(node.getClass.getName), to_cast
   end
 end
 

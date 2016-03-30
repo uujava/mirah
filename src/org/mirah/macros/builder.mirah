@@ -163,7 +163,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
     @typer.infer(ast)
     klass = @backend.compileAndLoadExtension(ast)
 
-    class_def = ClassDefinition(orig.findAncestor(ClassDefinition.class))
+    class_def:ClassDefinition = orig.findAncestor(ClassDefinition.class)
 
     addToExtensions(class_def, klass)
     registerLoadedMacro(cloned, klass)
@@ -216,7 +216,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
   end
 
   def deserializeAst(filename: String, startLine: int, startCol: int, code: String, values: List): Node
-    script = Script(@parser.parse(StringCodeSource.new(filename, code, startLine, startCol)))
+    script:Script = @parser.parse(StringCodeSource.new(filename, code, startLine, startCol))
     # ribrdb:TODO scope
     ValueSetter.new(values).scan(script)
     node = if script.body_size == 1
@@ -231,7 +231,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
   # If the string is too long split it into multiple string constants.
   def splitString(string: String): Node
     if string.length < 65535
-      Node(SimpleString.new(string))
+      SimpleString.new(string):Node
     else
       result = StringConcat.new
       while string.length >= 65535
@@ -313,9 +313,9 @@ class MacroBuilder; implements org.mirah.macros.Compiler
     end
     imports = scope.imports
     imports.keySet.each do |key|
-      future = @types.get scope, SimpleString.new(String(imports.get(key))).typeref
+      future = @types.get scope, SimpleString.new(imports.get(key):String).typeref
       if future.isResolved
-        preamble.add(Import.new(SimpleString.new(String(imports.get(key))),
+        preamble.add(Import.new(SimpleString.new(imports.get(key):String),
                                 SimpleString.new(key:String)))
       end
     end
@@ -326,7 +326,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
   def extensionName(macroDef: MacroDefinition)
     enclosing_type = @scopes.getScope(macroDef).selfType.peekInferredType
     if !enclosing_type.isError
-      counter = Integer(@extension_counters.get(enclosing_type))
+      counter:Integer = @extension_counters.get(enclosing_type)
       if counter.nil?
         id = 1
       else
@@ -465,7 +465,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
       end
     end
 
-    array = Array(extensions.values(0).value)
+    array:Array = extensions.values(0).value
     new_entry = SimpleString.new(klass.getName)
     entry_type = @typer.infer(new_entry)
     array.values.add(new_entry)

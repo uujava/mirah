@@ -161,7 +161,7 @@ class ClassStubWriter < StubWriter
   end
 
   def node_type
-    JVMType(typer.getInferredType(@node).resolve)
+    typer.getInferredType(@node).resolve:JVMType
   end
 
   def write_fields:void

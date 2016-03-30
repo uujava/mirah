@@ -107,7 +107,7 @@ class BaseCompiler < SimpleNodeVisitor
   end
 
   def getInferredType(mdef:MethodDefinition):MethodType
-    MethodType(typer.getInferredType(mdef).resolve)
+    typer.getInferredType(mdef).resolve:MethodType
   rescue Exception => ex
     raise reportICE(ex, mdef.name.position)
   end
@@ -119,9 +119,9 @@ class BaseCompiler < SimpleNodeVisitor
         args[i] = argTypes[i]:JVMType.getAsmType
       rescue ClassCastException
         error = argTypes[i]:ErrorType
-        e = List(error.message.get(0))
-        ex = IllegalArgumentException.new(String(e.get(0)))
-        raise reportICE(ex, Position(e.get(1)))
+        e = error.message.get(0):List
+        ex = IllegalArgumentException.new(e.get(0):String)
+        raise reportICE(ex, e.get(1):Position)
       end
     end
     Method.new(name, returnType.getAsmType, args)
@@ -191,7 +191,7 @@ class BaseCompiler < SimpleNodeVisitor
   end
   
   def findType(name:String):JVMType
-    JVMType(@typer.type_system.get(nil, TypeRefImpl.new(name, false, false, nil)).resolve)
+    @typer.type_system.get(nil, TypeRefImpl.new(name, false, false, nil)).resolve:JVMType
   end
   
   def visitMacroDefinition(node, expression)

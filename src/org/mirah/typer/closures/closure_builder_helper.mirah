@@ -123,7 +123,7 @@ class ClosureBuilderHelper
     elsif methods.size > 1
       raise UnsupportedOperationException, "Multiple abstract methods in #{iface}: #{methods}"
     end
-    MethodType(methods:List.get(0))
+    methods:List.get(0):MethodType
   end
 
   # Copies MethodDefinition nodes from block to klass.
@@ -254,7 +254,7 @@ class ClosureBuilderHelper
     return_type = makeSimpleTypeName(block.position, mtype.returnType)
     block_method = MethodDefinition.new(block.position, name, args, return_type, nil,[])
 
-    closure_scope = ClosureScope(get_inner_scope(block))
+    closure_scope = get_inner_scope(block):ClosureScope
 
     block_method.body = block.body
 

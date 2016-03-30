@@ -60,7 +60,7 @@ class LubFinder
       @@log.finer("EC(#{types}) = #{ecs}")
       minimizeErasedCandidates(ecs.keySet)
       @@log.finer("MEC = #{ecs.keySet}")
-      supertypes = List(ecs.values.map {|x:Set| candidateInvocation(x)})
+      supertypes:List = ecs.values.map {|x:Set| candidateInvocation(x)}
       @@log.fine("lub candidates(#{types}) = #{supertypes}")
       result = if supertypes.size == 1
         supertypes[0]:DeclaredType
@@ -179,7 +179,7 @@ class LubFinder
       args[i] = leastContainingTypeArgument(a, b)
       i += 1
     end
-    @types.getDeclaredType(TypeElement(@types.asElement(x)), args)
+    @types.getDeclaredType(@types.asElement(x):TypeElement, args)
   end
 
   def leastContainingTypeArgument(a:TypeMirror, b:TypeMirror)

@@ -117,7 +117,7 @@ class BetterClosureBuilder < ClosureBuilderHelper
       i += 1
       @@log.fine "adjust bindings for block #{entry.getKey} #{entry.getValue} #{i}"
       uncloned_block = entry.getKey:Block
-      block = Block(blockCloneMapOldNew.get(uncloned_block))
+      block = blockCloneMapOldNew.get(uncloned_block):Block
       @@log.fine "#{typer.sourceContent block}"
       enclosing_node = find_enclosing_node(block)
       if enclosing_node.nil?
@@ -139,7 +139,7 @@ class BetterClosureBuilder < ClosureBuilderHelper
       end
       bindingName = "$b#{i}"
       bindingForBlocks.put uncloned_block, bindingName
-      parent_scope = MirrorScope(get_scope(block)) 
+      parent_scope = get_scope(block):MirrorScope
       adjuster = BindingAdjuster.new(
         self,
         bindingName,
@@ -148,11 +148,11 @@ class BetterClosureBuilder < ClosureBuilderHelper
         bindingLocalNamesToTypes)
 
       adjuster.adjust enclosing_b, block
-      @@log.fine("After adjusting: #{AstFormatter.new(Node(scripts.get(0)))}")
+      @@log.fine("After adjusting: #{AstFormatter.new(scripts.get(0):Node)}")
 
       AstChecker.maybe_check(scripts)
   
-      block = Block(blockCloneMapOldNew.get(entry.getKey))
+      block = blockCloneMapOldNew.get(entry.getKey):Block
       parent_type = entry.getValue:ResolvedType
 
       unless get_body(find_enclosing_node(block))
@@ -185,7 +185,7 @@ class BetterClosureBuilder < ClosureBuilderHelper
         end
       end
 
-      binding_list = Collection(blockToBindings.get(uncloned_block)) || Collections.emptyList
+      binding_list:Collection = blockToBindings.get(uncloned_block) || Collections.emptyList
       binding_list.each do |name: String|
         constructor_args.add RequiredArgument.new(SimpleString.new(name), SimpleString.new(bindingLocalNamesToTypes[name]:ResolvedType.name))
         constructor_param = if outer_data.has_block_parent && !name.equals(parent_scope_to_binding_name[parent_scope])

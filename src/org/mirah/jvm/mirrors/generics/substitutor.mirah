@@ -79,7 +79,7 @@ class Substitutor < SimpleTypeVisitor6
     popTypeParam
     c = t.getComponentType
     saved = @substitutions
-    c2 = TypeFuture(visit(c, p))
+    c2:TypeFuture = visit(c, p)
     array = if saved == @substitutions
       t
     else
@@ -135,7 +135,7 @@ class Substitutor < SimpleTypeVisitor6
     end
     if t.getExtendsBound && !upper.isSameType(t.getExtendsBound:MirrorType)
       lub = LubFinder.new(@context)
-      upper = MirrorType(Object(lub.leastUpperBound([upper, t.getExtendsBound])))
+      upper:MirrorType = lub.leastUpperBound([upper, t.getExtendsBound]):Object
     end
     @substitutions += 1
     future(CapturedWildcard.new(@context, upper, lower:MirrorType))

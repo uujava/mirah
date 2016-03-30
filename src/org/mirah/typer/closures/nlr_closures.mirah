@@ -95,7 +95,7 @@ class NlrClosureBuilder < ClosureBuilderHelper
   end
 
   def has_non_local_return(block: Block): boolean
-    (!contains_methods(block)) && # TODO(nh): fix parser so !_ && _ works
+    (!contains_methods(block)) && # nh:TODO: fix parser so !_ && _ works
     contains_return(block)
   end
 
@@ -174,7 +174,7 @@ class NlrClosureBuilder < ClosureBuilderHelper
   end
 
   def convert_returns_to_raises block: Block, nlr_klass: ClosureDefinition, nlr_return_type: AssignableTypeFuture
-    # block = Block(block.clone) # I'd like to do this, but it's ...
+    # block = block.clone:Block # I'd like to do this, but it's ...
     return_nodes(block).each do |_n|
       node = _n:Return
 
@@ -210,7 +210,7 @@ class NlrClosureBuilder < ClosureBuilderHelper
     #block.findDescendants { |c| c.kind_of? Return }
     # from findDescendants
     # from commented out code in the parser
-    # TODO(nh): put this back in the parser
+    # nh:TODO: put this back in the parser
     finder = DescendentFinder2.new(false, false) { |c| c.kind_of? Return }
     finder.scan(block, nil)
     finder.results

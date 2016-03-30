@@ -427,7 +427,7 @@ class BetterScope
     quote do
       def outer_scope
         return nil if @scoper.nil? || context.nil? || context.parent.nil?
-        MirrorScope(@scoper.getScope(context))
+        @scoper.getScope(context):MirrorScope
       end
     end
   end

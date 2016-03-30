@@ -124,9 +124,9 @@ class DubyDatastorePlugin
 
   def to_datastore(type:String, value:Object):Object
     if @primitives.contains(type)
-      Object(mirah.quote { `type`.new(`value`) })
+      (mirah.quote { `type`.new(`value`) }):Object
     elsif @type_map.containsKey(type)
-      Object(mirah.quote { (`value` ? `type`.new(`value`) : nil) })
+      (mirah.quote { (`value` ? `type`.new(`value`) : nil) }):Object
     else
       value
     end
@@ -214,7 +214,7 @@ class ModelState
   def init_query(classname:String)
     name = "#{classname}$Query"
     superclass = 'com.google.appengine.ext.duby.db.DQuery'
-    @query = Body(mirah.defineClass(name, superclass).body)
+    @query = mirah.defineClass(name, superclass).body:Body
     array_size = mirah.quote { entities.size }
     @query << mirah.quote do
       import com.google.appengine.api.datastore.Entity
@@ -351,7 +351,7 @@ class ModelState
       end
     end
     ast << mdef
-    @read = Body(mdef.child_nodes.get(2))
+    @read = mdef.child_nodes.get(2):Body
 
     mdef = mirah.quote do
       def properties
@@ -361,7 +361,7 @@ class ModelState
       end
     end
     ast << mdef
-    @get_properties = Body(Node(mdef.child_nodes.get(2)).child_nodes.get(1))
+    @get_properties:Body = mdef.child_nodes.get(2):Node.child_nodes.get(1)
 
     mdef = mirah.quote do
       def update(properties:`map`):void
@@ -369,7 +369,7 @@ class ModelState
       end
     end
     ast << mdef
-    @update = Body(mdef.child_nodes.get(2))
+    @update = mdef.child_nodes.get(2):Body
   end
 
   def init_save(ast:Body)
@@ -380,6 +380,6 @@ class ModelState
       end
     end
     ast << mdef
-    @save = Body(mdef.child_nodes.get(2))
+    @save = mdef.child_nodes.get(2):Body
   end
 end

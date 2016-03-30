@@ -49,7 +49,7 @@ class MethodStubWriter < StubWriter
   # TODO optional args
   # TODO modifier
   def generate:void
-    type = MethodType(getInferredType(@node).resolve)
+    type:MethodType = getInferredType(@node).resolve
     @@log.fine "node:#{@node} type: #{type}"
     modifier = 'public'
     flags = []

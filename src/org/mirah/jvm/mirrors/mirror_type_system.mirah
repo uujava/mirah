@@ -381,7 +381,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
       if resolved.isError
         resolved
       else
-        MirrorProxy.create(MirrorType(types.getMetaType(resolved)))
+        MirrorProxy.create(types.getMetaType(resolved):MirrorType)
       end
     end
   end
@@ -440,7 +440,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     position = node ? node.position : nil
     fullname = calculateName(scope, node, name)
     type = Type.getObjectType(fullname.replace(?., ?/))
-    existing_future = DelegateFuture(wrap(type)).type
+    existing_future = wrap(type):DelegateFuture.type
     existing_type = findTypeDefinition(existing_future)
     if existing_type
       if superclass.nil? && (interfaces.nil? || interfaces.size == 0)
@@ -513,7 +513,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   def loadMacroType(name:String):MirrorType
     macro_context = @context[Context] || @context
     types = macro_context[MirrorTypeSystem]
-    MirrorType(types.loadNamedType(name).resolve)
+    types.loadNamedType(name).resolve:MirrorType
   end
 
   def loadNamedType(name:String)
@@ -550,7 +550,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def getResolvedArrayType(componentType:ResolvedType):ResolvedType
-    ResolvedType(@cached_array_types[componentType] ||= ArrayType.new(@context, cast(componentType)))
+    (@cached_array_types[componentType] ||= ArrayType.new(@context, cast(componentType))):ResolvedType
   end
 
   def getArrayType(componentType:ResolvedType):ResolvedType
@@ -572,7 +572,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def extendClass(classname:String, extensions:Class)
-    type = BaseType(loadNamedType(classname).resolve)
+    type = loadNamedType(classname).resolve:BaseType
     BytecodeMirrorLoader.extendClass(type, extensions)
   end
 
@@ -589,7 +589,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   def addClassIntrinsic(type:BaseType)
     future = BaseTypeFuture.new.resolved(type)
     klass = loadNamedType('java.lang.Class')
-    generic_class = JVMType(parameterize(klass, [future]).resolve)
+    generic_class = parameterize(klass, [future]).resolve:JVMType
     type.add(Member.new(
         Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, type, 'class', [],
         generic_class, MemberKind.CLASS_LITERAL))
@@ -721,8 +721,8 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def setBox(a:String, b:String)
-    primitive = BaseType(wrap(Type.getType(a)).resolve)
-    boxed = BaseType(loadNamedType("java.lang.#{b}").resolve)
+    primitive:BaseType = wrap(Type.getType(a)).resolve
+    boxed = loadNamedType("java.lang.#{b}").resolve:BaseType
     primitive.boxed = boxed
     boxed.unboxed = primitive
   end
@@ -847,7 +847,7 @@ class FakeMember < Member
   end
 
   def self.wrap(types:MirrorTypeSystem, type:Type)
-    JVMType(types.wrap(type).resolve)
+    types.wrap(type).resolve:JVMType
   end
 
   def initialize(description:String, flags:int,

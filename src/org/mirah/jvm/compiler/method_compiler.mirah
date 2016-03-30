@@ -126,7 +126,7 @@ class MethodCompiler < BaseCompiler
     end
 
     @descriptor = methodDescriptor(@name, @returnType, type.parameterTypes)
-    @selfType = JVMType(getScope(mdef).selfType.resolve)
+    @selfType = getScope(mdef).selfType.resolve:JVMType
     superclass = @selfType.superclass
     @superclass = superclass || JVMType(
         typer.type_system.get(nil, TypeRefImpl.new("java.lang.Object", false, false, nil)).resolve)
@@ -761,7 +761,7 @@ class MethodCompiler < BaseCompiler
 
   def self.findSameMethod(type:MirrorType, name: String, params: List, flags:int):Member
     if type.kind_of? BytecodeMirror
-      method = Member(type.getMethod(name, params))
+      method = type.getMethod(name, params):Member
       if method and checkSuperFlags(method, flags)
         @@log.fine "Method #{name}(#{params}) found for #{type}"
         return method

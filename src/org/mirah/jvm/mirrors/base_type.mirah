@@ -144,7 +144,7 @@ class BaseType implements MirrorType, DeclaredType, MethodListener
     else
       # This may spread intersection types to places java wouldn't allow them.
       # Do we care?
-      lub = MirrorType(Object(LubFinder.new(@context).leastUpperBound([self, other])))
+      lub:MirrorType = LubFinder.new(@context).leastUpperBound([self, other])
       lub || ErrorType.new([["Incompatible types #{self} and #{other}."]])
     end
   end

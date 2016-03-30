@@ -29,7 +29,7 @@ def hamming(n:int):BigInteger
     updateFrontier(BigInteger.ONE, frontier)
     lowest = BigInteger.ONE
     1.upto(n-1) do | i |
-        lowest = BigInteger(frontier.poll())
+        lowest = frontier.poll():BigInteger
         while (frontier.peek().equals(lowest))
             frontier.poll()
         end

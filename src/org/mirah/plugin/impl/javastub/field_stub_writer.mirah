@@ -45,7 +45,7 @@ class FieldStubWriter < StubWriter
 
   # TODO modifier
   def generate:void
-    type = JVMType(getInferredType(@node).resolve)
+    type = getInferredType(@node).resolve:JVMType
     @@log.fine "node:#{@node} type: #{type}"
     access = 'private'
     flags = []

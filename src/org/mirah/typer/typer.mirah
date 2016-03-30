@@ -202,7 +202,7 @@ class Typer < SimpleNodeVisitor
       # both. If the cast works, we'll go with that. If not, we'll leave
       # the method call.
       children.add(Cast.new(call.position, call.typeref:TypeName,
-                            Node(call.parameters.get(0).clone)))
+                            call.parameters.get(0).clone:Node))
     end
     children.add(call)
 
@@ -281,7 +281,7 @@ class Typer < SimpleNodeVisitor
           EmptyArray.new(call.position, typeref, call.parameters(0))
         else
           Cast.new(call.position, typeref:TypeName,
-                   Node(call.parameters(0).clone))
+                   call.parameters(0).clone:Node)
         end)
       end
     end
@@ -462,7 +462,7 @@ class Typer < SimpleNodeVisitor
   end
 
   def visitSuper(node, expression)
-    method = MethodDefinition(node.findAncestor(MethodDefinition.class))
+    method:MethodDefinition = node.findAncestor(MethodDefinition.class)
     scope = scopeOf(node)
     parameters = inferParameterTypes node
     if method.kind_of? ConstructorDefinition
@@ -477,7 +477,7 @@ class Typer < SimpleNodeVisitor
   end
 
   def visitZSuper(node, expression)
-    method = MethodDefinition(node.findAncestor(MethodDefinition.class))
+    method:MethodDefinition = node.findAncestor(MethodDefinition.class)
     locals = LinkedList.new
     [ method.arguments.required,
         method.arguments.optional,
@@ -555,7 +555,7 @@ class Typer < SimpleNodeVisitor
   def visitFieldAccess(field, expression)
     targetType = fieldTargetType field, field.isStatic
     if targetType.nil?
-      TypeFuture(ErrorType.new([["Cannot find declaring class for field.", field.position]]))
+      ErrorType.new([["Cannot find declaring class for field.", field.position]]):TypeFuture
     else
       getFieldType field, targetType
     end
@@ -968,7 +968,7 @@ class Typer < SimpleNodeVisitor
     # TODO(ribrdb) do these need to be cloned?
     nodes = node.nodes
     replacement = if nodes.size == 1
-      Node(nodes.get(0))
+      nodes.get(0):Node
     else
       NodeList.new(node.position, nodes)
     end
@@ -1142,7 +1142,7 @@ class Typer < SimpleNodeVisitor
         future = @types.get(
           scopeOf(block),
           TypeRefImpl.new(
-            ResolvedType(method_type.parameterTypes.get(i)).name))
+            method_type.parameterTypes.get(i):ResolvedType.name))
         param_type.declare(
                 future,
                 block.arguments.position)
@@ -1307,7 +1307,7 @@ class Typer < SimpleNodeVisitor
     return if block.arguments.nil?
     return if block.arguments.required_size() == 0
     return unless block.arguments.required(0).name.kind_of? Unquote
-    unquote_arg = Unquote(block.arguments.required(0).name)
+    unquote_arg = block.arguments.required(0).name:Unquote
     return unless unquote_arg.object.kind_of?(Arguments)
 
     @@log.finest "Block: expanding unquoted arguments with pipes"
@@ -1320,7 +1320,7 @@ class Typer < SimpleNodeVisitor
     return unless block.arguments.nil?
     return if block.body.nil? || block.body.size == 0
     return unless block.body.get(0).kind_of?(Unquote)
-    unquoted_first_element = Unquote(block.body.get(0))
+    unquoted_first_element = block.body.get(0):Unquote
     return unless unquoted_first_element.object.kind_of?(Arguments)
 
     @@log.finest "Block: expanding unquoted arguments with no pipes"
@@ -1332,7 +1332,7 @@ class Typer < SimpleNodeVisitor
   
   def visitSyntheticLambdaDefinition(node, expression)
     supertype = infer(node.supertype)
-    block     = BlockFuture(infer(node.block))
+    block     = infer(node.block):BlockFuture
     if node.parameters
       inferAll node.parameters
     end
@@ -1422,9 +1422,9 @@ class Typer < SimpleNodeVisitor
   end
 
   def buildNodeAndTypeForRaiseTypeTwo(old_args: NodeList, node: Node)
-    targetNode = Node(Node(old_args.get(0)).clone)
+    targetNode:Node = old_args.get(0):Node.clone
     params = ArrayList.new
-    1.upto(old_args.size - 1) {|i| params.add(Node(old_args.get(i)).clone)}
+    1.upto(old_args.size - 1) {|i| params.add(old_args.get(i):Node.clone)}
     call = Call.new(node.position, targetNode, SimpleString.new(node.position, 'new'), params, nil)
     wrapper = NodeList.new([call])
     @scopes.copyScopeFrom(node, wrapper)
