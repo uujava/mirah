@@ -54,33 +54,33 @@ class SimpleDiagnostics; implements DiagnosticListener
       newline = String.format("%n")
       buffer.append(newline)
       
-      target_line = Math.max(0, int(diagnostic.getLineNumber - source.initialLine))
+      target_line = Math.max(0, (diagnostic.getLineNumber - source.initialLine):int)
       start_col = if target_line == 0
         diagnostic.getColumnNumber - source.initialColumn
       else
         diagnostic.getColumnNumber - 1
       end
-      start_col = long(0) if start_col < 0
+      start_col = (0):long if start_col < 0
       lines = @newline.split(source.contents)
       if target_line < lines.length
         line = lines[target_line]
         buffer.append(line)
         buffer.append(newline)
-        space = char[int(start_col)]
-        prefix = line.substring(0,int(start_col))
+        space = char[(start_col):int]
+        prefix = line.substring(0,(start_col):int)
         prefix.length.times do |i|
           c = prefix.charAt(i) 
           if Character.isWhitespace(c)
             space[i] = c
           else
-            space[i] = char(32) 
+            space[i] = (32):char
           end
         end
         buffer.append(space)
         length = Math.min(diagnostic.getEndPosition - diagnostic.getStartPosition,
                           line.length - start_col)
-        underline = char[int(Math.max(length, 1))]
-        Arrays.fill(underline, char(94))
+        underline = char[Math.max(length, 1):int]
+        Arrays.fill(underline, (94):char)
         buffer.append(underline)
         message = buffer.toString
       end

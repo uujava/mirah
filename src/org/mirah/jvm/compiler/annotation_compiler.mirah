@@ -215,7 +215,7 @@ class AnnotationCompiler < BaseCompiler
     end
     double_value =  value:mirah::lang::ast::Float.value
     if "float".equals(type.name)
-      asm_value = java::lang::Float.valueOf(float(double_value))
+      asm_value = java::lang::Float.valueOf((double_value):float)
     else
       asm_value = Double.valueOf(double_value)
     end
@@ -231,21 +231,21 @@ class AnnotationCompiler < BaseCompiler
     min = Long.MIN_VALUE
     max = Long.MAX_VALUE
     if "byte".equals(type.name)
-      min = long(Byte.MIN_VALUE)
-      max = long(Byte.MAX_VALUE)
-      asm_value = Byte.valueOf(byte(long_value))
+      min = (Byte.MIN_VALUE):long
+      max = (Byte.MAX_VALUE):long
+      asm_value = Byte.valueOf((long_value):byte)
     elsif "char".equals(type.name)
-      min = long(Character.MIN_VALUE)
-      max = long(Character.MAX_VALUE)
-      asm_value = Character.valueOf(char(long_value))
+      min = (Character.MIN_VALUE):long
+      max = (Character.MAX_VALUE):long
+      asm_value = Character.valueOf((long_value):char)
     elsif "short".equals(type.name)
-      min = long(Short.MIN_VALUE)
-      max = long(Short.MAX_VALUE)
-      asm_value = Short.valueOf(short(long_value))
+      min = (Short.MIN_VALUE):long
+      max = (Short.MAX_VALUE):long
+      asm_value = Short.valueOf((long_value):short)
     elsif "int".equals(type.name)
-      min = long(Integer.MIN_VALUE)
-      max = long(Integer.MAX_VALUE)
-      asm_value = Integer.valueOf(int(long_value))
+      min = (Integer.MIN_VALUE):long
+      max = (Integer.MAX_VALUE):long
+      asm_value = Integer.valueOf((long_value):int)
     elsif "long".equals(type.name)
       asm_value = Long.valueOf(long_value)
     else

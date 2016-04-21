@@ -11,7 +11,7 @@ regex2 = /interpolated #{regex}/
 list = [1, 2, 3]
 list[2] = 4
 array = byte[5]
-array[0] = byte(0)
+array[0] = (0):byte
 hash = { "one" => 1, "two" => 2 }
 hash["three"] = 3
 

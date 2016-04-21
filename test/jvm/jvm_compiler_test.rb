@@ -194,7 +194,7 @@ class JVMCompilerTest < Test::Unit::TestCase
     cls, = compile("def foo; a = float[2]; a; end")
     assert_equal(Java::float[].java_class, cls.foo.class.java_class)
     assert_equal([0.0,0.0], cls.foo.to_a)
-    cls, = compile("def foo; a = float[2]; a[0] = float(1.0); a[0]; end")
+    cls, = compile("def foo; a = float[2]; a[0] = (1.0):float; a[0]; end")
     assert_equal(Float, cls.foo.class)
     assert_equal(1.0, cls.foo)
 
@@ -849,7 +849,7 @@ class JVMCompilerTest < Test::Unit::TestCase
         def to_#{primitive}(a:#{full.to_s.capitalize}):void
           puts a
         end
-        to_#{primitive} #{primitive}(1)
+        to_#{primitive} 1:#{primitive}
         EOF
         assert_run_output("1\n", cls)
       rescue => e
@@ -862,7 +862,7 @@ class JVMCompilerTest < Test::Unit::TestCase
         def to_#{type}(a:#{type.to_s.capitalize}):void
           puts a
         end
-        to_#{type} #{type}(1)
+        to_#{type} 1:#{type}
         EOF
       assert_run_output("1.0\n", cls)
       rescue => e
@@ -874,7 +874,7 @@ class JVMCompilerTest < Test::Unit::TestCase
       def to_character(a:Character):void
         puts a
       end
-      to_character char(65)
+      to_character 65:char
     EOF
     assert_run_output("A\n", cls)
   end

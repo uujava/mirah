@@ -174,11 +174,11 @@ class MethodCompiler < BaseCompiler
   def defaultValue(type:JVMType)
     if JVMTypeUtils.isPrimitive(type)
       if 'long'.equals(type.name)
-        @builder.push(long(0))
+        @builder.push((0):long)
       elsif 'double'.equals(type.name)
-        @builder.push(double(0))
+        @builder.push((0):double)
       elsif 'float'.equals(type.name)
-        @builder.push(float(0))
+        @builder.push((0):float)
       else
         @builder.push(0)
       end
@@ -194,7 +194,7 @@ class MethodCompiler < BaseCompiler
       if isLong
         @builder.push(node.value)
       else
-        @builder.push(int(node.value))
+        @builder.push((node.value):int)
       end
     end
   end
@@ -203,7 +203,7 @@ class MethodCompiler < BaseCompiler
       isFloat = "float".equals(getInferredType(node).name)
       recordPosition(node.position)
       if isFloat
-        @builder.push(float(node.value))
+        @builder.push((node.value):float)
       else
         @builder.push(node.value)
       end

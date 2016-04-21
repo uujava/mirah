@@ -21,10 +21,10 @@ def rot13 (value:String)
     value.toCharArray.each do |c|
         testChar = Character.toLowerCase(c)
         if testChar <= 'm'.toCharArray[0] && testChar >= 'a'.toCharArray[0] then
-            d = char(c + 13)
+            d = (c + 13):char
         end
         if testChar <= 'z'.toCharArray[0] && testChar >= 'n'.toCharArray[0] then
-            d = char(c - 13)
+            d = (c - 13):char
         end
         result += d
     end

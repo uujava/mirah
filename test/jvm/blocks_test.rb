@@ -510,7 +510,7 @@ class BlocksTest < Test::Unit::TestCase
       compile(<<-EOF)
         import java.io.OutputStream
         def foo x:OutputStream
-          x.write byte(1)
+          x.write 1:byte
         rescue
         end
         foo do |b:String|
@@ -525,7 +525,7 @@ class BlocksTest < Test::Unit::TestCase
     cls, = compile(<<-EOF)
       import java.io.OutputStream
       def foo x:OutputStream
-        x.write byte(1)
+        x.write 1:byte
       rescue
       end
       foo do |b:int|

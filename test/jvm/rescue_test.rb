@@ -164,12 +164,12 @@ class RescueTest < Test::Unit::TestCase
         begin
           return bar
         rescue Exception => e
-          return long(0)
+          return (0):long
         end
       end
 
       def bar
-        long(1)
+        (1):long
       end
     EOF
 
@@ -182,7 +182,7 @@ class RescueTest < Test::Unit::TestCase
         begin
           raise "some error"
         rescue Exception => e
-          return long(0)
+          return (0):long
         end
       end
     EOF
@@ -194,11 +194,11 @@ class RescueTest < Test::Unit::TestCase
     cls, = compile(<<-EOF)
       def foo:long
         begin
-          long(0)
+          (0):long
         rescue
-          long(1)
+          (1):long
         else
-          long(2)
+          (2):long
         end
       end
     EOF
@@ -212,9 +212,9 @@ class RescueTest < Test::Unit::TestCase
         begin
           raise "oh, my"
         rescue
-          long(1)
+          (1):long
         else
-          long(2)
+          (2):long
         end
       end
     EOF

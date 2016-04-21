@@ -97,7 +97,7 @@ class ObjectExtensionsTest < Test::Unit::TestCase
       puts false==true
       puts nil==true
 
-      obj = Boolean true
+      obj = true:Boolean
       puts obj == true
       puts obj == false
 

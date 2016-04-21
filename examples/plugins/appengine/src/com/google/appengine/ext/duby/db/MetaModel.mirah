@@ -34,7 +34,7 @@ class DubyDatastorePlugin
 
     @defaults = {
       'Rating' => mirah.fixnum(0),
-      'Long' => mirah.quote { long(0) },
+      'Long' => mirah.quote { (0):long },
       'Double' => mirah.quote { 0.0 },
       'Boolean' => mirah.quote { false },
       'Blob' => mirah.quote { byte[].cast(nil) },

@@ -19,7 +19,7 @@ def getInput:int
 end
 
 
-number = int(Math.random() * 10 + 1)
+number:int = Math.random() * 10 + 1
 
 puts "guess the number between 1 and 10"
 guessed = false
