@@ -30,7 +30,7 @@ class SpecialType; implements ResolvedType, TypeFuture
     true
   end
   def resolve
-    ResolvedType(self)
+    self:ResolvedType
   end
 
   def peekInferredType
@@ -51,7 +51,7 @@ class SpecialType; implements ResolvedType, TypeFuture
   end
   def removeListener(listener:TypeListener):void; end
   def equals(other:Object)
-    other.kind_of?(ResolvedType) && ResolvedType(other).name == @name
+    other.kind_of?(ResolvedType) && other:ResolvedType.name == @name
   end
   def hashCode
     name.hashCode

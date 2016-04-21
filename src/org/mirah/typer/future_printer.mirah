@@ -35,7 +35,7 @@ class FuturePrinter
         i = @cycles.size
         @cycles.put(future, Integer.new(i))
         position = if future.kind_of?(BaseTypeFuture)
-          BaseTypeFuture(future).position
+          future:BaseTypeFuture.position
         else
           nil
         end

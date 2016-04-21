@@ -48,7 +48,7 @@ class ErrorCollector < NodeScanner
     type = future.nil? ? nil : future.resolve
     if (type && type.isError)
       if @errors.add(type)
-        messages = ErrorType(type).message
+        messages = type:ErrorType.message
         diagnostic = build_diagnostic messages, node
         @reporter.report(diagnostic)
         debug = FuturePrinter.new
@@ -69,11 +69,11 @@ class ErrorCollector < NodeScanner
 
   def build_diagnostic(messages: List, node: Node)
     if messages.size >= 1
-      items = List(messages[0])
+      items = messages[0]:List
       text = items[0].toString
       position = node.position
       if items.size == 1 && items[1]
-        position = Position(items[1])
+        position = items[1]:Position
       end
       MirahDiagnostic.error(position, text)
     else messages.size == 0

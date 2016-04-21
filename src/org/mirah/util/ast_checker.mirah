@@ -45,7 +45,7 @@ class AstChecker < NodeScanner
 #   @@log.finest("enter #{node}")
     if stack.isEmpty
     else
-      parent = Node(stack.getLast)
+      parent = stack.getLast:Node
       if !(node.parent==parent)
         child_parent_mismatch(parent,node,node.parent)
       end

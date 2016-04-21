@@ -52,7 +52,7 @@ class Member implements GenericMethod
   end
 
   def asyncArgument(index:int):TypeFuture
-    BaseTypeFuture.new(nil).resolved(ResolvedType(argumentTypes.get(index)))
+    BaseTypeFuture.new(nil).resolved(argumentTypes.get(index):ResolvedType)
   end
 
   def asyncReturnType:TypeFuture
@@ -144,11 +144,11 @@ class AsyncMember < Member
 
   def returnType
     # TODO: Should this convert errors?
-    JVMType(@returnType.resolve)
+    @returnType.resolve:JVMType
   end
 
   def asyncArgument(index)
-    TypeFuture(@futures.get(index))
+    @futures.get(index):TypeFuture
   end
 
   def asyncReturnType
@@ -171,6 +171,6 @@ class AsyncMember < Member
   end
 
   def invalidate:void
-    MirrorType(self.declaringClass).invalidateMethod(self.name)
+    self.declaringClass:MirrorType.invalidateMethod(self.name)
   end
 end

@@ -45,12 +45,12 @@ class FieldStubWriter < StubWriter
 
   # TODO modifier
   def generate:void
-    type = JVMType(getInferredType(@node).resolve)
+    type = getInferredType(@node).resolve:JVMType
     @@log.fine "node:#{@node} type: #{type}"
     access = 'private'
     flags = []
     _final = false
-    process_modifiers(HasModifiers(@node)) do |atype:int, value:String|
+    process_modifiers(@node:HasModifiers) do |atype:int, value:String|
       # workaround for PRIVATE and PUBLIC annotations for class constants
       if atype == 0
         access = value.toLowerCase if !'PRIVATE'.equals value

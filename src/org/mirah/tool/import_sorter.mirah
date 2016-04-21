@@ -54,13 +54,13 @@ class ImportSorter < NodeScanner
   #todo handle multiple packages in one file
   # parser allows packages to have bodies
   def enterPackage(node, _info)
-    info = FileInfo(_info)
+    info = _info:FileInfo
     info.pkg = node.name.identifier
     false
   end
 
   def enterImport(node, _info)
-    info = FileInfo(_info)
+    info = _info:FileInfo
     fullName = node.fullName.identifier
     simpleName = node.simpleName.identifier
     info.add_import fullName
@@ -89,7 +89,7 @@ class ImportSorter < NodeScanner
     end
 
     def compareTo o
-      other = FileInfo(o)
+      other = o:FileInfo
       return 0 if other.pkg == self.pkg
       return -1 if has_import other.pkg
       return 1 if other.has_import other.pkg

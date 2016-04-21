@@ -17,54 +17,54 @@ class CastTest < Test::Unit::TestCase
 
   def test_cast
     cls, = compile(<<-EOF)
-      def f2b; 1.0:byte; end
-      def f2s; 1.0:byte; end
-      def f2c; 1.0:byte; end
-      def f2i; 1.0:byte; end
-      def f2l; 1.0:byte; end
-      def f2d; 1.0:byte; end
+      def f2b; (1.0):byte; end
+      def f2s; (1.0):short; end
+      def f2c; (1.0):char; end
+      def f2i; (1.0):int; end
+      def f2l; (1.0):long; end
+      def f2d; (1.0):int; end
 
-      def i2b; 1:byte; end
-      def i2s; 1:byte; end
-      def i2c; 1:byte; end
-      def i2l; 1:byte; end
-      def i2f; 1:byte; end
-      def i2d; 1:byte; end
+      def i2b; (1):byte; end
+      def i2s; (1):short; end
+      def i2c; (1):char; end
+      def i2l; (1):long; end
+      def i2f; (1):float; end
+      def i2d; (1):int; end
 
-      def b2s; byte(1:byte); end
-      def b2c; byte(1:byte); end
-      def b2i; byte(1:byte); end
-      def b2l; byte(1:byte); end
-      def b2f; byte(1:byte); end
-      def b2d; byte(1:byte); end
+      def b2s; ((1):byte):short; end
+      def b2c; ((1):byte):char; end
+      def b2i; ((1):byte):int; end
+      def b2l; ((1):byte):long; end
+      def b2f; ((1):byte):float; end
+      def b2d; ((1):byte):double; end
 
-      def s2b; short(1:byte); end
-      def s2c; short(1:byte); end
-      def s2i; short(1:byte); end
-      def s2l; short(1:byte); end
-      def s2f; short(1:byte); end
-      def s2d; short(1:byte); end
+      def s2b; ((1):short):byte; end
+      def s2c; ((1):short):char; end
+      def s2i; ((1):short):int; end
+      def s2l; ((1):short):long; end
+      def s2f; ((1):short):float; end
+      def s2d; ((1):short):double; end
 
-      def c2b; char(1:byte); end
-      def c2s; char(1:byte); end
-      def c2i; char(1:byte); end
-      def c2l; char(1:byte); end
-      def c2f; char(1:byte); end
-      def c2d; char(1:byte); end
+      def c2b; ((1):char):byte; end
+      def c2s; ((1):char):short; end
+      def c2i; ((1):char):int; end
+      def c2l; ((1):char):long; end
+      def c2f; ((1):char):float; end
+      def c2d; ((1):char):double; end
 
-      def l2b; long(1:byte); end
-      def l2c; long(1:byte); end
-      def l2i; long(1:byte); end
-      def l2l; long(1:byte); end
-      def l2f; long(1:byte); end
-      def l2d; long(1:byte); end
+      def l2b; ((1):long):byte; end
+      def l2c; ((1):long):char; end
+      def l2i; ((1):long):int; end
+      def l2l; ((1):long):long; end
+      def l2f; ((1):long):float; end
+      def l2d; ((1):long):double; end
 
-      def d2b; 1.0:byte; end
-      def d2s; 1.0:byte; end
-      def d2c; 1.0:byte; end
-      def d2i; 1.0:byte; end
-      def d2l; 1.0:byte; end
-      def d2f; 1.0:byte; end
+      def d2b; (1.0):byte; end
+      def d2s; (1.0):short; end
+      def d2c; (1.0):char; end
+      def d2i; (1.0):int; end
+      def d2l; (1.0):long; end
+      def d2f; (1.0):float; end
 
       def hard_i2f(a:int)
         if a < 0
@@ -251,7 +251,7 @@ class CastTest < Test::Unit::TestCase
 		list = [1,2,3]
 		m = 0
 		list.each do |x|
-			m = int(x) + m
+			m = x:int + m
 		end
 		return m
       end
@@ -261,12 +261,12 @@ class CastTest < Test::Unit::TestCase
 
   def test_no_errors_for_interface_casts
     cls, = compile(<<-EOF)
-      a = Runnable(nil)
-      b = java::io::Serializable(nil)
-      a = Runnable(b)
+      a = nil:Runnable
+      b:java::io::Serializable = nil
+      a = b:Runnable
       c = Number.new
-      a = Runnable(c)
-      c = Number(b)
+      a = c:Runnable
+      c = b:Number
     EOF
   rescue Exception => ex
     fail "casts for interfaces #{ex} #{ex.backtrace.join "\n"}"

@@ -111,7 +111,7 @@ class JVMTypeUtils
         return defaultAccess unless node
 
         if HasModifiers.class.isAssignableFrom(node.getClass)           
-          modifiers = HasModifiers(node).modifiers
+          modifiers = node:HasModifiers.modifiers
           if modifiers
           modifiers.each do |m: Modifier|
             _access = access_opcode(m.value)
@@ -127,13 +127,13 @@ class JVMTypeUtils
         end 
 
         if node.kind_of? MethodDefinition
-          if MethodDefinition(node).arguments.rest
+          if node:MethodDefinition.arguments.rest
             flags |= Opcodes.ACC_VARARGS
           end
         end
 
         if node.kind_of? MacroDefinition
-          if MacroDefinition(node).arguments.rest
+          if node:MacroDefinition.arguments.rest
             flags |= Opcodes.ACC_VARARGS
           end
         end
@@ -144,11 +144,11 @@ class JVMTypeUtils
     end
 
     def access_opcode(modifier:String):Integer
-      Integer(@@ACCESS[modifier])
+      @@ACCESS[modifier]:Integer
     end
 
     def flag_opcode(modifier:String):Integer
-      Integer(@@FLAGS[modifier])
+      @@FLAGS[modifier]:Integer
     end
 
   end

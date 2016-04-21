@@ -31,8 +31,8 @@ class IntersectionType < BaseType implements DeclaredType
     @types = ArrayList.new(types)
     Collections.sort(@types) do |a, b|
       # Move the interfaces after the superclass
-      a_is_class = a.kind_of?(MirrorType) && !MirrorType(a).isInterface
-      b_is_class = b.kind_of?(MirrorType) && !MirrorType(b).isInterface
+      a_is_class = a.kind_of?(MirrorType) && !a:MirrorType.isInterface
+      b_is_class = b.kind_of?(MirrorType) && !b:MirrorType.isInterface
       if a_is_class && b_is_class
         raise IllegalArgumentException, "Multiple superclasses in #{types}"
       elsif a_is_class
@@ -48,7 +48,7 @@ class IntersectionType < BaseType implements DeclaredType
   end
 
   def getAsmType
-    MirrorType(erasure).getAsmType
+    erasure:MirrorType.getAsmType
   end
 
   def directSupertypes
@@ -56,7 +56,7 @@ class IntersectionType < BaseType implements DeclaredType
   end
 
   def erasure
-    TypeMirror(@types.get(0))
+    @types.get(0):TypeMirror
   end
 
   def getKind
@@ -69,7 +69,7 @@ class IntersectionType < BaseType implements DeclaredType
 
   def equals(other)
     other.kind_of?(IntersectionType) &&
-        @types.equals(IntersectionType(other).directSupertypes)
+        @types.equals(other:IntersectionType.directSupertypes)
   end
 
   def isSameType(other)

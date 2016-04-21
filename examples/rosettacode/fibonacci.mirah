@@ -23,7 +23,7 @@ def fibonacci(n:int)
         fib = fib + fibPrev
         fibPrev = oldFib
     end
-    fib * (n<0 ? int(Math.pow(n+1, -1)) : 1)
+    fib * (n<0 ? Math.pow(n+1, -1):int : 1)
 end
 
 puts fibonacci 1

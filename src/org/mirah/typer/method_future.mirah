@@ -34,7 +34,7 @@ class MethodFuture < BaseTypeFuture
     @vararg = vararg
     mf = self
 
-    #raise IllegalArgumentException if parameters.any? {|p| ResolvedType(p).isBlock}
+    #raise IllegalArgumentException if parameters.any? {|p| p:ResolvedType.isBlock}
     @returnType.onUpdate do |f, type|
       if type.isError
         mf.resolved(type)

@@ -119,7 +119,7 @@ class CallCompiler < BaseCompiler implements MemberVisitor
   def getMethod
     @member ||= begin
       if @returnType.kind_of?(CallType)
-        CallType(@returnType).member
+        @returnType:CallType.member
       else
         argTypes = JVMType[@args.length]
         @args.length.times do |i|
@@ -151,10 +151,10 @@ class CallCompiler < BaseCompiler implements MemberVisitor
     num_required.times do |i|
       arg = @args[i]
       compile(arg)
-      @method.convertValue(getInferredType(arg), JVMType(argumentTypes[i]))
+      @method.convertValue(getInferredType(arg), argumentTypes[i]:JVMType)
     end
     if @member.isVararg
-      createVarargArray(JVMType(argumentTypes[i]), num_required)
+      createVarargArray(argumentTypes[i]:JVMType, num_required)
     end
   end
   
@@ -304,7 +304,7 @@ class CallCompiler < BaseCompiler implements MemberVisitor
     klass = method.declaringClass.getAsmType
     asmArgs = Type[method.argumentTypes.size]
     asmArgs.length.times do |i|
-      asmArgs[i] = JVMType(argTypes[i]).getAsmType
+      asmArgs[i] = argTypes[i]:JVMType.getAsmType
     end
     
     isDelegateCall = !expression && @target.kind_of?(ImplicitSelf) && @target.findAncestor(ConstructorDefinition.class) != nil
@@ -366,7 +366,7 @@ class CallCompiler < BaseCompiler implements MemberVisitor
     value_type = getInferredType(@args[1])
     convertArgs([method.argumentTypes[0], value_type])
     @method.dupX2(value_type) if expression
-    @method.convertValue(value_type, JVMType(method.argumentTypes[1]))
+    @method.convertValue(value_type, method.argumentTypes[1]:JVMType)
     recordPosition
     @method.arrayStore(method.returnType.getAsmType)
   end

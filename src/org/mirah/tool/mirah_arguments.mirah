@@ -116,7 +116,7 @@ class MirahArguments
     # else use destination directory
     return @classpath if @classpath
 
-    env_classpath = String(@env["CLASSPATH"])
+    env_classpath = @env["CLASSPATH"]:String
     if env_classpath
       @classpath = parseClassPath env_classpath
     elsif destination
@@ -288,7 +288,7 @@ class MirahArguments
       files = f.listFiles
 
       Arrays.sort(files) do |a,b|
-        f1 = File(a); f2 = File(b)
+        f1 = a:File; f2 = b:File
         f1.getName.compareTo f2.getName
       end
 

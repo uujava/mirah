@@ -43,7 +43,7 @@ class ClassCleanup < NodeScanner
     @static_init_nodes = ArrayList.new
     @init_nodes = ArrayList.new
     @constructors = ArrayList.new
-    @type = JVMType(@typer.getInferredType(@klass).resolve)
+    @type = @typer.getInferredType(@klass).resolve:JVMType
     @field_collector = FieldCollector.new(context, @type)
     @field_annotation_requestss = {}
     @methods = ArrayList.new
@@ -145,7 +145,7 @@ class ClassCleanup < NodeScanner
   end
 
   def addMethodState(state:MethodState):void
-    methods = List(@method_states[state.name])
+    methods = @method_states[state.name]:List
     methods ||= @method_states[state.name] = []
     methods.each do |m:MethodState|
       conflict = m.conflictsWith(state)
@@ -174,7 +174,7 @@ class ClassCleanup < NodeScanner
     MethodCleanup.new(@context, node).clean
     @methods.add(node)
     addMethodState(MethodState.new(
-        node, MethodType(@typer.getInferredType(node).resolve)))
+        node, @typer.getInferredType(node).resolve:MethodType))
     false
   end
 
@@ -186,7 +186,7 @@ class ClassCleanup < NodeScanner
     @methods.add(node)
     MethodCleanup.new(@context, node).clean
     addMethodState(MethodState.new(
-        node, MethodType(@typer.getInferredType(node).resolve)))
+        node, @typer.getInferredType(node).resolve:MethodType))
     false
   end
 
@@ -209,7 +209,7 @@ class ClassCleanup < NodeScanner
     MethodCleanup.new(@context, node).clean
     @methods.add(node)
     addMethodState(MethodState.new(
-        node, MethodType(@typer.getInferredType(node).resolve)))
+        node, @typer.getInferredType(node).resolve:MethodType))
     false
   end
   
@@ -261,7 +261,7 @@ class ClassCleanup < NodeScanner
 
   def enterFieldAnnotationRequest(node, arg)
     field_annotation_requestss[node.name.identifier] ||= []
-    List(field_annotation_requestss[node.name.identifier]).add(node)
+    field_annotation_requestss[node.name.identifier]:List.add(node)
     false
   end
 
@@ -278,9 +278,9 @@ class ClassCleanup < NodeScanner
   
   def addOptionalMethods(mdef:MethodDefinition):void
     if mdef.arguments.optional_size > 0
-      parent = NodeList(mdef.parent)
+      parent = mdef.parent:NodeList
       params = buildDefaultParameters(mdef.arguments)
-      new_args = Arguments(mdef.arguments.clone)
+      new_args = mdef.arguments.clone:Arguments
       num_optional_args = new_args.optional_size
       optional_arg_offset = new_args.required_size
       @@log.fine("Generating #{num_optional_args} optarg methods for #{mdef.name.identifier}")
@@ -316,8 +316,8 @@ class ClassCleanup < NodeScanner
   end
   
   def buildOptargBridge(orig:MethodDefinition, args:Arguments, params:List):Node
-    mdef = MethodDefinition(orig.clone)
-    mdef.arguments = Arguments(args.clone)
+    mdef = orig.clone:MethodDefinition
+    mdef.arguments = args.clone:Arguments
     mdef.body = NodeList.new([FunctionalCall.new(mdef.position, mdef.name, params, nil)])
     mdef.modifiers = ModifierList.new([Modifier.new(mdef.position, 'PUBLIC'), Modifier.new(mdef.position, 'SYNTHETIC'), Modifier.new(mdef.position, 'BRIDGE')])
   end

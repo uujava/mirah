@@ -89,7 +89,7 @@ class StaticFieldsTest < Test::Unit::TestCase
       oout.writeObject(Bar.new(5,7))
       oout.close
       bin  = java::io::ObjectInputStream.new(java::io::ByteArrayInputStream.new(bout.toByteArray))
-      puts Bar(bin.readObject)
+      puts bin.readObject:Bar
     ])
     assert_run_output("Bar(5,0)\n", cls) # b=7 should be forgotten, because b is a transient field. 
   end

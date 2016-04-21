@@ -30,7 +30,7 @@ class Wildcard < BaseType implements WildcardType
   end
 
   def getExtendsBound
-    if @extendsBound && MirrorType(@extendsBound).isSameType(@object)
+    if @extendsBound && @extendsBound:MirrorType.isSameType(@object)
       nil
     else
       @extendsBound
@@ -68,7 +68,7 @@ class Wildcard < BaseType implements WildcardType
 
   def isSupertypeOf(other)
     return false if @superBound.nil?
-    MirrorType(@superBound).isSupertypeOf(other)
+    @superBound:MirrorType.isSupertypeOf(other)
   end
 
   def accept(v, p)
@@ -77,14 +77,14 @@ class Wildcard < BaseType implements WildcardType
 
   def erasure
     if @extendsBound
-      MirrorType(@extendsBound).erasure
+      @extendsBound:MirrorType.erasure
     else
       @object
     end
   end
 
   def getAsmType
-    MirrorType(erasure).getAsmType
+    erasure:MirrorType.getAsmType
   end
 
   def toString

@@ -97,7 +97,7 @@ class ObjectExtensionsTest < Test::Unit::TestCase
       puts false==true
       puts nil==true
 
-      obj = Boolean true
+      obj = true:Boolean
       puts obj == true
       puts obj == false
 
@@ -112,7 +112,7 @@ class ObjectExtensionsTest < Test::Unit::TestCase
   def test_boxing_for_numerics
     cls, = compile(%q[
       puts 1==Long.new(1)
-      puts Long(nil)==Long.new(1)
+      puts nil:Long==Long.new(1)
       puts 1==Long.new(2)
       puts nil == Long.new(2)
     ])

@@ -40,7 +40,7 @@ class MirahDiagnostic implements Diagnostic
   
   def getColumnNumber:long
     if @position
-      long(@position.startColumn)
+      (@position.startColumn):long
     else
       Diagnostic.NOPOS
     end
@@ -48,7 +48,7 @@ class MirahDiagnostic implements Diagnostic
   
   def getEndPosition:long
     if @position
-      long(@position.endChar)
+      (@position.endChar):long
     else
       Diagnostic.NOPOS
     end
@@ -56,7 +56,7 @@ class MirahDiagnostic implements Diagnostic
   
   def getLineNumber:long
     if @position
-      long(@position.startLine)
+      (@position.startLine):long
     else
       Diagnostic.NOPOS
     end
@@ -64,7 +64,7 @@ class MirahDiagnostic implements Diagnostic
   
   def getPosition:long
     if @position
-      long(@position.startChar)
+      (@position.startChar):long
     else
       Diagnostic.NOPOS
     end

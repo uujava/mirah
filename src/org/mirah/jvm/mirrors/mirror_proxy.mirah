@@ -112,7 +112,7 @@ class MirrorProxy implements MirrorType,
   def getComponentType:MirrorType
     if @target.getComponentType.kind_of? MirrorType
       # unchecked typecheck
-      MirrorType(Object(@target.getComponentType))
+      @target.getComponentType:Object:MirrorType
     else
       nil
     end
@@ -121,7 +121,7 @@ class MirrorProxy implements MirrorType,
   def getComponentType:TypeMirror
     if @target.getComponentType.kind_of? TypeMirror
       # unchecked typecheck
-      TypeMirror(Object(@target.getComponentType))
+      @target.getComponentType:Object:TypeMirror
     else
       nil
     end
@@ -217,7 +217,7 @@ class MirrorProxy implements MirrorType,
   def getTypeArguments
     if @target.kind_of? DeclaredType
       # unchecked typecheck
-      DeclaredType(Object(@target)).getTypeArguments
+      @target:Object:DeclaredType.getTypeArguments
     else
       nil
     end
@@ -225,7 +225,7 @@ class MirrorProxy implements MirrorType,
   def getLowerBound
     if @target.kind_of? TypeVariableModel
       # unchecked typecheck
-      TypeVariableModel(Object(@target)).getLowerBound
+      @target:Object:TypeVariableModel.getLowerBound
     else
       nil
     end
@@ -233,7 +233,7 @@ class MirrorProxy implements MirrorType,
   def getUpperBound
     if @target.kind_of? TypeVariableModel
       # unchecked typecheck
-      TypeVariableModel(Object(@target)).getUpperBound
+      @target:Object:TypeVariableModel.getUpperBound
     else
       nil
     end
@@ -241,7 +241,7 @@ class MirrorProxy implements MirrorType,
   def getExtendsBound
     if @target.kind_of? WildcardType
       # unchecked typecheck
-      WildcardType(Object(@target)).getExtendsBound
+      @target:Object:WildcardType.getExtendsBound
     else
       nil
     end
@@ -249,7 +249,7 @@ class MirrorProxy implements MirrorType,
   def getSuperBound
     if @target.kind_of? WildcardType
       # unchecked typecheck
-      WildcardType(Object(@target)).getSuperBound
+      @target:Object:WildcardType.getSuperBound
     else
       nil
     end
@@ -265,7 +265,7 @@ class MirrorProxy implements MirrorType,
 
   def signature
     if target.kind_of?(DeclaredMirrorType)
-      DeclaredMirrorType(@target).signature
+      @target:DeclaredMirrorType.signature
     else
       nil
     end
@@ -273,13 +273,13 @@ class MirrorProxy implements MirrorType,
 
   def ensure_linked
     if @target.kind_of?(DeclaredMirrorType)
-      DeclaredMirrorType(@target).ensure_linked
+      @target:DeclaredMirrorType.ensure_linked
     end
   end
 
   def getTypeVariableMap
     if @target.kind_of?(DeclaredMirrorType)
-      DeclaredMirrorType(@target).getTypeVariableMap
+      @target:DeclaredMirrorType.getTypeVariableMap
     else
       Collections.emptyMap
     end
@@ -310,7 +310,7 @@ class MirrorFuture < BaseTypeFuture
     direct_supertypes.size.times do |i|
       direct_supertype = direct_supertypes[i]
       if direct_supertype.kind_of?(MirrorProxy)
-        if !MirrorProxy(direct_supertype).isFullyResolved
+        if !direct_supertype:MirrorProxy.isFullyResolved
           return false
         end
       elsif direct_supertype.kind_of?(ErrorType)
@@ -344,9 +344,9 @@ class ResolvedCall < MirrorProxy implements CallType
 
   def self.expressionType(target:MirrorType, method:JVMMethod):MirrorType
     return_type = if method.kind_of?(GenericMethod)
-      MirrorType(GenericMethod(method).genericReturnType)
+      method:GenericMethod.genericReturnType:MirrorType
     else
-      MirrorType(method.returnType)
+      method.returnType:MirrorType
     end
     if "V".equals(return_type.getAsmType.getDescriptor)
       target
@@ -366,7 +366,7 @@ class ResolvedCall < MirrorProxy implements CallType
     if areSame(self, other)
       true
     elsif other.kind_of?(ResolvedCall)
-      rc = ResolvedCall(other)
+      rc = other:ResolvedCall
       target.equals(rc.target) && @member.equals(rc.member)
     else
       false

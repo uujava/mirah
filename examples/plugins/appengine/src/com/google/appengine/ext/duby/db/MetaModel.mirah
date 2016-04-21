@@ -34,7 +34,7 @@ class DubyDatastorePlugin
 
     @defaults = {
       'Rating' => mirah.fixnum(0),
-      'Long' => mirah.quote { long(0) },
+      'Long' => mirah.quote { (0):long },
       'Double' => mirah.quote { 0.0 },
       'Boolean' => mirah.quote { false },
       'Blob' => mirah.quote { byte[].cast(nil) },
@@ -43,7 +43,7 @@ class DubyDatastorePlugin
   end
 
   def mirah:Compiler
-    Compiler(@mirah.get)
+    @mirah.get:Compiler
   end
 
   def add_property(name_node:Node, type_node:Node, call:Call)
@@ -53,12 +53,12 @@ class DubyDatastorePlugin
     ds_type = 'Long' if ds_type == 'Integer'
 
     # create an empty body
-    result = Body(mirah.quote { nil; nil })
+    result:Body = mirah.quote { nil; nil }
 
     klass = find_class(call.parent)
     model = find_model(klass, result)
 
-    type_name = String(@type_map[ds_type]) || ds_type
+    type_name = @type_map[ds_type]:String || ds_type
     if type_name.endsWith('[]')
       array = true
       type_name = type_name.replace('[]', '')
@@ -112,21 +112,21 @@ class DubyDatastorePlugin
     while node && !node.kind_of?(ClassDefinition)
       node = node.parent
     end
-    ClassDefinition(node)
+    node:ClassDefinition
   end
 
   def find_model(klass:ClassDefinition, ast:Body):ModelState
     unless @models[klass]
       @models[klass] = ModelState.new(mirah, klass, ast)
     end
-    ModelState(@models[klass])
+    @models[klass]:ModelState
   end
 
   def to_datastore(type:String, value:Object):Object
     if @primitives.contains(type)
-      Object(mirah.quote { `type`.new(`value`) })
+      (mirah.quote { `type`.new(`value`) }):Object
     elsif @type_map.containsKey(type)
-      Object(mirah.quote { (`value` ? `type`.new(`value`) : nil) })
+      (mirah.quote { (`value` ? `type`.new(`value`) : nil) }):Object
     else
       value
     end
@@ -173,7 +173,7 @@ class DubyDatastorePlugin
       instance = DubyDatastorePlugin.new(mirah)
       @@instances[mirah] = instance
     end
-    DubyDatastorePlugin(instance)
+    instance:DubyDatastorePlugin
   end
 end
 
@@ -202,19 +202,19 @@ class ModelState
     # The nodes we add to ast will get dup'ed before being inserted, but
     # we need to be able to update some methods when add_property gets
     # called again.  So we insert these directly into the class definition.
-    class_body = Body(klass.body)
+    class_body = klass.body:Body
     init_read(class_body)
     init_save(class_body)
   end
 
   def mirah:Compiler
-    Compiler(@mirah.get)
+    @mirah.get:Compiler
   end
 
   def init_query(classname:String)
     name = "#{classname}$Query"
     superclass = 'com.google.appengine.ext.duby.db.DQuery'
-    @query = Body(mirah.defineClass(name, superclass).body)
+    @query = mirah.defineClass(name, superclass).body:Body
     array_size = mirah.quote { entities.size }
     @query << mirah.quote do
       import com.google.appengine.api.datastore.Entity
@@ -229,7 +229,7 @@ class ModelState
       def first
         it = _prepare.asIterator
         if it.hasNext
-          e = Entity(it.next)
+          e = it.next:Entity
           m = `kind`.new
           m._read_from(e)
           m
@@ -244,7 +244,7 @@ class ModelState
         it = entities.iterator
         i = 0
         while (it.hasNext)
-          e = Entity(it.next)
+          e = it.next:Entity
           m = `kind`.new
           m._read_from(e)
           models[i] = m
@@ -351,7 +351,7 @@ class ModelState
       end
     end
     ast << mdef
-    @read = Body(mdef.child_nodes.get(2))
+    @read = mdef.child_nodes.get(2):Body
 
     mdef = mirah.quote do
       def properties
@@ -361,7 +361,7 @@ class ModelState
       end
     end
     ast << mdef
-    @get_properties = Body(Node(mdef.child_nodes.get(2)).child_nodes.get(1))
+    @get_properties:Body = mdef.child_nodes.get(2):Node.child_nodes.get(1)
 
     mdef = mirah.quote do
       def update(properties:`map`):void
@@ -369,7 +369,7 @@ class ModelState
       end
     end
     ast << mdef
-    @update = Body(mdef.child_nodes.get(2))
+    @update = mdef.child_nodes.get(2):Body
   end
 
   def init_save(ast:Body)
@@ -380,6 +380,6 @@ class ModelState
       end
     end
     ast << mdef
-    @save = Body(mdef.child_nodes.get(2))
+    @save = mdef.child_nodes.get(2):Body
   end
 end

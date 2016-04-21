@@ -35,7 +35,7 @@ class PickFirst < BaseTypeFuture
   # futureX and argX are passed to the listener when futureX is chosen.
   # If multiple futures resolve the one that occurs first in items is chosen.
   def initialize(items:List, listener:PickerListener)
-    initialize(items, TypeFuture(items.get(0)), listener)
+    initialize(items, items.get(0):TypeFuture, listener)
   end
 
   def initialize(items:List, _default:TypeFuture, listener:PickerListener)
@@ -45,7 +45,7 @@ class PickFirst < BaseTypeFuture
     @items = ArrayList.new(items.size / 2)
     items.size.times do |i|
       next if i % 2 != 0
-      addItem(i, TypeFuture(items.get(i)), items.get(i + 1))
+      addItem(i, items.get(i):TypeFuture, items.get(i + 1))
     end
   end
   
@@ -72,7 +72,7 @@ class PickFirst < BaseTypeFuture
 
   def dump(out)
     @items.each do |i|
-      out.printFuture(TypeFuture(i))
+      out.printFuture(i:TypeFuture)
     end
   end
 

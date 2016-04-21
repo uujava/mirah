@@ -47,7 +47,7 @@ class ListExtensionsTest < Test::Unit::TestCase
     cls, = compile(<<-EOF)
       class Co implements java::util::Comparator
         def compare(o0:Object,o1:Object)
-          compare(Comparable(o0),Comparable(o1))
+          compare(o0:Comparable,o1:Comparable)
         end
         def compare(o0:Comparable,o1:Comparable)
           -o0.compareTo(o1)
@@ -62,7 +62,7 @@ class ListExtensionsTest < Test::Unit::TestCase
     cls, = compile(<<-EOF)
       class Co implements java::util::Comparator
         def compare(o0:Object,o1:Object)
-          compare(Comparable(o0),Comparable(o1))
+          compare(o0:Comparable,o1:Comparable)
         end
         def compare(o0:Comparable,o1:Comparable)
           -o0.compareTo(o1)

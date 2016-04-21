@@ -62,7 +62,7 @@ class FlexibleFrame < Frame
     if i >= @locals.size
       BasicValue.UNINITIALIZED_VALUE
     else
-      Value(@locals.get(i))
+      @locals.get(i):Value
     end
   end
 
@@ -79,7 +79,7 @@ class FlexibleFrame < Frame
     if i >= @stack.size
       BasicValue.UNINITIALIZED_VALUE
     else
-      Value(@stack.get(i))
+      @stack.get(i):Value
     end
   end
 
@@ -167,7 +167,7 @@ class LocalInitializerAdapter < MethodVisitor
     array.length.times do |i|
       opcode = array[i].getOpcode
       if opcode >= Opcodes.ILOAD && opcode <= Opcodes.ALOAD
-        var = VarInsnNode(array[i]).var
+        var = array[i]:VarInsnNode.var
         frame = frames[i]
         next if frame.nil?
         next unless frame.getLocal(var) == BasicValue.UNINITIALIZED_VALUE

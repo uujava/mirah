@@ -26,7 +26,7 @@ class IterableExtensions
       type = arg.type if arg.type
     else
       name = gensym
-      type = TypeName(nil)
+      type = nil:TypeName
     end
     it = gensym
 
@@ -64,7 +64,7 @@ class IterableExtensions
       a_type = arg.type if arg.type
     else
       a = gensym
-      a_type = TypeName(nil)
+      a_type = nil:TypeName
     end
     if block.arguments && block.arguments.required_size() > 1
       arg = block.arguments.required(1)
@@ -72,7 +72,7 @@ class IterableExtensions
       b_type = arg.type if arg.type
     else
       b = gensym
-      b_type = TypeName(nil)
+      b_type = nil:TypeName
     end    
     ait = gensym
     bit = gensym

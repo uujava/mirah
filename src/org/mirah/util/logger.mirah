@@ -15,7 +15,7 @@ class Logger
   attr_reader internal_logger: JavaLogger
   
   def initialize(internal_logger:Object) # old compiler cannot handle def initialize(internal_logger:java.util.logging.Logger) 
-    @internal_logger = JavaLogger(internal_logger)
+    @internal_logger = internal_logger:JavaLogger
   end
 
   macro def finest(arg)

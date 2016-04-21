@@ -29,5 +29,5 @@ implements Printer
 end
 
 list = ['foo', 'bar', 'baz']
-p = Printer(MyPrinter.new)
+p = MyPrinter.new:Printer
 p.printAll(list)

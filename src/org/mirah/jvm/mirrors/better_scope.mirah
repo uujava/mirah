@@ -61,7 +61,7 @@ class Locals
     parent: BetterScope,
     shadowed: boolean
   )
-    type = LocalFuture(@local_types[name])
+    type = @local_types[name]:LocalFuture
     if type.nil?
       type = LocalFuture.new(name, position)
       locals = @defined_locals
@@ -74,7 +74,7 @@ class Locals
       end
 
       if parent && !shadowed
-        type.parent = BetterScope(parent).getLocalType(name, position)
+        type.parent = parent:BetterScope.getLocalType(name, position)
       end
       @local_types[name] = type
     end
@@ -153,7 +153,7 @@ class BetterScope
   implements Scope, MirrorScope
 
   def initialize(context: Node)
-    @parent = BetterScope(nil)
+    @parent = nil:BetterScope
     @children = []
     @tmpCounter = 0
 
@@ -179,8 +179,8 @@ class BetterScope
 
     @parent.removeChild(self) if @parent
 
-    BetterScope(new_parent).addChild(self)
-    @parent = BetterScope(new_parent)
+    new_parent:BetterScope.addChild(self)
+    @parent = new_parent:BetterScope
 
     flush
   end
@@ -341,7 +341,7 @@ class BetterScope
   macro def self.supports_locals
     quote do
       def getLocalType(name, position)
-        @locals.local_type name, position, BetterScope(parent), shadowed?(name)
+        @locals.local_type name, position, parent:BetterScope, shadowed?(name)
       end
 
       def hasLocal(name, includeParent:boolean=true)
@@ -367,7 +367,7 @@ class BetterScope
   macro def self.defers_locals
     quote do
       def getLocalType(name, position)
-        MirrorScope(parent).getLocalType(name, position)
+        parent:MirrorScope.getLocalType(name, position)
       end
 
       def hasLocal(name, includeParent:boolean=true)
@@ -394,7 +394,7 @@ class BetterScope
 
       def capturedLocals
         captured = ArrayList.new(@locals.size)
-        @locals.each {|name| captured.add(name) if isCaptured(String(name))}
+        @locals.each {|name| captured.add(name) if isCaptured(name:String)}
         captured
       end
     end
@@ -427,7 +427,7 @@ class BetterScope
     quote do
       def outer_scope
         return nil if @scoper.nil? || context.nil? || context.parent.nil?
-        MirrorScope(@scoper.getScope(context))
+        @scoper.getScope(context):MirrorScope
       end
     end
   end

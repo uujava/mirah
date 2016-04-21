@@ -22,7 +22,7 @@ class MirrorObjectExtensions
   # This is needed by the Mirror type system,
   # but it breaks the ruby type system.
   macro def self.[]
-    TypeRefImpl.new(TypeName(@call.target).typeref.name,
+    TypeRefImpl.new(@call.target:TypeName.typeref.name,
                     true, true, @call.position)
   end
 end

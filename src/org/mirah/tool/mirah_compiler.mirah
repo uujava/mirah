@@ -155,9 +155,9 @@ class MirahCompiler implements JvmBackend
 
   def parse(code:CodeSource)
     begin
-      node = Node(@parser.parse(code))
+      node:Node = @parser.parse(code)
     rescue org.mirah.mmeta.SyntaxError => e
-      raise Exception.new("#{code.name} failed to parse.",e)
+      raise Exception.new("#{code.name} failed to parse. #{e}",e)
     end
     if node.nil?
       puts "#{code.name} failed to parse."

@@ -57,7 +57,7 @@ class MacrosTest < Test::Unit::TestCase
         mirah::lang::ast::Null.new
       end
 
-      puts(Object(foo))
+      puts(foo:Object)
     EOF
 
     assert_run_output("null\n", cls)
@@ -69,7 +69,7 @@ class MacrosTest < Test::Unit::TestCase
       import java.util.LinkedList
       macro def foo
         LinkedList.new
-        Node(nil)
+        nil:Node
       end
 
       foo
@@ -85,7 +85,7 @@ class MacrosTest < Test::Unit::TestCase
         mirah::lang::ast::Null.new
       end
 
-      puts(Object(foo()))
+      puts(foo():Object)
     EOF
 
     assert_run_output("null\n", cls)
@@ -98,7 +98,7 @@ class MacrosTest < Test::Unit::TestCase
         quote { nil }
       end
 
-      puts(Object(foo))
+      puts(foo:Object)
     EOF
 
     assert_run_output("null\n", cls)
@@ -524,7 +524,7 @@ class MacrosTest < Test::Unit::TestCase
         macro def self.method_adding_macro
           node  = @call
           node  = node.parent until node.nil? || node.kind_of?(ClassDefinition) # cannot call enclosing_class(), currently
-          klass = ClassDefinition(node)
+          klass = node:ClassDefinition
           
           klass.body.add(quote do
             def another_method
@@ -552,7 +552,7 @@ class MacrosTest < Test::Unit::TestCase
         macro def self.method_adding_macro
           node  = @call
           node  = node.parent until node.nil? || node.kind_of?(ClassDefinition) # cannot call enclosing_class(), currently
-          klass = ClassDefinition(node)
+          klass = node:ClassDefinition
           
           klass.body.add(quote do
             def another_method
@@ -697,7 +697,7 @@ class MacrosTest < Test::Unit::TestCase
 
          args.each do |arg:Node|
            m = if arg.kind_of? Block
-            body = Block(arg).body
+            body = arg:Block.body
             quote do
               puts `body`
             end

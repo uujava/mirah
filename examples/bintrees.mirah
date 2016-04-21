@@ -54,8 +54,8 @@ class TreeNode
   end
 
   def initialize(item:int)
-    @left = TreeNode(nil)
-    @right = TreeNode(nil)
+    @left = nil:TreeNode
+    @right = nil:TreeNode
     @item = item
   end
 

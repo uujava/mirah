@@ -131,20 +131,20 @@ abstract class StubWriter
   end
 
   protected def process_annotations(node:Annotated, visitor:AnnotationVisitor):void
-    iterator = Annotated(node).annotations.iterator
+    iterator = node:Annotated.annotations.iterator
     while iterator.hasNext
-     anno = Annotation(iterator.next)
+     anno = iterator.next:Annotation
      @@log.finest "anno: #{anno} #{anno.type}"
      inferred = getInferredType(anno)
      next unless inferred
-     anno_type = JVMType(inferred.resolve)
+     anno_type = inferred.resolve:JVMType
      if anno.values.size == 0
        visitor.visit(anno, anno_type, nil, nil)
      else
        values = anno.values.iterator
        while values.hasNext
-         entry = HashEntry(values.next)
-         key = Identifier(entry.key).identifier
+         entry = values.next:HashEntry
+         key = entry.key:Identifier.identifier
          visitor.visit(anno, anno_type, key, entry.value)
        end
      end

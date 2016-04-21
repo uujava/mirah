@@ -33,15 +33,15 @@ class MirahLogFormatter < Formatter
   end
 
   def shorten(name:String):String
-    short = String(@names[name])
+    short = @names[name]:String
     return short if short
     pieces = Arrays.asList(name.split('\.'))
     pieces.size.times do |i|
       key = pieces.subList(pieces.size - i - 1, pieces.size)
-      existing = List(@inverse_names[key])
+      existing = @inverse_names[key]:List
       if existing.nil? || existing == [name]
         @inverse_names[key] = [name]
-        return String(@names[name] = join(key, '.'))
+        return (@names[name] = join(key, '.')):String
       else
         existing.each {|e| @names[e] = nil}
         existing.add(name) unless existing.contains(name)

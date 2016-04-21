@@ -44,7 +44,7 @@ class ErrorType < SpecialType
   end
 
   def equals(other:Object)
-    other.kind_of?(ErrorType) && message.equals(ErrorType(other).message)
+    other.kind_of?(ErrorType) && message.equals(other:ErrorType.message)
   end
 
   def hashCode
@@ -56,9 +56,9 @@ class ErrorType < SpecialType
   def checkMessage(message:List)
     new_message = ArrayList.new(message.size)
     message.each do |_pair|
-      pair = List(_pair)
-      text = String(pair.get(0))
-      position = pair.size > 1 ? Position(pair.get(1)) : nil
+      pair = _pair:List
+      text = pair.get(0):String
+      position = pair.size > 1 ? pair.get(1):Position : nil
       new_pair = ArrayList.new(2)
       new_pair.add(text)
       new_pair.add(position)

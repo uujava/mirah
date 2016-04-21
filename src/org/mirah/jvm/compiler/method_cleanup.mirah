@@ -30,7 +30,7 @@ class MethodCleanup < NodeScanner
     @typer = context[Typer]
     @scope = @typer.scoper.getIntroducedScope(method)
     @method = method
-    @type = MethodType(@typer.getInferredType(method).resolve)
+    @type = @typer.getInferredType(method).resolve:MethodType
   end
 
   def clean:void
@@ -49,12 +49,12 @@ class MethodCleanup < NodeScanner
   def enterClosureDefinition(node, arg)
     if @typer.getInferredType(node).resolve.equals(@scope.binding_type) && node.body_size == 0
       @scope.capturedLocals.each do |name|
-        type = JVMType(@typer.type_system.getLocalType(@scope, String(name), node.position).resolve)
+        type:JVMType = @typer.type_system.getLocalType(@scope, name:String, node.position).resolve
         if type.kind_of?(MirrorType)
-          type = JVMType(Object(MirrorType(type).erasure))
+          type = type:MirrorType.erasure:Object:JVMType
         end
         typeref = TypeRefImpl.new(type.name, JVMTypeUtils.isArray(type), false, node.position)
-        decl = FieldDeclaration.new(SimpleString.new(String(name)), typeref, nil, [Modifier.new('PROTECTED')])
+        decl = FieldDeclaration.new(SimpleString.new(name:String), typeref, nil, [Modifier.new('PROTECTED')])
         node.body.add(decl)
         @typer.infer(decl)
       end

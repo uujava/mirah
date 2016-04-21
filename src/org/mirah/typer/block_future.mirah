@@ -21,7 +21,7 @@ class BlockFuture < BaseTypeFuture
   def initialize(block:Block, listener:TypeListener)
     super(block.position)
     @block = block
-    @basic_block_method_type = MethodType(nil)
+    @basic_block_method_type = nil:MethodType
     onUpdate(listener)
   end
 

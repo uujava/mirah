@@ -42,7 +42,7 @@ class MethodState
     @name = method.name.identifier
     @position = method.name.position
     @num_args = type.parameterTypes.size
-    @returnType = JVMType(type.returnType)
+    @returnType = type.returnType:JVMType
     signature = StringBuilder.new
     type.parameterTypes.each do |t:JVMType|
       signature.append(t.getAsmType.getDescriptor)

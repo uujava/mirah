@@ -53,7 +53,7 @@ class Types implements TypesModel
     @context = context
     @types = context[MirrorTypeSystem]
     context[TypesModel] = self
-    @object = MirrorType(@types.loadNamedType('java.lang.Object').resolve)
+    @object:MirrorType = @types.loadNamedType('java.lang.Object').resolve
     @primitives = EnumMap.new(
       TypeKind.BOOLEAN => @types.loadNamedType('boolean').resolve,
       TypeKind.BYTE => @types.loadNamedType('byte').resolve,
@@ -67,55 +67,55 @@ class Types implements TypesModel
   end
 
   def boxedClass(p)
-    TypeElement.new(MirrorType(NumberType(p).box))
+    TypeElement.new(p:NumberType.box:MirrorType)
   end
 
   def getArrayType(component)
-    ArrayType(@types.getResolvedArrayType(MirrorType(component)))
+    @types.getResolvedArrayType(component:MirrorType):ArrayType
   end
 
   def getNoType(kind)
     if kind == TypeKind.VOID
-      return VoidType(@types.getVoidType.resolve)
+      return @types.getVoidType.resolve:VoidType
     end
   end
 
   def getNullType
-    NullType(@types.getNullType.resolve)
+    @types.getNullType.resolve:NullType
   end
 
   def getPrimitiveType(kind)
-    PrimitiveType(@primitives[kind])
+    @primitives[kind]:PrimitiveType
   end
 
   def directSupertypes(t)
-    MirrorType(t).directSupertypes
+    t:MirrorType.directSupertypes
   end
 
   def asElement(t)
-    TypeElement.new(MirrorType(t))
+    TypeElement.new(t:MirrorType)
   end
 
   def erasure(x)
-    MirrorType(x).erasure
+    x:MirrorType.erasure
   end
 
   def isSameType(a, b)
-    MirrorType(a).isSameType(MirrorType(b))
+    a:MirrorType.isSameType(b:MirrorType)
   end
 
   def isSubtype(a, b)
-    MirrorType(b).isSupertypeOf(MirrorType(a))
+    b:MirrorType.isSupertypeOf(a:MirrorType)
   end
 
   def getDeclaredType(element:ITypeElement, args:TypeMirror[]):DeclaredType
-    t = Type.getType(TypeElement(element).descriptor)
+    t = Type.getType(element:TypeElement.descriptor)
     type = @types.wrap(t)
     arg_futures = ArrayList.new(args.length)
     args.each do |arg|
-      arg_futures.add(BaseTypeFuture.new.resolved(MirrorType(arg)))
+      arg_futures.add(BaseTypeFuture.new.resolved(arg:MirrorType))
     end
-    DeclaredMirrorType(@types.parameterize(type, arg_futures).resolve)
+    @types.parameterize(type, arg_futures).resolve:DeclaredMirrorType
   end
 
   def getWildcardType(extendsBound, superBound)

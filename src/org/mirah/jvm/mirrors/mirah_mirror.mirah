@@ -50,7 +50,7 @@ class MirahMirror < AsyncMirror
     fields
   end
   def getDeclaredField(name:String):JVMMethod
-    JVMMethod(@fields[name])
+    @fields[name]:JVMMethod
   end
 
   def getDeclaredMethods(name)

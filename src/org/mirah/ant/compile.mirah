@@ -48,7 +48,7 @@ class Compile < Task
     bytecode = @bytecode
     jvm_version = @jvm_version
     verbose = @verbose
-    exception = Exception(nil)
+    exception = nil:Exception
 
     args = ArrayList.new(
         ['--jvm', jvm_version,

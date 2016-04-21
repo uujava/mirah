@@ -38,7 +38,7 @@ class NumberType < BaseType implements PrimitiveType
 
   def initialize(context:Context, type:Type, supertype:MirrorType, loader:MirrorLoader)
     super(context, type, Opcodes.ACC_PUBLIC, supertype)
-    @kind = TypeKind(@@kind_map[type.getDescriptor])
+    @kind = @@kind_map[type.getDescriptor]:TypeKind
     @loader = loader
   end
 

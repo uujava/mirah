@@ -109,14 +109,14 @@ class SimpleMirrorLoader implements MirrorLoader
   # 2) Otherwise calls findMirror() and returns the result.
   # Subclasses should usually override findMirror instead of this method.
   def loadMirror(type:Type):MirrorType
-    existing = MirrorType(@mirrors[type])
+    existing = @mirrors[type]:MirrorType
     return existing if existing
 
     mirror = findMirror(type)
     if mirror
       @mirrors[type] = mirror
       if mirror.kind_of?(DeclaredMirrorType)
-        DeclaredMirrorType(mirror).ensure_linked
+        mirror:DeclaredMirrorType.ensure_linked
       end
     end
     return mirror
@@ -159,7 +159,7 @@ class PrimitiveLoader < SimpleMirrorLoader
   end
 
   def findMirror(type:Type)
-    super || MirrorType(@mirrors[type])
+    super || @mirrors[type]:MirrorType
   end
 end
 
@@ -175,7 +175,7 @@ class SimpleAsyncMirrorLoader implements AsyncMirrorLoader
   # Note that the order here is different from SimpleMirrorLoader:
   # We delegate to the parent after checking if we know about the type.
   def loadMirrorAsync(type:Type):TypeFuture
-    TypeFuture(@futures[type] ||= findMirrorAsync(type))
+    (@futures[type] ||= findMirrorAsync(type)):TypeFuture
   end
 
   def findMirrorAsync(type:Type):TypeFuture
@@ -204,12 +204,12 @@ class SimpleAsyncMirrorLoader implements AsyncMirrorLoader
   def findArrayMirrorAsync(type:Type):TypeFuture
     context = @context
     DerivedFuture.new(loadMirrorAsync(type)) do |resolved|
-      ArrayType.new(context, MirrorType(resolved))
+      ArrayType.new(context, resolved:MirrorType)
     end
   end
 
   def defineMirror(type:Type, mirror:TypeFuture):TypeFuture
-    delegate = DelegateFuture(@futures[type] ||= DelegateFuture.new)
+    delegate = (@futures[type] ||= DelegateFuture.new):DelegateFuture
     delegate.type = mirror
     delegate
   end
@@ -258,7 +258,7 @@ class SyncLoaderAdapter implements MirrorLoader
   def loadMirror(type:Type):MirrorType
     resolved = @loader.loadMirrorAsync(type).resolve
     unless resolved.isError
-      MirrorType(resolved)
+      resolved:MirrorType
     end
   end
 end
@@ -372,16 +372,16 @@ class BytecodeMirrorLoader < SimpleMirrorLoader
     macros = findMacros(node)
     @@log.fine "  found #{macros.size} macros. Loading"
     macros.each do |name|
-      member = internalAddMacro(type, String(name))
+      member = internalAddMacro(type, name:String)
       @@log.fine "    #{member}"
     end
   end
 
   def self.findMacros(klass:ClassNode)
     klass.invisibleAnnotations.each do |a|
-      annotation = AnnotationNode(a)
+      annotation = a:AnnotationNode
       if "Lorg/mirah/macros/anno/Extensions;".equals(annotation.desc)
-        return List(annotation.values.get(1))
+        return annotation.values.get(1):List
       end
     end if klass.invisibleAnnotations
     Collections.emptyList

@@ -51,7 +51,7 @@ class TypeInvocation < AsyncMirror implements DeclaredMirrorType
   end
 
   def signature
-    DeclaredMirrorType(@raw).signature
+    @raw:DeclaredMirrorType.signature
   end
 
   def interfaces:TypeFuture[]
@@ -63,9 +63,9 @@ class TypeInvocation < AsyncMirror implements DeclaredMirrorType
     @typeArguments.map do |a:TypeFuture|
       resolved = a.resolve
       if resolved.kind_of?(ErrorType)
-        JvmErrorType.new(@context, ErrorType(resolved))
+        JvmErrorType.new(@context, resolved:ErrorType)
       else
-        MirrorType(resolved)
+        resolved:MirrorType
       end
     end
   end
@@ -95,7 +95,7 @@ class TypeInvocation < AsyncMirror implements DeclaredMirrorType
   def equals(other)
     import static org.mirah.util.Comparisons.*
     return true if areSame(self, other)
-    other.kind_of?(MirrorType) && isSameType(MirrorType(other))
+    other.kind_of?(MirrorType) && isSameType(other:MirrorType)
   end
 
   def hashCode:int
@@ -105,7 +105,7 @@ class TypeInvocation < AsyncMirror implements DeclaredMirrorType
 
   def isSameType(other)
     return false if other.getKind != TypeKind.DECLARED
-    getTypeArguments.zip(DeclaredType(Object(other)).getTypeArguments) do
+    getTypeArguments.zip(other:Object:DeclaredType.getTypeArguments) do
       |a:MirrorType, b:MirrorType|
       return false if b.nil?
       return false unless a.isSameType(b)
@@ -115,7 +115,7 @@ class TypeInvocation < AsyncMirror implements DeclaredMirrorType
 
   def isSupertypeOf(other)
     if getAsmType.equals(other.getAsmType) && other.getKind == TypeKind.DECLARED
-      other_args = DeclaredType(Object(other)).getTypeArguments
+      other_args = other:Object:DeclaredType.getTypeArguments
       if other_args.nil? || other_args.isEmpty
         # Allow unchecked conversion
         return true

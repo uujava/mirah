@@ -81,7 +81,7 @@ class TypePrinter < NodeScanner
     super(node, arg)
     if node.object
       if node.object.kind_of?(Node)
-        Node(node.object).accept(self, arg)
+        node.object:Node.accept(self, arg)
       else
         printIndent
         @out.print node.object
@@ -160,7 +160,7 @@ class TypePrinter2 < NodeScanner
     @out.print "$TODOAnnotations\n"  if node.annotations_size > 0
     printIndent
     @out.print "def "
-    @out.print "(self.)" # if MethodType(type).isStatic
+    @out.print "(self.)" # if type:MethodType.isStatic
     @out.print node.name.identifier
     node.arguments.accept(self, arg)
 
@@ -362,7 +362,7 @@ class TypePrinter2 < NodeScanner
     super(node, arg)
     if node.object
       if node.object.kind_of?(Node)
-        Node(node.object).accept(self, arg)
+        node.object:Node.accept(self, arg)
       else
         printIndent
         @out.print node.object

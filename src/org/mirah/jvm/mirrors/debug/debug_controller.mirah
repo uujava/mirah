@@ -149,7 +149,7 @@ class DebugController implements DebuggerInterface, ResolutionWatcher
     @stopped = false
     @breakpoints = ArrayList.new
     @watches = LinkedHashMap.new
-    @step = StepPredicate(nil)
+    @step = nil:StepPredicate
     @listener = listener
     @executor = executor
     @predicates = {
@@ -291,7 +291,7 @@ class DebugController implements DebuggerInterface, ResolutionWatcher
   def inferenceError(context, node, error)
     @lock.lock
     begin
-      @stack = StackEntry.new(context, node, true, StackEntry(@stack))
+      @stack = StackEntry.new(context, node, true, @stack:StackEntry)
       @stack.result = error
     ensure
       @lock.unlock
@@ -311,7 +311,7 @@ class DebugController implements DebuggerInterface, ResolutionWatcher
     should_stop = false
     @lock.lock
     begin
-      @stack = StackEntry.new(context, node, expression, StackEntry(@stack))
+      @stack = StackEntry.new(context, node, expression, @stack:StackEntry)
       position = node.position
       if @step && @step.stopBefore(@stack)
         should_stop = true
@@ -353,7 +353,7 @@ class DebugController implements DebuggerInterface, ResolutionWatcher
   def resolved(future, currentValue, newValue)
     @lock.lock
     begin
-      predicate = WatchPredicate(@watches[future])
+      predicate = @watches[future]:WatchPredicate
       unless predicate && predicate.test(currentValue, newValue)
         return
       end

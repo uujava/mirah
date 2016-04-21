@@ -43,16 +43,16 @@ class SimpleScoper; implements Scoper
     orig = node
     until node.parent.nil?
       node = node.parent
-      scope = Scope(@scopes[node])
+      scope = @scopes[node]:Scope
       return scope if scope
     end
-    Scope(@scopes[node]) || addScope(node)
+    @scopes[node]:Scope || addScope(node)
   end
   def getIntroducedScope(node:Node)
-    Scope(@scopes[node])
+    @scopes[node]:Scope
   end
   def addScope(node)
-    Scope(@scopes[node]) || begin
+    @scopes[node]:Scope || begin
       scope = if @factory
         @factory.newScope(self, node)
       else

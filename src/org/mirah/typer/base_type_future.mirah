@@ -35,7 +35,7 @@ class BaseTypeFuture; implements TypeFuture
   def initialize(position: Position)
     @position = position
     @listeners = ArrayList.new
-    @new_listeners = ArrayList(nil)
+    @new_listeners = nil:ArrayList
     @notify_depth = 0
     @lock = ReentrantLock.new
   end

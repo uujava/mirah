@@ -49,7 +49,7 @@ class ReturnTypeFuture < AssignableTypeFuture
     if type && type.name.equals("null")
       type = @context[MirrorTypeSystem].loadNamedType('java.lang.Object').resolve
     elsif type.kind_of?(MirrorType)
-      type = MirrorType(MirrorType(type).erasure)
+      type = type:MirrorType.erasure:MirrorType
     elsif type.kind_of?(UnreachableType)
       type = VoidType.new
     end
@@ -96,7 +96,7 @@ class MirahMethod < AsyncMember implements MethodListener
   end
 
   def wrap_error(type:ResolvedType):ResolvedType
-    JvmErrorType.new(@context, ErrorType(type))
+    JvmErrorType.new(@context, type:ErrorType)
   end
 
   def setupOverrides(argumentTypes:List):void
@@ -109,7 +109,7 @@ class MirahMethod < AsyncMember implements MethodListener
     if !args_declared
       declareArguments(argumentTypes)
     end
-    type = MirrorType(declaringClass)
+    type = declaringClass:MirrorType
     type.addMethodListener(name, self)
     checkOverrides
   end
@@ -120,7 +120,7 @@ class MirahMethod < AsyncMember implements MethodListener
     size.times do |i|
       @arguments[i] = DelegateFuture.new
       @arguments[i].type = generate_error
-      arg = AssignableTypeFuture(argumentTypes[i])
+      arg = argumentTypes[i]:AssignableTypeFuture
       # Don't declare it if it's optional or already is declared.
       unless arg.hasDeclaration || arg.assignedValues(false, false).size > 0
         arg.declare(@arguments[i], @position)
@@ -134,7 +134,7 @@ class MirahMethod < AsyncMember implements MethodListener
 
   def checkOverrides:void
     supertype_methods = @lookup.findOverrides(
-        MirrorType(declaringClass), name, @arity)
+        declaringClass:MirrorType, name, @arity)
     if @arguments
       processArguments(supertype_methods)
     end
@@ -143,7 +143,7 @@ class MirahMethod < AsyncMember implements MethodListener
 
   def processArguments(supertype_methods:List):void
     if supertype_methods.size == 1
-      method = Member(supertype_methods[0])
+      method = supertype_methods[0]:Member
       @arity.times do |i|
         @arguments[i].type = method.asyncArgument(i)
       end
@@ -170,7 +170,7 @@ class MirahMethod < AsyncMember implements MethodListener
       match = true
       self.argumentTypes.zip(method.argumentTypes) do |a:ResolvedType, b:ResolvedType|
         next if a.isError || b.isError
-        unless MirrorType(a).isSameType(MirrorType(b))
+        unless a:MirrorType.isSameType(b:MirrorType)
           match = false
           break
         end
@@ -187,7 +187,7 @@ class MirahMethod < AsyncMember implements MethodListener
       filtered.each do |m:Member|
         future.addType(m.asyncReturnType)
       end
-      future.addType(Member(supertype_methods[0]).asyncReturnType)
+      future.addType(supertype_methods[0]:Member.asyncReturnType)
       @super_return_type.type = future
     end
   end

@@ -60,7 +60,7 @@ class ScriptCompiler < BaseCompiler
   
   def generate(consumer:BytecodeConsumer)
     until @classes.isEmpty
-      compiler = ClassCompiler(@classes.removeFirst)
+      compiler = @classes.removeFirst:ClassCompiler
       consumer.consumeClass(compiler.internal_name, compiler.getBytes)
       @classes.addAll(compiler.innerClasses)
     end

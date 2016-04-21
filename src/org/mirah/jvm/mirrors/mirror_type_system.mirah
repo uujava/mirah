@@ -99,7 +99,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     context[JavaxTypes] = Types.new(context)
 
     @object_future = wrap(Type.getType('Ljava/lang/Object;'))
-    @object = BaseType(@object_future.resolve)
+    @object = @object_future.resolve:BaseType
     @anonymousClasses = {}
     @unpinned_field_futures = {}
     @cached_array_types = {}
@@ -121,7 +121,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     future.type = type
     type.onUpdate do |x, resolved|
       future.type = MirrorFuture.new(
-          TypeInvoker.invoke(context, MirrorType(resolved), args, nil, seen_signatures))
+          TypeInvoker.invoke(context, resolved:MirrorType, args, nil, seen_signatures))
     end
     future
   end
@@ -131,7 +131,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
       unless r.kind_of?(MirrorType)
         r
       else
-        resolved = MirrorType(r)
+        resolved = r:MirrorType
         if JVMTypeUtils.isPrimitive(resolved)
           resolved.box
         else
@@ -143,7 +143,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
 
   def getSuperClass(type)
     DerivedFuture.new(type) do |resolved|
-      JVMType(resolved).superclass
+      resolved:JVMType.superclass
     end
   end
 
@@ -243,7 +243,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   def getMethodDefType(target, name, flags, argTypes, declaredReturnType, position)
     name = name.replaceAll('=$', '_set')
     createMember(
-        MirrorType(target.peekInferredType), name, flags, argTypes, declaredReturnType,
+        target.peekInferredType:MirrorType, name, flags, argTypes, declaredReturnType,
         position)
   end
 
@@ -257,7 +257,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
       if call.resolved_target.isError || call.resolved_target.kind_of?(UnreachableType)
         return BaseTypeFuture.new().resolved(call.resolved_target)
       end
-      target = MirrorType(call.resolved_target)
+      target = call.resolved_target:MirrorType
       method_name = resolveMethodName(call.scope, target, call.name)
       if "<init>".equals(method_name)
         target = target.unmeta
@@ -290,13 +290,13 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
       end
       target.addMethodListener(method_name, listener)
       unless call.explicitTarget || call.scope.nil?
-        MirrorScope(call.scope).staticImports.each do |f:TypeFuture|
+        call.scope:MirrorScope.staticImports.each do |f:TypeFuture|
           f.onUpdate do |x, resolved|
             if resolved.kind_of?(MirrorType)
-              MirrorType(resolved).addMethodListener(method_name, listener)
+              resolved:MirrorType.addMethodListener(method_name, listener)
               if resolved.kind_of?(MirrorProxy)
-                if BaseType(MirrorProxy(resolved).target).hasMember(method_name) # if the method was already created, then
-                  listener.methodChanged(MirrorType(resolved),method_name)       #   fire the listener right away
+                if resolved:MirrorProxy.target:BaseType.hasMember(method_name) # if the method was already created, then
+                  listener.methodChanged(resolved:MirrorType,method_name)       #   fire the listener right away
                 end
               end
             end
@@ -308,32 +308,32 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def getFieldType(target, name, position)
-    resolved = MirrorType(target.peekInferredType)
-    klass = MirrorType(resolved.unmeta)
+    resolved = target.peekInferredType:MirrorType
+    klass = resolved.unmeta:MirrorType
     member = klass.getDeclaredField(name)
     if member
       @@log.finest "found declared field future for target: #{target} name: #{name}"
-      return AssignableTypeFuture(AsyncMember(member).asyncReturnType)
+      return member:AsyncMember.asyncReturnType:AssignableTypeFuture
     end
 
     undeclared_future = @unpinned_field_futures[unpinned_key(klass, name)]
     if undeclared_future
       @@log.finest "found undeclared field future for target: #{klass} name: #{name}"
-      return AssignableTypeFuture(undeclared_future)
+      return undeclared_future:AssignableTypeFuture
     end
 
     @@log.finest "creating undeclared field's future target: #{target} name: #{name}"
     future = AssignableTypeFuture.new(position)
     @unpinned_field_futures[unpinned_key(klass, name)] = future
-    AssignableTypeFuture(future)
+    future:AssignableTypeFuture
   end
 
   def getFieldTypeOrDeclare(target, flags, name, position)
-    resolved = MirrorType(target.peekInferredType)
-    klass = MirrorType(resolved.unmeta)
+    resolved = target.peekInferredType:MirrorType
+    klass = resolved.unmeta:MirrorType
     member = klass.getDeclaredField(name)
     future = if member
-      AsyncMember(member).asyncReturnType
+      member:AsyncMember.asyncReturnType
     else
       if resolved.isMeta and (flags & Opcodes.ACC_STATIC) == 0
         @@log.warning "implicitly enable static flag for meta field #{name} #{target}"
@@ -341,7 +341,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
       end
       createField(klass, name, flags, position)
     end
-    AssignableTypeFuture(future)
+    future:AssignableTypeFuture
   end
 
   def resolveMethodName(scope:Scope, target:ResolvedType, name:String)
@@ -366,7 +366,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     if type.isError
       type
     else
-      jvmType = MirrorType(type)
+      jvmType = type:MirrorType
       if jvmType.isMeta
         jvmType
       else
@@ -376,23 +376,23 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def getMetaType(type:TypeFuture):TypeFuture
-    types = TypeSystem(self)
+    types = self:TypeSystem
     DerivedFuture.new(type) do |resolved|
       if resolved.isError
         resolved
       else
-        MirrorProxy.create(MirrorType(types.getMetaType(resolved)))
+        MirrorProxy.create(types.getMetaType(resolved):MirrorType)
       end
     end
   end
 
   def getLocalType(scope, name, position)
-    MirrorScope(scope).getLocalType(name, position)
+    scope:MirrorScope.getLocalType(name, position)
   end
 
   def getAbstractMethods(type)
     if type.kind_of?(MirrorType)
-      @methods.gatherAbstractMethods(MirrorType(type))
+      @methods.gatherAbstractMethods(type:MirrorType)
     else
       Collections.emptyList
     end
@@ -403,12 +403,12 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
       outerName = scope.selfType.resolve.name
       id = 1
       if @anonymousClasses.containsKey(outerName)
-        id = Integer(@anonymousClasses[outerName]).intValue + 1
+        id = @anonymousClasses[outerName]:Integer.intValue + 1
       end
       @anonymousClasses[outerName] = id
       name = "#{outerName}$#{id}"
       if node
-        ClassDefinition(node).name = SimpleString.new(name)
+        node:ClassDefinition.name = SimpleString.new(name)
       end
       name
     elsif scope && scope.package && !scope.package.isEmpty && !name.contains(".")
@@ -421,10 +421,10 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   def findTypeDefinition(future:TypeFuture):MirahMirror
     resolved = future.peekInferredType
     while resolved.kind_of?(MirrorProxy)
-      resolved = MirrorProxy(resolved).target
+      resolved = resolved:MirrorProxy.target
     end
     if resolved.kind_of?(MirahMirror)
-      MirahMirror(resolved)
+      resolved:MirahMirror
     else
       nil
     end
@@ -440,7 +440,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     position = node ? node.position : nil
     fullname = calculateName(scope, node, name)
     type = Type.getObjectType(fullname.replace(?., ?/))
-    existing_future = DelegateFuture(wrap(type)).type
+    existing_future = wrap(type):DelegateFuture.type
     existing_type = findTypeDefinition(existing_future)
     if existing_type
       if superclass.nil? && (interfaces.nil? || interfaces.size == 0)
@@ -479,8 +479,8 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   
   def publishType(future:TypeFuture)
     if future.kind_of?(MirrorFuture)
-      mirror_future = MirrorFuture(future)
-      publishType(MirahMirror(mirror_future.peekInferredType),mirror_future)
+      mirror_future = future:MirrorFuture
+      publishType(mirror_future.peekInferredType:MirahMirror,mirror_future)
     end
   end
   
@@ -504,7 +504,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
 
   def resolveName(scope:Scope, name:String):String
     if scope
-      String(scope.imports[name]) || name
+      scope.imports[name]:String || name
     else
       name
     end
@@ -513,13 +513,13 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   def loadMacroType(name:String):MirrorType
     macro_context = @context[Context] || @context
     types = macro_context[MirrorTypeSystem]
-    MirrorType(types.loadNamedType(name).resolve)
+    types.loadNamedType(name).resolve:MirrorType
   end
 
   def loadNamedType(name:String)
     desc = @primitives[name]
     type = if desc
-      Type.getType(String(desc))
+      Type.getType(desc:String)
     else
       Type.getObjectType(name.replace(?., ?/))
     end
@@ -550,7 +550,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def getResolvedArrayType(componentType:ResolvedType):ResolvedType
-    ResolvedType(@cached_array_types[componentType] ||= ArrayType.new(@context, cast(componentType)))
+    (@cached_array_types[componentType] ||= ArrayType.new(@context, cast(componentType))):ResolvedType
   end
 
   def getArrayType(componentType:ResolvedType):ResolvedType
@@ -565,14 +565,14 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def addMacro(klass:ResolvedType, macro_impl:Class)
-    type = MirrorType(klass).unmeta
+    type = klass:MirrorType.unmeta
     member = MacroMember.create(macro_impl, type, @context)
     type.add(member)
     @@log.fine("Added macro #{member}")
   end
 
   def extendClass(classname:String, extensions:Class)
-    type = BaseType(loadNamedType(classname).resolve)
+    type = loadNamedType(classname).resolve:BaseType
     BytecodeMirrorLoader.extendClass(type, extensions)
   end
 
@@ -589,7 +589,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   def addClassIntrinsic(type:BaseType)
     future = BaseTypeFuture.new.resolved(type)
     klass = loadNamedType('java.lang.Class')
-    generic_class = JVMType(parameterize(klass, [future]).resolve)
+    generic_class = parameterize(klass, [future]).resolve:JVMType
     type.add(Member.new(
         Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, type, 'class', [],
         generic_class, MemberKind.CLASS_LITERAL))
@@ -598,7 +598,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   def addObjectIntrinsics
     BytecodeMirrorLoader.extendClass(
         @object, MirrorObjectExtensions.class)
-    bool = JVMType(getBooleanType.resolve)
+    bool = getBooleanType.resolve:JVMType
     object_meta = getMetaType(@object_future).resolve
     methods = [
       Member.new(
@@ -614,7 +614,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
         Opcodes.ACC_PUBLIC, @object, '!==', [@object],
         bool, MemberKind.COMPARISON_OP),
     ]
-    nullType = NullType(getNullType.resolve)
+    nullType = getNullType.resolve:NullType
     methods.each do |m:Member|
       @object.add(m)
       nullType.add(m)
@@ -639,10 +639,10 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
 
   def cast(type:ResolvedType)
     if type.kind_of?(MirrorType)
-      MirrorType(type)
+      type:MirrorType
     else
       JvmErrorType.new(
-          ErrorType(type).message, Type.getType("Ljava/lang/Object;"), @object)
+          type:ErrorType.message, Type.getType("Ljava/lang/Object;"), @object)
     end
   end
 
@@ -653,7 +653,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     kind = MemberKind.METHOD
     isMeta = target.isMeta
     if isMeta
-      target = MirrorType(MirrorType(target).unmeta)
+      target = target:MirrorType.unmeta:MirrorType
       flags |= Opcodes.ACC_STATIC
       kind = MemberKind.STATIC_METHOD
     end
@@ -669,7 +669,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     end
     member = MirahMethod.new(@context, position, flags, target, name, arguments, returnType, kind)
 
-    returnFuture = AssignableTypeFuture(member.asyncReturnType)
+    returnFuture = member.asyncReturnType:AssignableTypeFuture
     log = @@log
     me = self
     returnFuture.onUpdate do |x, resolved|
@@ -694,7 +694,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
 
     undeclared_future = @unpinned_field_futures[unpinned_key(target, name)]
     future = if undeclared_future
-      AssignableTypeFuture(undeclared_future)
+      undeclared_future:AssignableTypeFuture
     else
       AssignableTypeFuture.new(position)
     end
@@ -721,8 +721,8 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def setBox(a:String, b:String)
-    primitive = BaseType(wrap(Type.getType(a)).resolve)
-    boxed = BaseType(loadNamedType("java.lang.#{b}").resolve)
+    primitive:BaseType = wrap(Type.getType(a)).resolve
+    boxed = loadNamedType("java.lang.#{b}").resolve:BaseType
     primitive.boxed = boxed
     boxed.unboxed = primitive
   end
@@ -736,7 +736,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     i = 0
     args.each do |arg|
       if arg.kind_of?(TypeFuture)
-        future = TypeFuture(Object(arg))
+        future = arg:Object:TypeFuture
         if future.isResolved
           arg = future.resolve
         end
@@ -786,7 +786,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     boot_class_loader = MirrorTypeSystem.class.getClassLoader
     register_extensions boot_class_loader
     
-    compile_class_loader = ClassLoader(@context[ClassLoader])
+    compile_class_loader = @context[ClassLoader]:ClassLoader
     
     if compile_class_loader != boot_class_loader
       register_extensions compile_class_loader
@@ -799,7 +799,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     services = ServiceLoader.load(ExtensionsProvider.class, class_loader)
     type_system = self
     log.fine("register extensions for services: #{services}")
-    Iterable(services).each do |provider: ExtensionsProvider|
+    services:Iterable.each do |provider: ExtensionsProvider|
       provider.register(type_system)
     end
   end
@@ -847,7 +847,7 @@ class FakeMember < Member
   end
 
   def self.wrap(types:MirrorTypeSystem, type:Type)
-    JVMType(types.wrap(type).resolve)
+    types.wrap(type).resolve:JVMType
   end
 
   def initialize(description:String, flags:int,

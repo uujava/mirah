@@ -85,7 +85,7 @@ class BytecodeMirror < AsyncMirror implements DeclaredMirrorType
       invoker.read(@signature)
       setSupertypes(invoker.superclass, invoker.interfaces)
       invoker.getFormalTypeParameters.each do |var|
-        @typeParams[var.toString] = BaseTypeFuture.new.resolved(MirrorType(var))
+        @typeParams[var.toString] = BaseTypeFuture.new.resolved(var:MirrorType)
       end
     else
       superclass = @superName ? types.wrap(Type.getType("L#{@superName};")) : nil
@@ -172,7 +172,7 @@ class BytecodeMirror < AsyncMirror implements DeclaredMirrorType
       mirrors = JVMMethod[@fields.size]
       it = @fields.iterator
       @fields.size.times do |i|
-        field = FieldNode(it.next)
+        field = it.next:FieldNode
         type = lookup(Type.getType(field.desc))
         kind = if Opcodes.ACC_STATIC == (field.access & Opcodes.ACC_STATIC)
                  MemberKind.STATIC_FIELD_ACCESS
@@ -216,7 +216,7 @@ class BytecodeMirror < AsyncMirror implements DeclaredMirrorType
     end
     t = @context[MethodLookup].findMethod(nil, self, name, params, nil, nil, false)
     if t
-      return ResolvedCall(MethodType(t.resolve).returnType).member
+      return t.resolve:MethodType.returnType:ResolvedCall.member
     end
   end
 end

@@ -41,14 +41,14 @@ class CompilerPlugins
     services = ServiceLoader.load(CompilerPlugin.class, class_loader)
     available = {}
     @plugins = plugins = []
-    Iterable(services).each do |plugin: CompilerPlugin|
+    services:Iterable.each do |plugin: CompilerPlugin|
       available.put plugin.key, plugin
     end
 
     plugin_params.entrySet.each do |entry|
-      plugin = CompilerPlugin(available.get entry.getKey)
+      plugin = available.get(entry.getKey):CompilerPlugin
       if plugin
-        plugin.start(String(entry.getValue), context)
+        plugin.start(entry.getValue:String, context)
         plugins.add plugin
         @@log.fine "plugin started: #{plugin} params: #{entry.getValue}"
       else
@@ -59,19 +59,19 @@ class CompilerPlugins
 
   def on_parse(node:Node):void
     @plugins.each do |plugin:CompilerPlugin|
-      plugin.on_parse Script(node)
+      plugin.on_parse node:Script
     end
   end
 
   def on_infer(node:Node):void
     @plugins.each do |plugin:CompilerPlugin|
-       plugin.on_infer Script(node)
+       plugin.on_infer node:Script
     end
   end
 
   def on_clean(node:Node):void
     @plugins.each do |plugin:CompilerPlugin|
-      plugin.on_clean Script(node)
+      plugin.on_clean node:Script
     end
   end
 

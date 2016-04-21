@@ -51,7 +51,7 @@ class AsyncTypeBuilder < SignatureVisitor
   end
 
   def visitTypeVariable(name)
-    @type = TypeFuture(@typeVariables[name])
+    @type = @typeVariables[name]:TypeFuture
   end
 
   def visitArrayType
@@ -72,7 +72,7 @@ class AsyncTypeBuilder < SignatureVisitor
 
   def visitTypeArgument
     @typeArguments.add(BaseTypeFuture.new.resolved(
-        Wildcard(@type_utils.getWildcardType(nil, nil))))
+        @type_utils.getWildcardType(nil, nil):Wildcard))
   end
 
   def visitTypeArgument(kind)
@@ -81,13 +81,13 @@ class AsyncTypeBuilder < SignatureVisitor
     @typeArguments.add(lambda(AsyncTypeBuilderResult) do
       if builder.future
         DerivedFuture.new(builder.future) do |resolved|
-          type = MirrorType(resolved)
+          type = resolved:MirrorType
           if kind == ?=
             type
           elsif kind == ?-
-            Wildcard(utils.getWildcardType(type, nil))
+            utils.getWildcardType(type, nil):Wildcard
           else
-            Wildcard(utils.getWildcardType(nil, type))
+            utils.getWildcardType(nil, type):Wildcard
           end
         end
       else
@@ -110,17 +110,17 @@ class AsyncTypeBuilder < SignatureVisitor
     # TODO: handle inner types properly
     args = @typeArguments.map do |a|
       if a.kind_of?(AsyncTypeBuilderResult)
-        AsyncTypeBuilderResult(a).getResult
+        a:AsyncTypeBuilderResult.getResult
       else
         a
       end
     end
     utils = @type_utils
-    #TODO use {|ar: TypeFuture| !ar || MirrorType(utils.getWildcardType(nil, nil)).equals(ar.resolve) }
+    #TODO use {|ar: TypeFuture| !ar || utils.getWildcardType(nil, nil):MirrorType.equals(ar.resolve) }
     # once the parser is fixed to support it
     all_question_marks=args.all? do |ar: TypeFuture|
       if ar
-        Wildcard(utils.getWildcardType(nil, nil)).equals(ar.resolve)
+        utils.getWildcardType(nil, nil):Wildcard.equals(ar.resolve)
       else
         true
       end

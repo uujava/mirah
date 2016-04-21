@@ -46,11 +46,11 @@ class ProxyNode < NodeList implements TypeName, Identifier
 
   def clone
     #if @selectedNode
-    #  cloned = Node(@selectedNode.clone)
+    #  cloned = @selectedNode.clone:Node
     #  fireWasCloned(cloned)
     #  cloned
     #else
-      cloned = Node(@original.clone)
+      cloned = @original.clone:Node
       fireWasCloned(cloned)
       cloned
     #end
@@ -76,7 +76,7 @@ class ProxyNode < NodeList implements TypeName, Identifier
   def typeref
     @nodes.each do |n|
       if n.kind_of?(TypeName)
-        return TypeName(n).typeref
+        return n:TypeName.typeref
       end
     end
     nil
@@ -115,11 +115,11 @@ class ProxyNode < NodeList implements TypeName, Identifier
     @future = nil
 
     nodes.size.times do |i|
-      node = childAdded(Node(nodes[i]))
+      node = childAdded(nodes[i]:Node)
       newNodes.add(node)
     end
     @nodes = newNodes
-    @selectedNode = Node(@nodes.get(@defaultChild))
+    @selectedNode = @nodes.get(@defaultChild):Node
   end
 
   def inferChildren(expression:boolean):TypeFuture
@@ -127,8 +127,8 @@ class ProxyNode < NodeList implements TypeName, Identifier
       @expression = expression
       @future = DelegateFuture.new
       @futures = @nodes.map {|n:Node| @typer.infer(n, expression)}
-      @selectedNode = Node(@nodes.get(@defaultChild))
-      @future.type = DerivedFuture.new(TypeFuture(@futures.get(@defaultChild))) do
+      @selectedNode = @nodes.get(@defaultChild):Node
+      @future.type = DerivedFuture.new(@futures.get(@defaultChild):TypeFuture) do
         |resolved|
         if resolved.kind_of?(InlineCode)
           nil
@@ -147,16 +147,16 @@ class ProxyNode < NodeList implements TypeName, Identifier
 
   def updateSelection:void
     @futures.size.times do |i|
-      f = TypeFuture(@futures.get(i))
+      f = @futures.get(i):TypeFuture
       if f.isResolved
         resolved = f.resolve
         unless resolved.isError
-          selectNode(i, Node(@nodes.get(i)), f, resolved)
+          selectNode(i, @nodes.get(i):Node, f, resolved)
           return
         end
       end
     end
-    selectNode(-1, Node(@nodes.get(@defaultChild)), TypeFuture(@futures.get(@defaultChild)), nil)
+    selectNode(-1, @nodes.get(@defaultChild):Node, @futures.get(@defaultChild):TypeFuture, nil)
   end
 
   def selectNode(index:int, node:Node,

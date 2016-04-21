@@ -92,7 +92,7 @@ class MethodLookup
       return true if areSame(subtype, supertype)
       return true if subtype.equals(supertype)
       if subtype.kind_of?(JVMType) && supertype.kind_of?(JVMType)
-        return isJvmSubType(JVMType(subtype), JVMType(supertype))
+        return isJvmSubType(subtype:JVMType, supertype:JVMType)
       end
       return true if subtype.matchesAnything
       return supertype.matchesAnything
@@ -107,15 +107,15 @@ class MethodLookup
         return true if JVMTypeUtils.isInterface(supertype)
         return true if JVMTypeUtils.isAbstract(supertype)
       end
-      MirrorType(supertype).isSupertypeOf(MirrorType(subtype))
+      supertype:MirrorType.isSupertypeOf(subtype:MirrorType)
     end
 
     def isPrimitiveSubType(subtype:JVMType, supertype:JVMType):boolean
-      MirrorType(supertype).isSupertypeOf(MirrorType(subtype))
+      supertype:MirrorType.isSupertypeOf(subtype:MirrorType)
     end
 
     def isArraySubType(subtype:JVMType, supertype:JVMType):boolean
-      MirrorType(supertype).isSupertypeOf(MirrorType(subtype))
+      supertype:MirrorType.isSupertypeOf(subtype:MirrorType)
     end
 
     def isSubTypeWithConversion(subtype:ResolvedType,
@@ -123,7 +123,7 @@ class MethodLookup
       if isSubType(subtype, supertype)
         true
       elsif subtype.kind_of?(JVMType) && supertype.kind_of?(JVMType)
-        isSubTypeViaBoxing(JVMType(subtype), JVMType(supertype))
+        isSubTypeViaBoxing(subtype:JVMType, supertype:JVMType)
       else
         false
       end
@@ -152,8 +152,8 @@ class MethodLookup
       elsif b.isError
         return 1.0
       end
-      jvm_a = MirrorType(a)
-      jvm_b = MirrorType(b)
+      jvm_a = a:MirrorType
+      jvm_b = b:MirrorType
         
       return 0.0 if jvm_a.isSameType(jvm_b)
 
@@ -174,7 +174,7 @@ class MethodLookup
       maximal = LinkedList.new
       ambiguous = false
       methods.each do |m|
-        method = JVMMethod(m)
+        method = m:JVMMethod
       
         # Compare 'method' with each of the maximally specific methods.
         # If it is strictly more specific than all of them, it is the
@@ -185,7 +185,7 @@ class MethodLookup
         more_specific = true
         method_ambiguous = false
         maximal.each do |x|
-          item = JVMMethod(x)
+          item = x:JVMMethod
           comparison = compareSpecificity(method, item, params)
           @@log.finest("compareSpecificity('#{method}', '#{item}') = #{comparison}")
           if comparison < 0
@@ -261,14 +261,14 @@ class MethodLookup
     def getMethodArgument(arguments:List, index:int, isVararg:boolean)
       last_index = arguments.size - 1
       if isVararg && index >= last_index
-        type = ResolvedType(arguments.get(last_index))
+        type = arguments.get(last_index):ResolvedType
         if type.isError
           type
         else
-          JVMType(type).getComponentType
+          type:JVMType.getComponentType
         end
       else
-        ResolvedType(arguments.get(index))
+        arguments.get(index):ResolvedType
       end
     end
 
@@ -279,7 +279,7 @@ class MethodLookup
     def pickMostSpecific(methods:List):JVMMethod
       method = nil
       methods.each do |m|
-        method = JVMMethod(m)
+        method = m:JVMMethod
         return method unless method.isAbstract
       end
       method
@@ -296,7 +296,7 @@ class MethodLookup
     potentials = gatherMethods(target, name)
 
     if includeStaticImports && potentials.isEmpty
-      potentials = gatherStaticImports(MirrorScope(scope), name)
+      potentials = gatherStaticImports(scope:MirrorScope, name)
     end
     state = LookupState.new(@context, scope, target, potentials, position)
     state.search(params, macro_params)
@@ -309,7 +309,7 @@ class MethodLookup
     results = {}
     unless target.isMeta
       gatherMethods(target, name).each do |m|
-        member = Member(m)
+        member = m:Member
         next if member.declaringClass == target
         next if member.kind_of?(MacroMember)
         member_is_static = (0 != member.flags & Opcodes.ACC_STATIC)
@@ -355,10 +355,10 @@ class MethodLookup
     fields = ArrayList.new
     types = HashSet.new
     scope.staticImports.each do |type|
-      resolved = TypeFuture(type).resolve
+      resolved = type:TypeFuture.resolve
       if resolved.kind_of?(MirrorType)
-        gatherMethodsInternal(MirrorType(resolved), name, methods, types)
-        gatherFields(MirrorType(resolved), name, fields)
+        gatherMethodsInternal(resolved:MirrorType, name, methods, types)
+        gatherFields(resolved:MirrorType, name, fields)
       end
     end
     cflags = Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC
@@ -377,7 +377,7 @@ class MethodLookup
       methods.addAll(target.getDeclaredMethods(name))
       return methods if "<init>".equals(name)
       target.directSupertypes.each do |t|
-        gatherMethodsInternal(MirrorType(t), name, methods, visited)
+        gatherMethodsInternal(t:MirrorType, name, methods, visited)
       end
     end
     methods
@@ -407,7 +407,7 @@ class MethodLookup
         end
       end
       target.directSupertypes.each do |t|
-        gatherAbstractMethodsInternal(MirrorType(t), defined_methods, abstract_methods, visited)
+        gatherAbstractMethodsInternal(t:MirrorType, defined_methods, abstract_methods, visited)
       end
     end
   end
@@ -429,11 +429,11 @@ class MethodLookup
       visited.add(target)
       field = target.getDeclaredField(name)
       if field
-        field = makeSetter(Member(field)) if isSetter
+        field = makeSetter(field:Member) if isSetter
         fields.add(field)
       end
       target.directSupertypes.each do |t|
-        gatherFieldsInternal(MirrorType(t), name, isSetter, fields, visited)
+        gatherFieldsInternal(t:MirrorType, name, isSetter, fields, visited)
       end
     end
   end
@@ -445,7 +445,7 @@ class MethodLookup
       MemberKind.STATIC_FIELD_ASSIGN
     end
     AsyncMember.new(field.flags,
-                    MirrorType(field.declaringClass),
+                    field.declaringClass:MirrorType,
                     "#{field.name}=",
                     [field.asyncReturnType],
                     field.asyncReturnType,
@@ -468,12 +468,12 @@ class MethodLookup
     arity = params.size
     phase_methods = LinkedList.new
     potentials.each do |m|
-      member = Member(m)
+      member = m:Member
       args = member.argumentTypes
       next unless args.size == arity
       match = true
       arity.times do |i|
-        unless phase.isSubType(ResolvedType(params[i]), ResolvedType(args[i]))
+        unless phase.isSubType(params[i]:ResolvedType, args[i]:ResolvedType)
           match = false
           break
         end
@@ -497,14 +497,14 @@ class MethodLookup
     arity = params.size
     phase3_methods = LinkedList.new
     potentials.each do |m|
-      member = Member(m)
+      member = m:Member
       next unless member.isVararg
       args = member.argumentTypes
       required_count = args.size - 1
       next unless required_count <= arity
       match = true
       arity.times do |i|
-        param = ResolvedType(params[i])
+        param = params[i]:ResolvedType
         arg = MethodLookup.getMethodArgument(args, i, true)
         unless MethodLookup.isSubTypeWithConversion(param, arg)
           match = false
@@ -529,7 +529,7 @@ class MethodLookup
     elsif scope.nil? || scope.selfType.nil?
       return 0 != (access & Opcodes.ACC_PUBLIC)
     end
-    selfType = MirrorType(scope.selfType.peekInferredType)
+    selfType = scope.selfType.peekInferredType:MirrorType
     if (0 != (access & Opcodes.ACC_PUBLIC) ||
         type.getAsmType.getDescriptor.equals(
             selfType.getAsmType.getDescriptor))
@@ -567,7 +567,7 @@ class MethodLookup
     inaccessible = LinkedList.new
     it = methods.iterator
     while it.hasNext
-      method = Member(it.next)
+      method = it.next:Member
       # The declaring class and the method must be visible for the method
       # to be applicable.
       accessible = true
@@ -626,7 +626,7 @@ class LookupState
     @inaccessible_macros = LinkedList.new
     
     potentials.each do |p|
-      method = Member(p)
+      method = p:Member
       # The declaring class and the method must be visible for the method
       # to be applicable.
       accessible = true
@@ -715,7 +715,7 @@ class LookupState
     if matches + macro_matches == 0
       if inaccessible != 0
         @context[MethodLookup].inaccessible(
-            @scope, Member(@inaccessible.get(0)), @position, self)
+            @scope, @inaccessible.get(0):Member, @position, self)
       elsif @context[DebuggerInterface]
         DebugError.new([["Can't find method #{@target}#{@params} II #{@methods}"]], @context, self)
       else
@@ -733,7 +733,7 @@ class LookupState
       nil
     elsif isField || methods.size == 1
       @context[MethodLookup].makeFuture(
-          @target, Member(methods[0]), params, @position, self)
+          @target, methods[0]:Member, params, @position, self)
     else
       DebugError.new([["Ambiguous methods #{methods}", @position]], @context, self)
     end

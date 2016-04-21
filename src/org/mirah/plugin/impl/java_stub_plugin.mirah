@@ -76,7 +76,7 @@ class JavaStubPlugin < CompilerPluginAdapter
        param_list.remove "+pl"
        @preserve_lines = true
      end
-     @stub_dir = String(param_list[0]) if param_list.size > 0
+     @stub_dir = param_list[0]:String if param_list.size > 0
     end
     @@log.fine "stub dir: '#{@stub_dir}' mirahc destination: '#{args.destination}'"
     @@log.fine "copy src: '#{@copy_src}"
@@ -89,7 +89,7 @@ class JavaStubPlugin < CompilerPluginAdapter
   def exitScript(node, ctx)
     iter = @writers.iterator
     while iter.hasNext
-       writer = ClassStubWriter(iter.next)
+       writer = iter.next:ClassStubWriter
        writer.add_imports @imports
        writer.generate
     end
@@ -105,7 +105,7 @@ class JavaStubPlugin < CompilerPluginAdapter
   end
 
   def current:ClassStubWriter
-    ClassStubWriter(@defs.peek)
+    @defs.peek:ClassStubWriter
   end
 
   def enterPackage(node, ctx)

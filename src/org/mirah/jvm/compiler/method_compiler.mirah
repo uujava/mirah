@@ -120,13 +120,13 @@ class MethodCompiler < BaseCompiler
     type = getInferredType(mdef)
 
     if @name.endsWith("init>") || ":unreachable".equals(type.returnType.name)
-      @returnType = JVMType(typer.type_system.getVoidType.resolve)
+      @returnType = typer.type_system.getVoidType.resolve:JVMType
     else
-      @returnType = JVMType(type.returnType)
+      @returnType = type.returnType:JVMType
     end
 
     @descriptor = methodDescriptor(@name, @returnType, type.parameterTypes)
-    @selfType = JVMType(getScope(mdef).selfType.resolve)
+    @selfType = getScope(mdef).selfType.resolve:JVMType
     superclass = @selfType.superclass
     @superclass = superclass || JVMType(
         typer.type_system.get(nil, TypeRefImpl.new("java.lang.Object", false, false, nil)).resolve)
@@ -137,7 +137,7 @@ class MethodCompiler < BaseCompiler
   
   def prepareBinding(mdef:MethodDefinition):void
     scope = getIntroducedScope(mdef)
-    type = JVMType(scope.binding_type)
+    type = scope.binding_type:JVMType
     if type
       # Figure out if we need to create a binding or if it already exists.
       # If this method is inside a ClosureDefinition, the binding is stored
@@ -174,16 +174,16 @@ class MethodCompiler < BaseCompiler
   def defaultValue(type:JVMType)
     if JVMTypeUtils.isPrimitive(type)
       if 'long'.equals(type.name)
-        @builder.push(long(0))
+        @builder.push((0):long)
       elsif 'double'.equals(type.name)
-        @builder.push(double(0))
+        @builder.push((0):double)
       elsif 'float'.equals(type.name)
-        @builder.push(float(0))
+        @builder.push((0):float)
       else
         @builder.push(0)
       end
     else
-      @builder.push(String(nil))
+      @builder.push(nil:String)
     end
   end
   
@@ -194,7 +194,7 @@ class MethodCompiler < BaseCompiler
       if isLong
         @builder.push(node.value)
       else
-        @builder.push(int(node.value))
+        @builder.push((node.value):int)
       end
     end
   end
@@ -203,7 +203,7 @@ class MethodCompiler < BaseCompiler
       isFloat = "float".equals(getInferredType(node).name)
       recordPosition(node.position)
       if isFloat
-        @builder.push(float(node.value))
+        @builder.push((node.value):float)
       else
         @builder.push(node.value)
       end
@@ -228,7 +228,7 @@ class MethodCompiler < BaseCompiler
     end
   end
   def visitNull(node, expression)
-    value = String(nil)
+    value = nil:String
     if expression
       recordPosition(node.position)
       @builder.push(value)
@@ -247,20 +247,20 @@ class MethodCompiler < BaseCompiler
     recordPosition(node.position)
     result = getInferredType(node)
 
-    target = MirrorType(nil)
-    method = JVMMethod(nil)
+    target = nil:MirrorType
+    method = nil:JVMMethod
 
     if @name.equals 'initialize' or @name.endsWith 'init>'
        # handle constructors
        target = @superclass
        method = if result.kind_of?(CallType)
-         CallType(result).member
+         result:CallType.member
        else
          @superclass.getMethod(@name, paramTypes)
        end
     else
       # assume order: superclass, interface1, interface2 etc
-      MirrorType(@klass).directSupertypes.each do |type:MirrorType|
+      @klass:MirrorType.directSupertypes.each do |type:MirrorType|
         method = findSameMethod(type, @name, paramTypes, @flags)
         if method
           target = type
@@ -313,7 +313,7 @@ class MethodCompiler < BaseCompiler
       )
     valueType = getInferredType(local.value)
     if local.value.kind_of?(NodeList)
-      compileBody(NodeList(local.value), Boolean.TRUE, type)
+      compileBody(local.value:NodeList, Boolean.TRUE, type)
       valueType = type
     else
       visit(local.value, Boolean.TRUE)
@@ -717,7 +717,7 @@ class MethodCompiler < BaseCompiler
   
   def handleEnsures(node:Node, klass:Class):void
     while node.parent
-      visit(Ensure(node).ensureClause, nil) if node.kind_of?(Ensure)
+      visit(node:Ensure.ensureClause, nil) if node.kind_of?(Ensure)
       break if klass.isInstance(node)
       node = node.parent
     end
@@ -761,13 +761,13 @@ class MethodCompiler < BaseCompiler
 
   def self.findSameMethod(type:MirrorType, name: String, params: List, flags:int):Member
     if type.kind_of? BytecodeMirror
-      method = Member(type.getMethod(name, params))
+      method = type.getMethod(name, params):Member
       if method and checkSuperFlags(method, flags)
         @@log.fine "Method #{name}(#{params}) found for #{type}"
         return method
       end
     else
-      MirrorType(type).getDeclaredMethods(name).each do |member:Member|
+      type:MirrorType.getDeclaredMethods(name).each do |member:Member|
         if member.argumentTypes.equals(params) and checkSuperFlags(member, flags)
           @@log.fine "Method #{name}(#{params}) found for #{type}"
           return member

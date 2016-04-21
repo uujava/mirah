@@ -51,7 +51,7 @@ class OverrideFuture < BaseTypeFuture
       if f.isResolved
         t = f.resolve
         unless t.isError || t.kind_of?(InlineCode)
-          type = MirrorType(t)
+          type = t:MirrorType
           if resolved.nil?
             resolved = type
           else

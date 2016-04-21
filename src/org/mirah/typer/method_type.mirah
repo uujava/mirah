@@ -35,7 +35,7 @@ class MethodType
     #     raise IllegalArgumentException.new("#{p} is not a ResolvedType")
     #   end
     # end
-    raise IllegalArgumentException if parameterTypes.any? {|p| p && ResolvedType(p).isBlock }
+    raise IllegalArgumentException if parameterTypes.any? {|p| p && p:ResolvedType.isBlock }
   end
 
   def name

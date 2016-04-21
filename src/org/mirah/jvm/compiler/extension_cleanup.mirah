@@ -63,7 +63,7 @@ class ExtensionCleanup < NodeScanner
 
   def enterPackage(pac, map)
     # we need the package to ensure that the $Extensions class is put in the right package
-    Map(map)[:package]= pac.name.identifier
+    map:Map[:package]= pac.name.identifier
     true
   end
 
@@ -87,7 +87,7 @@ class ExtensionCleanup < NodeScanner
       Collections.emptyList, # body
       Collections.emptyList, # interfaces
       [extensions_anno])
-    pkg_str = String(Map(map).get(:package))
+    pkg_str = map:Map.get(:package):String
     pkg_name = Unquote.new(pos, SimpleString.new(pkg_str))
     new_pkg = MirahPackage.new(pos, pkg_name, nil)
     script = Script.new(pos, [new_pkg, new_klass])

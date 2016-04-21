@@ -41,7 +41,7 @@ class AssignableTypeFuture < BaseTypeFuture
     @lock.lock
     if @declarations.containsKey(type)
       @@log.finest "already visited declaration for #{type}"
-      TypeFuture(@declarations[type])
+      @declarations[type]:TypeFuture
     elsif @declarations.isEmpty
       @@log.finest "first declaration as #{type}"
       base_type = self
@@ -50,7 +50,7 @@ class AssignableTypeFuture < BaseTypeFuture
       end
       self.position = position
       @declarations[type] = self
-      TypeFuture(self)
+      self:TypeFuture
     else
       earlier_declarations = declarations.keySet.map{ |future: TypeFuture| future.resolve }
       msg = "Type redeclared as #{type.resolve} from #{earlier_declarations}"
@@ -71,7 +71,7 @@ class AssignableTypeFuture < BaseTypeFuture
   def assign(value: TypeFuture, position: Position): TypeFuture
     @lock.lock
     if @assignments.containsKey(value)
-      TypeFuture(@assignments[value])
+      @assignments[value]:TypeFuture
     else
       assignment = AssignmentFuture.new(self, value, position)
       @assignments[value] = assignment
@@ -80,7 +80,7 @@ class AssignableTypeFuture < BaseTypeFuture
         variable.checkAssignments
         assignment.checkCompatibility
       end
-      TypeFuture(assignment)
+      assignment:TypeFuture
     end
   ensure
     @lock.unlock
@@ -101,7 +101,7 @@ class AssignableTypeFuture < BaseTypeFuture
 
   def assignedValues(includeParent: boolean, includeChildren: boolean, forceIncludeChildren = false): Collection
     @lock.lock
-    Collection(@assignments.keySet)
+    @assignments.keySet:Collection
   ensure
     @lock.unlock
   end
@@ -111,7 +111,7 @@ class AssignableTypeFuture < BaseTypeFuture
     if @declarations.isEmpty
       nil
     else
-      TypeFuture(@declarations.keySet.iterator.next)
+      @declarations.keySet.iterator.next:TypeFuture
     end
   ensure
     @lock.unlock
@@ -148,8 +148,8 @@ class AssignableTypeFuture < BaseTypeFuture
     end
     begin
       @checking = true
-      type = ResolvedType(nil)
-      error = ResolvedType(nil)
+      type = nil:ResolvedType
+      error = nil:ResolvedType
       values = LinkedHashSet.new(assignedValues(true, true))
       errors = HashSet.new
 

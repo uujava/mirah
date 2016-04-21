@@ -47,7 +47,7 @@ class HashCompiler < BaseCompiler
     @bytecode.recordPosition(hash.position)
     @bytecode.newInstance(@hashmap.getAsmType)
     @bytecode.dup
-    @bytecode.push(Math.max(int(hash.size / 0.75), 16))
+    @bytecode.push(Math.max((hash.size / 0.75):int, 16))
     @bytecode.invokeConstructor(@hashmap.getAsmType, @constructor)
     hash.size.times do |i|
       @bytecode.dup
