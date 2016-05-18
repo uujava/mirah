@@ -128,8 +128,7 @@ class MethodCompiler < BaseCompiler
     @descriptor = methodDescriptor(@name, @returnType, type.parameterTypes)
     @selfType = getScope(mdef).selfType.resolve:JVMType
     superclass = @selfType.superclass
-    @superclass = superclass || JVMType(
-        typer.type_system.get(nil, TypeRefImpl.new("java.lang.Object", false, false, nil)).resolve)
+    @superclass = superclass || findType("java.lang.Object")
     builder = Bytecode.new(@flags, @descriptor, cv, mdef.findAncestor(Script.class).position.source)
     collectArgNames(mdef, builder)
     builder

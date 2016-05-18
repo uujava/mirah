@@ -65,6 +65,7 @@ class Bytecode < GeneratorAdapter
     @codesource = codesource
     @currentLine = -1
     @flags = flags
+    @asm_object_type = Type.getType('Ljava/lang/Object;')
   end
 
   def instruction_count
@@ -183,8 +184,12 @@ class Bytecode < GeneratorAdapter
         raise "Autoboxing failure: Current boxed type: #{currentType.box}##{currentType} wanted type :#{wantedType}" if currentType.getAsmType.getSort != Type.VOID and !wantedType.assignableFrom(currentType.box)
         box(currentType.getAsmType)
       elsif isPrimitive(wantedType)
-        raise "Autoboxing failure: Current type: #{currentType}##{currentType.unbox} wanted unboxed type: #{wantedType}##{wantedType.getAsmType}" if !wantedType.assignableFrom(currentType.unbox)
-        unbox(wantedType.getAsmType)
+        if currentType.getAsmType == @asm_object_type or (!currentType.unbox.nil? or wantedType.assignableFrom(currentType.unbox))
+           unbox(wantedType.getAsmType)
+        else
+           raise "Autoboxing failure: Current type: #{currentType}##{currentType.unbox} wanted unboxed type: #{wantedType}##{wantedType.getAsmType}"
+        end
+
       elsif !wantedType.assignableFrom(currentType)
         checkCast(wantedType.getAsmType)
       end
