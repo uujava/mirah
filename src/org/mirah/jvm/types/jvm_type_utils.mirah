@@ -58,6 +58,13 @@ class JVMTypeUtils
       sort != Type.OBJECT && sort != Type.ARRAY
     end
 
+    def supportBoxing(type:JVMType)
+      if type.isError
+        return false
+      end
+      return type.box != nil or type.unbox != nil
+    end
+
     def isEnum(type:JVMType):boolean
       0 != (type.flags & Opcodes.ACC_ENUM)
     end

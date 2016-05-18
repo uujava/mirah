@@ -31,7 +31,7 @@ import org.mirah.jvm.mirrors.MirrorType
 import org.mirah.jvm.mirrors.BytecodeMirror
 import org.mirah.jvm.mirrors.Member
 import org.mirah.jvm.types.JVMMethod
-import org.mirah.jvm.types.JVMTypeUtils
+import static org.mirah.jvm.types.JVMTypeUtils.*
 
 import java.util.List
 
@@ -172,7 +172,7 @@ class MethodCompiler < BaseCompiler
   end
   
   def defaultValue(type:JVMType)
-    if JVMTypeUtils.isPrimitive(type)
+    if isPrimitive(type)
       if 'long'.equals(type.name)
         @builder.push((0):long)
       elsif 'double'.equals(type.name)
@@ -448,7 +448,15 @@ class MethodCompiler < BaseCompiler
     compile(node.value)
     from = getInferredType(node.value)
     to = getInferredType(node)
-    @builder.convertValue(from, to)
+    if isPrimitive(from) && !isPrimitive(to) && supportBoxing(to)
+      @builder.cast(from.getAsmType, to.unbox.getAsmType)
+      @builder.box(to.unbox.getAsmType)
+    elsif isPrimitive(to) && !isPrimitive(from) && supportBoxing(from)
+      @builder.unbox(from.unbox.getAsmType)
+      @builder.cast(from.unbox.getAsmType, to.getAsmType)
+    else
+      @builder.convertValue(from, to)
+    end
     @builder.pop(to) unless expression
   end
   
@@ -545,7 +553,7 @@ class MethodCompiler < BaseCompiler
       done = @builder.newLabel
       elseLabel = @builder.newLabel
       type = getInferredType(node.value)
-      if JVMTypeUtils.isPrimitive(type)
+      if isPrimitive(type)
         @builder.ifZCmp(GeneratorAdapter.EQ, elseLabel)
       else
         @builder.ifNull(elseLabel)

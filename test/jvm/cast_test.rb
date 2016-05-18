@@ -271,4 +271,5 @@ class CastTest < Test::Unit::TestCase
   rescue Exception => ex
     fail "casts for interfaces #{ex} #{ex.backtrace.join "\n"}"
   end
+
 end

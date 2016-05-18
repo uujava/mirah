@@ -142,7 +142,8 @@ class MacroBuilder; implements org.mirah.macros.Compiler
                                   opt_arg.name,
                                   Cast.new(cloned.body.position,
                                       opt_arg.type,
-                                      opt_arg.value)
+                                      opt_arg.value),
+                                  nil
                                 )
                              )
         end

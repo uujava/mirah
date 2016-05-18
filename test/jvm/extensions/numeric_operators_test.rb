@@ -58,6 +58,20 @@ class NumericOperatorsTest < Test::Unit::TestCase
     end
   end
 
+
+  def self.define_cast_test_methods(numeric_class, primitive_class)
+    str = <<-EOF
+          a:#{numeric_class} = 5:#{primitive_class}
+          puts "\#{a:int}\#{a.class.getName}"
+    EOF
+    puts str
+
+    define_method "test_#{numeric_class}_cast_#{primitive_class}".to_sym do
+      cls, = compile(str)
+      assert_run_output("5java.lang.#{numeric_class}\n", cls)
+    end
+  end
+
   FIXNUM_TYPES.each do |numeric_class|
     test_num = 0
     cast = ('Integer' == numeric_class ? 'int' : numeric_class.downcase)
@@ -73,8 +87,8 @@ class NumericOperatorsTest < Test::Unit::TestCase
 
   # have to
   FLOAT_TYPES.each do |numeric_class|
+    cast = numeric_class.downcase
     OPERATORS.each_with_index do |operator, i|
-      cast = numeric_class.downcase
       assert = eval "5.0#{operator}7.0"
       if numeric_class == 'Float' and operator == '/'
         assert = '0.71428573'
@@ -83,4 +97,10 @@ class NumericOperatorsTest < Test::Unit::TestCase
     end
   end
 
+  (FIXNUM_TYPES+FLOAT_TYPES).each do |numeric_class|
+    (FIXNUM_TYPES+FLOAT_TYPES).each do |primitive_class|
+      primitive_class = ('Integer' == numeric_class ? 'int' : numeric_class.downcase)
+      define_cast_test_methods(numeric_class, primitive_class)
+    end
+  end
 end

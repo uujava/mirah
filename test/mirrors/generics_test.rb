@@ -813,32 +813,38 @@ class GenericsTest < Test::Unit::TestCase
     end
   end
 
-  def test_refix_417
+  def test_issue_417_npe
     omit_if JVMCompiler::JVM_VERSION.to_f < 1.8
     cls, = compile(%q[
-import java.util.function.BiConsumer
-import java.util.Map
-import java.util.List
-import org.foo.xx_type_fixture
+      import org.foo.TypeFixtureJava8
+      import java.util.function.BiConsumer
+      import java.util.Map
+      import java.util.List
 
-class test_refix_417
+      class Issue417Test
 
-   def initialize
-      @future = xx_type_fixture.new.load(nil, 1)
-   end
+         def initialize(filters:List, flags:int)
+            @filters = filters
+            @flags = flags
+            @loader = TypeFixtureJava8.new
+            @future = nil
+         end
 
-   def self.main(args:String[]):void
-       puts "OK"
-   end
+         def run():void
+             @future = @loader.load(@filters, @flags)
+         end
 
-   def handle(block:BiConsumer):test_refix_417
-      @future.whenComplete(block)
-      self
-   end
+         def handle(block:BiConsumer):Issue417Test
+            @future.whenComplete(block)
+            self
+         end
 
-end
-      ])
-      assert_run_output("OK\n", cls)
+         def join():void
+            @future.join
+         end
+
+      end
+    ])
   end
 
   def test_type_invoker_recursive_reference_signature

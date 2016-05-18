@@ -180,10 +180,10 @@ class Bytecode < GeneratorAdapter
       if isPrimitive(currentType) && isPrimitive(wantedType)
         cast(currentType.getAsmType, wantedType.getAsmType)
       elsif isPrimitive(currentType)
-        # TODO make sure types match
+        raise "Autoboxing failure: Current boxed type: #{currentType.box}##{currentType} wanted type :#{wantedType}" if currentType.getAsmType.getSort != Type.VOID and !wantedType.assignableFrom(currentType.box)
         box(currentType.getAsmType)
       elsif isPrimitive(wantedType)
-        # TODO make sure types match
+        raise "Autoboxing failure: Current type: #{currentType}##{currentType.unbox} wanted unboxed type: #{wantedType}##{wantedType.getAsmType}" if !wantedType.assignableFrom(currentType.unbox)
         unbox(wantedType.getAsmType)
       elsif !wantedType.assignableFrom(currentType)
         checkCast(wantedType.getAsmType)

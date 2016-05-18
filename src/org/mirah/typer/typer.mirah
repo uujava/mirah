@@ -23,7 +23,7 @@ import org.mirah.macros.JvmBackend
 import org.mirah.macros.MacroBuilder
 import mirah.objectweb.asm.Opcodes
 
-import org.mirah.jvm.types.JVMTypeUtils
+import static org.mirah.jvm.types.JVMTypeUtils.*
 import org.mirah.jvm.types.JVMType
 import org.mirah.jvm.mirrors.*
 
@@ -343,14 +343,24 @@ class Typer < SimpleNodeVisitor
   # Should be verified by JLS 5.5 Casting Contexts
   def isCastable(resolved_cast_type: ResolvedType, resolved_value_type: ResolvedType): boolean
     are_jvm_types = resolved_cast_type.kind_of?(JVMType) && resolved_value_type.kind_of?(JVMType)
-    if are_jvm_types &&
-       JVMTypeUtils.isPrimitive(resolved_cast_type:JVMType)  &&
-       JVMTypeUtils.isPrimitive(resolved_value_type:JVMType)
-      true
-    elsif resolved_value_type.assignableFrom(resolved_cast_type)
-      true
+    if are_jvm_types
+      if isPrimitive(resolved_cast_type:JVMType) &&
+         isPrimitive(resolved_value_type:JVMType)
+         return true
+      elsif isPrimitive(resolved_value_type:JVMType) &&
+           supportBoxing(resolved_cast_type:JVMType)
+         # it's a bit off JLS  - we always cast from primitive to boxed number. Check logic in MethodCompiler#visitCast
+         return true
+       elsif isPrimitive(resolved_cast_type:JVMType) &&
+                 supportBoxing(resolved_value_type:JVMType)
+         # it's a bit off JLS  - we always cast from Boxed to primitive. Check logic in MethodCompiler#visitCast
+         return true
+      end
+    end
+    if resolved_value_type.assignableFrom(resolved_cast_type)
+      return true
     elsif resolved_cast_type.assignableFrom(resolved_value_type)
-      true
+      return true
     else
       # avoid error when casting to from interfaces (JLS 5.5.1) for non final classes
       # Here we do not have common subtypes as this check already done above.
@@ -1202,7 +1212,7 @@ class Typer < SimpleNodeVisitor
         returnType = getTypeOf(mdef, mdef.type.typeref)
       end
 
-      flags = JVMTypeUtils.calculateFlags(Opcodes.ACC_PUBLIC, mdef)
+      flags = calculateFlags(Opcodes.ACC_PUBLIC, mdef)
 
       selfType = selfTypeOf(mdef)
       resolvedSelf =  selfType.peekInferredType:ResolvedType
@@ -1578,7 +1588,7 @@ class Typer < SimpleNodeVisitor
 
   def getFieldTypeOrDeclare field: Named, targetType: TypeFuture, isStatic: boolean
     # private by default, static if needed
-    flags = JVMTypeUtils.calculateFlags(Opcodes.ACC_PRIVATE, field:Node)
+    flags = calculateFlags(Opcodes.ACC_PRIVATE, field:Node)
     flags |= Opcodes.ACC_STATIC if isStatic
     logger.fine("flags for field #{field.name}  #{targetType}" + flags)
     @types.getFieldTypeOrDeclare(targetType,

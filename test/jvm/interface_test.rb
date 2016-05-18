@@ -113,7 +113,7 @@ class InterfaceTest < Test::Unit::TestCase
   def test_interface_with_default_method_compiles_on_java_8
     omit_if JVMCompiler::JVM_VERSION.to_f < 1.8
 
-    cls, = compile(<<-'EOF', java_version=>'1.8')
+    cls, = compile(<<-'EOF', :java_version=>'1.8')
       interface DefaultMe
         def act(messages:String):void
           puts "#{messages} all the things!"
@@ -146,7 +146,7 @@ class InterfaceTest < Test::Unit::TestCase
         end
       end
       puts TestSuper.new(1).foo(1)
-    ', java_version=>'1.8')
+    ', :java_version=>'1.8')
       assert_run_output("3\n", cls)
   end
 end
