@@ -272,4 +272,16 @@ class CastTest < Test::Unit::TestCase
     fail "casts for interfaces #{ex} #{ex.backtrace.join "\n"}"
   end
 
+  def test_unboxing_for_object
+    cls, = compile(<<-EOF)
+      def bar:Object
+        6:Integer
+      end
+      def foo:int
+        return bar:int
+      end
+    EOF
+    assert_equal(6, cls.foo())
+  end
+
 end
