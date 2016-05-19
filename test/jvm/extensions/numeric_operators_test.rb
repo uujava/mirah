@@ -99,7 +99,7 @@ class NumericOperatorsTest < Test::Unit::TestCase
 
   (FIXNUM_TYPES+FLOAT_TYPES).each do |numeric_class|
     (FIXNUM_TYPES+FLOAT_TYPES).each do |primitive_class|
-      primitive_class = ('Integer' == numeric_class ? 'int' : numeric_class.downcase)
+      primitive_class = ('Integer' == primitive_class ? 'int' : primitive_class.downcase)
       define_cast_test_methods(numeric_class, primitive_class)
     end
   end
