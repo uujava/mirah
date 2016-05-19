@@ -39,11 +39,12 @@ class ConditionCompiler < BaseCompiler
       '>=' => '<'
     }
   end
-  def initialize(method:BaseCompiler, bytecode:Bytecode)
+  def initialize(method:BaseCompiler, node:Node, bytecode:Bytecode)
     super(method.context)
     @method = method
     @bytecode = bytecode
     @negated = false
+    @node = node
   end
   
   def negate
@@ -64,11 +65,8 @@ class ConditionCompiler < BaseCompiler
       if "boolean".equals(@type.name)
         mode = @negated ? GeneratorAdapter.EQ : GeneratorAdapter.NE
         @bytecode.ifZCmp(mode, label)
-      else # In all cases where an expression exp in "if exp" is a primitive type and not boolean, the boolean value of "exp" is always "true"
-        pop_from_stack(@type.name) # just ignore the result of the computation
-        if !@negated
-          @bytecode.goTo(label)
-        end
+      else # Do not allow numeric primitives!
+         reportError("Numeric expression is not supported for condition argument", @node.position)
       end
     else
       if @negated

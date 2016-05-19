@@ -406,7 +406,7 @@ class MethodCompiler < BaseCompiler
   def visitIf(node, expression)
     elseLabel = @builder.newLabel
     endifLabel = @builder.newLabel
-    compiler = ConditionCompiler.new(self, @builder)
+    compiler = ConditionCompiler.new(self, node, @builder)
     type = getInferredType(node)
     
     need_then = !expression.nil? || node.body_size > 0
@@ -601,7 +601,7 @@ class MethodCompiler < BaseCompiler
     
     visit(node.init, nil)
     
-    predicate = ConditionCompiler.new(self, @builder)
+    predicate = ConditionCompiler.new(self, node, @builder)
     
     preLabel = @builder.newLabel
     unless node.skipFirstCheck
