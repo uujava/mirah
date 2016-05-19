@@ -33,6 +33,19 @@ class Test
     value
   end
 
+  macro def assertFalse(block:Block):Node
+    body = block.body
+    var = gensym
+    src = SimpleString.new body.position.source.substring(body.position.startChar, body.position.endChar)
+    value = quote do
+       `var` = `body`
+       if `var` == true
+         raise org::mirah::util::AssertionError.new true, `var`, `src`.trim
+       end
+    end
+    value
+  end
+
   def fail(message:String):void
     raise AssertionError.new message
   end
