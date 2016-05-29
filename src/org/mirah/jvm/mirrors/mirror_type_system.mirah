@@ -783,14 +783,8 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
 
   def register_extensions:void
     log.fine("register extensions")
-    boot_class_loader = MirrorTypeSystem.class.getClassLoader
-    register_extensions boot_class_loader
-    
     compile_class_loader = @context[ClassLoader]:ClassLoader
-    
-    if compile_class_loader != boot_class_loader
-      register_extensions compile_class_loader
-    end
+    register_extensions compile_class_loader
   end
   
   # use java service SPI to load all extensions registrations from context classloader

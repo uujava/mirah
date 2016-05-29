@@ -31,13 +31,18 @@ import org.mirah.util.Context
 
 class MacroMember < Member
   def initialize(flags:int, klass:JVMType, name:String, argumentTypes:List,
-                 returnType:InlineCode, kind:MemberKind)
+                 returnType:InlineCode, kind:MemberKind, priority:int)
     super(flags, klass, name, argumentTypes, nil, kind)
     @returnType = returnType
+    @priority = priority
   end
 
   def asyncReturnType
     @returnType
+  end
+
+  def priority
+    @priority
   end
 
   def self.makeReturnType(klass:Class)
@@ -73,8 +78,9 @@ class MacroMember < Member
     else
       MemberKind.METHOD
     end
-    
+
+    priority =
     MacroMember.new(flags, declaringClass, macrodef.name, argumentTypes,
-                    makeReturnType(klass), kind)
+                    makeReturnType(klass), kind, macrodef.priority)
   end
 end

@@ -245,7 +245,12 @@ class MethodLookup
       end
       target_comparison = subtypeComparison(a.declaringClass, b.declaringClass)
       if comparison == target_comparison || target_comparison == 0.0
-        return comparison
+        # types are same: if macro - use priority
+        if comparison == 0.0 and a.kind_of? MacroMember
+          return a:MacroMember.priority - b:MacroMember.priority
+        else
+          return comparison
+        end
       elsif comparison == 0.0
         if Double.isNaN(target_comparison)
           # Return equal so pickMostSpecific gets to decide

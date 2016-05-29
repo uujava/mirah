@@ -156,6 +156,10 @@ file 'tmp_test/fixtures/fixtures_built.txt' => ['tmp_test/fixtures'] + Dir['test
 
   javac_args['excludes'] = '**/*Java8.java' if jvm_version < 1.8
   ant.javac javac_args
+
+  run_mirahc("test-fixtures", "dist/mirahc.jar", *(['-d','tmp_test/fixtures', '-cp', 'dist/mirahc.jar'] + Dir['test/fixtures/**/*_fixture.mirah']))
+
+  cp_r 'test/fixtures/META-INF', 'tmp_test/fixtures/META-INF'
   `touch tmp_test/fixtures/fixtures_built.txt`
 end
 

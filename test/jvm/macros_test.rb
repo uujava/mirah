@@ -675,6 +675,13 @@ class MacrosTest < Test::Unit::TestCase
     assert_run_output("nil\ntest\nself nil\nself test\n", cls)
   end
   
+  def test_macros_priority_annotation
+    cls, = compile(<<-EOF)
+       "aaa".xxx_macro
+    EOF
+    assert_run_output("xxx2\n", cls)
+  end
+
   def test_attr_accessor_for_interfaces
     cls, = compile(<<-EOF)
         interface TestAcc

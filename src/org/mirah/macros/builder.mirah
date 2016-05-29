@@ -52,6 +52,8 @@ import mirah.lang.ast.FunctionalCall
 import mirah.lang.ast.TypeRefImpl
 import org.mirah.typer.TypeFuture
 import org.mirah.typer.Typer
+import mirah.lang.ast.Annotated
+
 
 class ValueSetter < NodeScanner
   def initialize(objects: List)
@@ -252,6 +254,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
     scope = @scopes.getScope(macroDef)
     isStatic = mirah::lang::ast::Boolean.new(macroDef.name.position, macroDef.isStatic || scope.selfType.resolve.isMeta)
     script = Script.new(macroDef.position)
+    priority = read_priority(macroDef)
     script.body = quote do
       import org.mirah.macros.anno.*
       import org.mirah.macros.Macro
@@ -262,7 +265,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
       import java.util.*
       import java.lang.reflect.Array as ReflectArray
 
-      $MacroDef[name: `macroDef.name`, arguments: `argdef`, isStatic: `isStatic`]
+      $MacroDef[name: `macroDef.name`, arguments: `argdef`, isStatic: `isStatic`, priority: `priority`]
       class `name` implements Macro
         def initialize(mirah: Compiler, call: CallSite)
           @mirah = mirah
@@ -489,5 +492,15 @@ class MacroBuilder; implements org.mirah.macros.Compiler
     
     extended_class = typer.scoper.getScope(macroDef).selfType.peekInferredType
     typer.type_system.addMacro(extended_class, klass)
+  end
+
+  def read_priority(node:Annotated):Node
+    node.annotations.each do |a:Annotation|
+      if a.type.typeref.name == "org.mirah.macros.anno.Priority"
+      # TODO check value exists
+        return a.values.get(0).value
+      end
+    end
+    Fixnum.new(0)
   end
 end
