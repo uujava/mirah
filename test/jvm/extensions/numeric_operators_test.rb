@@ -64,7 +64,6 @@ class NumericOperatorsTest < Test::Unit::TestCase
           a:#{numeric_class} = 5:#{primitive_class}
           puts "\#{a:int}\#{a.class.getName}"
     EOF
-    puts str
 
     define_method "test_#{numeric_class}_cast_#{primitive_class}".to_sym do
       cls, = compile(str)
