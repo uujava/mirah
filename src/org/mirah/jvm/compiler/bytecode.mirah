@@ -184,7 +184,7 @@ class Bytecode < GeneratorAdapter
         raise "Autoboxing failure: Current boxed type: #{currentType.box}##{currentType} wanted type :#{wantedType}" if currentType.getAsmType.getSort != Type.VOID and !wantedType.assignableFrom(currentType.box)
         box(currentType.getAsmType)
       elsif isPrimitive(wantedType)
-        if currentType.getAsmType == @asm_object_type or (!currentType.unbox.nil? or wantedType.assignableFrom(currentType.unbox))
+        if currentType.getAsmType == @asm_object_type or (!currentType.unbox.nil? and wantedType.assignableFrom(currentType.unbox))
            unbox(wantedType.getAsmType)
         else
            raise "Autoboxing failure: Current type: #{currentType}##{currentType.unbox} wanted unboxed type: #{wantedType}##{wantedType.getAsmType}"
