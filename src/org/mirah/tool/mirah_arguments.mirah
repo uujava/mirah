@@ -78,8 +78,7 @@ class MirahArguments
                 encoding: String,
                 plugins: String,
                 debugger: DebuggerInterface,
-                skip_compile:boolean,
-                script_mode:boolean
+                skip_compile:boolean
 
   def initialize(env=System.getenv)
     @logger_color = true
@@ -160,7 +159,6 @@ class MirahArguments
         ["e"], "CODE",
         "Compile an inline script.\n\t(The class will be named DashE)") do |c|
       compiler_args.code_sources.add(StringCodeSource.new('DashE', c))
-      compiler_args.script_mode = true
     end
 
     parser.addFlag(['v', 'version'], 'Print the version.') do
