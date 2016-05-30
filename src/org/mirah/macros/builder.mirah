@@ -53,7 +53,8 @@ import mirah.lang.ast.TypeRefImpl
 import org.mirah.typer.TypeFuture
 import org.mirah.typer.Typer
 import mirah.lang.ast.Annotated
-
+import org.mirah.typer.ErrorType
+import org.mirah.jvm.types.JVMType
 
 class ValueSetter < NodeScanner
   def initialize(objects: List)
@@ -496,9 +497,13 @@ class MacroBuilder; implements org.mirah.macros.Compiler
 
   def read_priority(node:Annotated):Node
     node.annotations.each do |a:Annotation|
-      if a.type.typeref.name == "org.mirah.macros.anno.Priority"
-      # TODO check value exists
-        return a.values.get(0).value
+      anno_type = @typer.infer(a.type).resolve
+      if anno_type.kind_of?(ErrorType)
+        raise InternalError.new("Cannot use error type #{anno_type} as base annotation for #{node}")
+      else
+        if anno_type:JVMType.name == "org.mirah.macros.anno.Priority" and a.values.size > 0
+          return a.values.get(0).value
+        end
       end
     end
     Fixnum.new(0)
