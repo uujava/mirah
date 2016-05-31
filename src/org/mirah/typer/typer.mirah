@@ -964,6 +964,7 @@ class Typer < SimpleNodeVisitor
       # Script, and Package nodes should require a body.
       scope = scopeOf(node)
       scope.package = node.name.identifier
+      scope.selfType = @types.getMainType(scope, node.findAncestor(Script.class):Script)
     end
     @types.getVoidType()
   end
