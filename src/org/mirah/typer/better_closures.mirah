@@ -272,8 +272,8 @@ class BetterClosureBuilder < ClosureBuilderHelper
       infer enclosing_b
 
       @@log.fine "done with #{enclosing_b}"
-      @@log.log(Level.FINE, "Inferred AST:\n{0}", AstFormatter.new(enclosing_b))
-      @@log.log(Level.FINE, "Inferred types:\n{0}", LazyTypePrinter.new(typer, enclosing_b))
+      @@log.log(Level.FINE, "Inferred AST: #{enclosing_b.position}\n{0}", AstFormatter.new(enclosing_b))
+      @@log.log(Level.FINE, "Inferred types: #{enclosing_b.position}\n{0}", LazyTypePrinter.new(typer, enclosing_b))
       
       if @@log.fine?
         buf = java::io::ByteArrayOutputStream.new
