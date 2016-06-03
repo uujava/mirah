@@ -72,7 +72,7 @@ end
 
 interface JvmBackend do
   def compileAndLoadExtension(macro:Script):Class; end
-  def logExtensionAst(node:Node):void; end
+  def logAst(node:Node):void; end
 end
 
 interface ExtensionsService

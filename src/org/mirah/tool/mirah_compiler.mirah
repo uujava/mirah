@@ -175,17 +175,18 @@ class MirahCompiler implements JvmBackend
 
     sorted_asts.each do |node: Node|
       begin
+        logAst(node)
         AstChecker.maybe_check(node)
         @typer.infer(node, false)
         AstChecker.maybe_check(node)
       ensure
-        logAst(Level.FINEST, node, @typer)
+        logInferred(Level.FINEST, node, @typer)
       end
     end
 
     @@log.log(Level.FINE, "Inferred ASTs after full inference cycle")
     sorted_asts.each do |node: Node|
-      logAst(Level.FINE, node, @typer)
+      logInferred(Level.FINE, node, @typer)
     end
 
     @typer.finish_closures
@@ -206,12 +207,12 @@ class MirahCompiler implements JvmBackend
     errors.scan(node, nil)
   end
 
-  def logAst(level:Level, node:Node, typer:Typer):void
+  def logInferred(level:Level, node:Node, typer:Typer):void
     @@log.log(level, "Inferred types: #{node.position}\n{0}", LazyTypePrinter.new(typer, node))
   end
 
-  def logExtensionAst(ast)
-    @@log.log(Level.FINE, "Extension AST: #{ast.position}\n{0}", AstFormatter.new(ast))
+  def logAst(ast)
+    @@log.log(Level.FINE, "AST: #{ast.position}\n{0}", AstFormatter.new(ast))
   end
 
   def failIfErrors
@@ -221,7 +222,7 @@ class MirahCompiler implements JvmBackend
   end
 
   def compileAndLoadExtension(ast)
-    logAst(Level.FINE, ast, @macro_typer)
+    logInferred(Level.FINE, ast, @macro_typer)
     processInferenceErrors(ast, @macro_context)
     failIfErrors
 
