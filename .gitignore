@@ -13,6 +13,7 @@ Gemfile.lock
 vendor/
 *~
 .*/
+stub
 .ruby-*
 
 tmp_test

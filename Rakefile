@@ -49,7 +49,14 @@ end
 task :default => :new_ci
 
 desc "run new backend ci"
-task :new_ci => [:'test:core', :'test:jvm', :'test:artifacts', 'dist/mirahc3.jar']
+task :new_ci => [:new_ci_jar, :test]
+
+task :new_ci_jar => ['dist/mirahc3.jar',] do
+  puts "using dist/mirahc3.jar for tests"
+  #dist/mirahc.jar jar loaded by mirah.gemspec when  running test as forked Rake application
+  rm 'dist/mirahc.jar'
+  cp 'dist/mirahc3.jar', 'dist/mirahc.jar'
+end
 
 def run_tests tests
   results = tests.map do |name|
@@ -73,7 +80,7 @@ task :test do
   run_tests [ 'test:core', 'test:plugins', 'test:jvm', 'test:artifacts' ]
 end
 
-Rake::TestTask.new :single_test  => ["dist/mirahc.jar", :compile] do |t|
+Rake::TestTask.new :single_test  => :compile do |t|
   t.libs << 'test'
   t.test_files = FileList["test/single_test.rb"]
 end
@@ -81,21 +88,21 @@ end
 namespace :test do
 
   desc "run the core tests"
-  Rake::TestTask.new :core  => :compile do |t|
+  Rake::TestTask.new :core do |t|
     t.libs << 'test'
     t.test_files = FileList["test/core/**/*test.rb"]
     java.lang.System.set_property("jruby.duby.enabled", "true")
   end
 
   desc "run tests for plugins"
-  Rake::TestTask.new :plugins  => :compile do |t|
+  Rake::TestTask.new :plugins do |t|
     t.libs << 'test'
     t.test_files = FileList["test/plugins/**/*test.rb"]
     java.lang.System.set_property("jruby.duby.enabled", "true")
   end
 
   desc "run the artifact tests"
-  Rake::TestTask.new :artifacts  => :compile do |t|
+  Rake::TestTask.new :artifacts do |t|
     t.libs << 'test'
     t.test_files = FileList["test/artifacts/**/*test.rb"]
   end
@@ -113,18 +120,18 @@ namespace :test do
     end
 
     desc "run tests for mirror type system"
-    Rake::TestTask.new :mirrors  => "dist/mirahc.jar" do |t|
+    Rake::TestTask.new :mirrors do |t|
       t.libs << 'test'
       t.test_files = FileList["test/mirrors/**/*test.rb"]
     end
 
-    Rake::TestTask.new :mirror_compilation  => ["dist/mirahc.jar", :test_setup] do |t|
+    Rake::TestTask.new :mirror_compilation  => :test_setup do |t|
       t.libs << 'test' << 'test/jvm'
       t.ruby_opts.concat ["-r", "new_backend_test_helper"]
       t.test_files = FileList["test/jvm/**/*test.rb"]
     end
 
-    Rake::TestTask.new :modifiers  => ["dist/mirahc.jar", :test_setup] do |t|
+    Rake::TestTask.new :modifiers  => :test_setup do |t|
       t.libs << 'test' << 'test/jvm'
       t.ruby_opts.concat ["-r", "new_backend_test_helper"]
       t.test_files = FileList["test/jvm/**/modifiers_test.rb"]
@@ -241,7 +248,7 @@ task :zip => 'jar:complete' do
 end
 
 desc "Build java stub"
-task :stub => [:compile, 'dist/mirahc-stub.jar']
+task :stub => 'dist/mirahc-stub.jar'
 
 desc "Build all redistributable files"
 task :dist => [:gem, :zip]
@@ -350,7 +357,7 @@ def bootstrap_mirah_from(old_jar, new_jar, options={})
 
   file new_jar, [:verbose] => mirah_srcs + extensions_srcs + ant_srcs + [old_jar, 'javalib/mirah-asm-5.jar', 'javalib/mirah-parser.jar'] + [:mirah_version] do |task, task_args|
     task_args.with_defaults(:verbose => false)
-    build_dir = 'build/bootstrap'+new_jar.gsub(/[.-\/]/, '_')
+    build_dir = options[:build_dir] || 'build/bootstrap'+new_jar.gsub(/[.-\/]/, '_')
     cp "#{new_jar}", "#{new_jar}.prev" rescue nil
     rm_rf build_dir
     mkdir_p build_dir
@@ -416,7 +423,7 @@ end
 bootstrap_mirah_from('javalib/mirahc-prev.jar', 'dist/mirahc.jar')
 bootstrap_mirah_from('dist/mirahc.jar', 'dist/mirahc2.jar')
 bootstrap_mirah_from('dist/mirahc2.jar', 'dist/mirahc3.jar')
-bootstrap_mirah_from('dist/mirahc.jar', 'dist/mirahc-stub.jar', {:optargs => ['-skip-compile','-plugins', 'stub:+pl'], :use_old_jar => true})
+bootstrap_mirah_from('dist/mirahc.jar', 'dist/mirahc-stub.jar', {:optargs => ['-skip-compile','-plugins', 'stub:+pl'], :use_old_jar => true, :build_dir => 'stub'})
 
 
 def build_version
