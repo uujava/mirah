@@ -34,11 +34,22 @@ import org.mirah.typer.TypeFuture
 
 import org.mirah.util.Context
 
-class ResourceLoader
+interface MirrorLoader
+  def loadMirror(type:Type):MirrorType; end
+end
+
+interface AsyncMirrorLoader
+  # The future must resolve to a MirrorType.
+  def loadMirrorAsync(type:Type):TypeFuture; end
+end
+
+abstract class ResourceLoader
   def initialize(parent:ResourceLoader=nil)
     @parent = parent
   end
-  def findResource(name:String):InputStream; nil; end
+
+  protected abstract def findResource(name:String):InputStream; end
+
   def getResourceAsStream(name:String):InputStream
     if @parent
       @parent.getResourceAsStream(name) || findResource(name)
@@ -54,7 +65,7 @@ class ClassResourceLoader < ResourceLoader
     @klass = klass
   end
 
-  def findResource(name)
+  protected def findResource(name)
     name = "/#{name}" unless name.startsWith("/")
     @klass.getResourceAsStream(name)
   end
@@ -66,7 +77,7 @@ class ClassLoaderResourceLoader < ResourceLoader
     @loader = loader
   end
 
-  def findResource(name)
+  protected def findResource(name)
     @loader.getResourceAsStream(name)
   end
 end
@@ -77,7 +88,7 @@ class FilteredResources < ResourceLoader
     @source = source
     @filter = filter
   end
-  def findResource(name)
+  protected def findResource(name)
     if @filter.matcher(name).lookingAt
       @source.getResourceAsStream(name)
     end
@@ -90,7 +101,7 @@ class NegativeFilteredResources < ResourceLoader
     @source = source
     @filter = filter
   end
-  def findResource(name)
+  protected def findResource(name)
     unless @filter.matcher(name).lookingAt
       @source.getResourceAsStream(name)
     end

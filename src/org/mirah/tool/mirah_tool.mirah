@@ -14,52 +14,19 @@
 # limitations under the License.
 
 package org.mirah.tool
-
-import java.io.BufferedOutputStream
-import java.io.File
-import java.io.FileOutputStream
-import java.net.URL
-import java.net.URLClassLoader
-import java.util.HashSet
-import java.util.List
 import org.mirah.util.Logger
-import java.util.logging.Level
-import java.util.regex.Pattern
-import javax.tools.DiagnosticListener
 import mirah.impl.MirahParser
 import mirah.lang.ast.CodeSource
-import mirah.lang.ast.Node
-import mirah.lang.ast.Script
 import mirah.lang.ast.StringCodeSource
-import org.mirah.IsolatedResourceLoader
-import org.mirah.MirahClassLoader
-import org.mirah.MirahLogFormatter
-import org.mirah.jvm.compiler.Backend
 import org.mirah.jvm.compiler.BytecodeConsumer
 import org.mirah.jvm.compiler.JvmVersion
-import org.mirah.jvm.mirrors.MirrorTypeSystem
-import org.mirah.jvm.mirrors.ClassResourceLoader
-import org.mirah.jvm.mirrors.ClassLoaderResourceLoader
-import org.mirah.jvm.mirrors.FilteredResources
-import org.mirah.jvm.mirrors.SafeTyper
-import org.mirah.jvm.mirrors.debug.ConsoleDebugger
 import org.mirah.jvm.mirrors.debug.DebuggerInterface
-import org.mirah.macros.JvmBackend
-import org.mirah.mmeta.BaseParser
-import org.mirah.typer.Scoper
-import org.mirah.typer.Typer
-import org.mirah.typer.TypeSystem
-import org.mirah.util.ParserDiagnostics
 import org.mirah.util.SimpleDiagnostics
-import org.mirah.util.AstFormatter
 import org.mirah.util.TooManyErrorsException
-import org.mirah.util.LazyTypePrinter
-import org.mirah.util.Context
-import org.mirah.util.OptionParser
 
 abstract class MirahTool implements BytecodeConsumer
   def initialize
-    reset
+    reset()
   end
 
   def self.initialize:void
@@ -80,7 +47,7 @@ abstract class MirahTool implements BytecodeConsumer
       return @compiler_args.exit_status
     end
     @compiler = MirahCompiler.new(@compiler_args)
-    parseAllFiles
+    parseAllFiles()
     @compiler.infer
     @compiler.compile(self)
     0

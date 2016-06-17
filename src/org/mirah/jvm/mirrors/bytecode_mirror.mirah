@@ -38,15 +38,6 @@ import org.mirah.util.Context
 import mirah.lang.ast.TypeRefImpl
 
 
-interface MirrorLoader
-  def loadMirror(type:Type):MirrorType; end
-end
-
-interface AsyncMirrorLoader
-  # The future must resolve to a MirrorType.
-  def loadMirrorAsync(type:Type):TypeFuture; end
-end
-
 class BytecodeMirror < AsyncMirror implements DeclaredMirrorType
   def initialize(context:Context, klass:ClassNode, loader:MirrorLoader)
     super(context, Type.getObjectType(klass.name), klass.access)

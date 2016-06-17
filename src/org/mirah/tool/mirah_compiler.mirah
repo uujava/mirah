@@ -202,12 +202,12 @@ class MirahCompiler implements JvmBackend
     end
   end
 
-  def processInferenceErrors(node:Node, context:Context):void
+  private def processInferenceErrors(node:Node, context:Context):void
     errors = ErrorCollector.new(context)
     errors.scan(node, nil)
   end
 
-  def logInferred(level:Level, node:Node, typer:Typer):void
+  private def logInferred(level:Level, node:Node, typer:Typer):void
     @@log.log(level, "Inferred types: #{node.position}\n{0}", LazyTypePrinter.new(typer, node))
   end
 
@@ -215,7 +215,7 @@ class MirahCompiler implements JvmBackend
     @@log.log(Level.FINE, "AST: #{ast.position}\n{0}", AstFormatter.new(ast))
   end
 
-  def failIfErrors
+  private def failIfErrors
     if @diagnostics.errorCount > 0
       raise CompilationFailure.new
     end
@@ -292,9 +292,9 @@ class MirahCompiler implements JvmBackend
     # Annotations used by the compiler also need to be loadable
     bootloader = FilteredResources.new(
         ClassResourceLoader.new(Mirahc.class),
-        Pattern.compile("^/?org/mirah/jvm/(types/(Flags|Member|Modifiers))|compiler/Cleaned"), boot)
-    ClassLoaderResourceLoader.new(
-            IsolatedResourceLoader.new(classpath), bootloader)
+        Pattern.compile("^/?org/mirah/jvm/(types/(Flags|Member|Modifiers))|compiler/Cleaned"), boot
+    )
+    ClassLoaderResourceLoader.new(IsolatedResourceLoader.new(classpath), bootloader)
   end
 
   def createTypeSystems(classpath: URL[], bootcp: URL[], macrocp: URL[]): void

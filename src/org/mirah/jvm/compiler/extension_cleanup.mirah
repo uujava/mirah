@@ -37,10 +37,6 @@ import org.mirah.jvm.compiler.Backend
 import org.mirah.jvm.mirrors.MirrorTypeSystem
 import org.mirah.jvm.mirrors.BetterScopeFactory
 import org.mirah.jvm.mirrors.MirrorScope
-import org.mirah.jvm.mirrors.ClassResourceLoader
-import org.mirah.jvm.mirrors.ClassLoaderResourceLoader
-import org.mirah.jvm.mirrors.FilteredResources
-import org.mirah.jvm.mirrors.NegativeFilteredResources
 
 import org.mirah.typer.Typer
 import org.mirah.typer.TypeSystem
