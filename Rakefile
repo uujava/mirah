@@ -357,7 +357,7 @@ def bootstrap_mirah_from(old_jar, new_jar, options={})
 
   file new_jar, [:verbose] => mirah_srcs + extensions_srcs + ant_srcs + [old_jar, 'javalib/mirah-asm-5.jar', 'javalib/mirah-parser.jar'] + [:mirah_version] do |task, task_args|
     task_args.with_defaults(:verbose => false)
-    build_dir = options[:build_dir] || 'build/bootstrap'+new_jar.gsub(/[.-\/]/, '_')
+    build_dir = 'build/bootstrap'+new_jar.gsub(/[.-\/]/, '_')
     cp "#{new_jar}", "#{new_jar}.prev" rescue nil
     rm_rf build_dir
     mkdir_p build_dir
@@ -423,7 +423,7 @@ end
 bootstrap_mirah_from('javalib/mirahc-prev.jar', 'dist/mirahc.jar')
 bootstrap_mirah_from('dist/mirahc.jar', 'dist/mirahc2.jar')
 bootstrap_mirah_from('dist/mirahc2.jar', 'dist/mirahc3.jar')
-bootstrap_mirah_from('dist/mirahc.jar', 'dist/mirahc-stub.jar', {:optargs => ['-skip-compile','-plugins', 'stub:+pl'], :use_old_jar => true, :build_dir => 'stub'})
+bootstrap_mirah_from('dist/mirahc.jar', 'dist/mirahc-stub.jar', {:optargs => ['-skip-compile','-plugins', 'stub:stub|+pl'], :use_old_jar => true})
 
 
 def build_version
