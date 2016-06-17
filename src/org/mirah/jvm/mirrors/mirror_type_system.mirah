@@ -61,7 +61,6 @@ import org.mirah.typer.Scope
 import org.mirah.typer.TypeFuture
 import org.mirah.typer.TypeSystem
 import org.mirah.typer.UnreachableType
-import org.mirah.typer.simple.SimpleScope
 import org.mirah.util.Context
 
 import org.mirah.jvm.mirrors.generics.TypeInvoker

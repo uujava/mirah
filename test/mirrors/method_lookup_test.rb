@@ -31,7 +31,7 @@ class BaseMethodLookupTest <  Test::Unit::TestCase
   java_import 'org.mirah.jvm.types.MemberKind'
   java_import 'org.mirah.typer.BaseTypeFuture'
   java_import 'org.mirah.typer.ErrorType'
-  java_import 'org.mirah.typer.simple.SimpleScoper'
+  java_import 'org.mirah.typer.SimpleScoper'
   java_import 'mirah.lang.ast.Script'
   java_import 'mirah.objectweb.asm.Opcodes'
   java_import 'mirah.objectweb.asm.Type'
@@ -63,7 +63,8 @@ class BaseMethodLookupTest <  Test::Unit::TestCase
   end
 
   def new_scope opts={}
-    BetterScopeFactory.new.newScope(SimpleScoper.new, opts[:context] || Script.new)
+    factory = BetterScopeFactory.new
+    factory.newScope(SimpleScoper.new(factory), opts[:context] || Script.new)
   end
 
   def jvmtype(internal_name, flags=0, superclass=nil)

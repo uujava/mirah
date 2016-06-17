@@ -26,7 +26,7 @@ class BaseMirrorsTest < Test::Unit::TestCase
   java_import 'org.mirah.typer.BaseTypeFuture'
   java_import 'org.mirah.typer.CallFuture'
   java_import 'org.mirah.typer.TypeFuture'
-  java_import 'org.mirah.typer.simple.SimpleScoper'
+  java_import 'org.mirah.typer.SimpleScoper'
   java_import 'mirah.lang.ast.ClassDefinition'
   java_import 'mirah.lang.ast.ConstructorDefinition'
   java_import 'mirah.lang.ast.PositionImpl'
@@ -44,7 +44,8 @@ class BaseMirrorsTest < Test::Unit::TestCase
   end
 
   def new_scope opts={}
-    BetterScopeFactory.new.newScope(SimpleScoper.new, opts[:context] || Script.new)
+    factory = BetterScopeFactory.new
+    factory.newScope(SimpleScoper.new(factory), opts[:context] || Script.new)
   end
 
   def set_filename(filename)

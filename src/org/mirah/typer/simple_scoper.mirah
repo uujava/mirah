@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-package org.mirah.typer.simple
+package org.mirah.typer
 
 import java.util.*
-import org.mirah.typer.*
 import mirah.lang.ast.NodeScanner
 import mirah.lang.ast.Node
 import mirah.lang.ast.Position
@@ -26,15 +25,23 @@ import java.io.InputStreamReader
 import java.io.FileInputStream
 import java.io.PrintStream
 
+interface Scoper do
+  # parent scope of node
+  def getScope(node: Node): Scope; end
+  # add scope to nodes below node
+  def addScope(node: Node): Scope; end
+  # get scope of node
+  def getIntroducedScope(node: Node): Scope; end
+  def copyScopeFrom(from: Node, to: Node): void; end
+  def setScope(node: Node, scope: Scope): void; end
+end
+
 interface ScopeFactory do
   def newScope(scoper:Scoper, node:Node):Scope; end
 end
 
 # A minimal Scoper.
 class SimpleScoper; implements Scoper
-  def initialize
-    @scopes = {}
-  end
   def initialize(factory:ScopeFactory)
     @factory = factory
     @scopes = {}
@@ -53,11 +60,7 @@ class SimpleScoper; implements Scoper
   end
   def addScope(node)
     @scopes[node]:Scope || begin
-      scope = if @factory
-        @factory.newScope(self, node)
-      else
-        SimpleScope.new
-      end
+      scope = @factory.newScope(self, node)
       @scopes[node] = scope
       scope
     end

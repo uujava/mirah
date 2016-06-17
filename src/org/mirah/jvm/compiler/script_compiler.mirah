@@ -18,7 +18,7 @@ package org.mirah.jvm.compiler
 import java.util.LinkedList
 import org.mirah.util.Logger
 import org.mirah.typer.Typer
-import org.mirah.typer.simple.TypePrinter
+import org.mirah.typer.TypePrinter
 import org.mirah.util.Context
 
 class ScriptCompiler < BaseCompiler

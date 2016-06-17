@@ -37,7 +37,7 @@ import org.mirah.typer.ResolvedType
 import org.mirah.typer.Scope
 import org.mirah.typer.ScopeFilter
 import org.mirah.typer.Scoper
-import org.mirah.typer.simple.ScopeFactory
+import org.mirah.typer.ScopeFactory
 import org.mirah.typer.TypeFuture
 
 

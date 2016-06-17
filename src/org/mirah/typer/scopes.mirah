@@ -51,17 +51,6 @@ interface Scope do
   def find_parent(filter:ScopeFilter):Scope;end
 end
 
-interface Scoper do
-  # parent scope of node
-  def getScope(node: Node): Scope; end
-  # add scope to nodes below node
-  def addScope(node: Node): Scope; end
-  # get scope of node
-  def getIntroducedScope(node: Node): Scope; end
-  def copyScopeFrom(from: Node, to: Node): void; end
-  def setScope(node: Node, scope: Scope): void; end 
-end
-
 interface ScopeFilter
   def matches(scope:Scope):boolean;end
 end

@@ -19,7 +19,7 @@ import java.io.StringWriter
 import java.io.PrintWriter
 import mirah.lang.ast.Node
 import org.mirah.typer.Typer
-import org.mirah.typer.simple.TypePrinter
+import org.mirah.typer.TypePrinter
 
 class LazyTypePrinter
   def initialize(typer:Typer, node:Node)

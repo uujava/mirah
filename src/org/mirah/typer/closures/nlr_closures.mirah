@@ -28,7 +28,7 @@ import org.mirah.jvm.mirrors.ClosureScope
 import org.mirah.jvm.types.JVMType
 import org.mirah.jvm.types.JVMTypeUtils
 import org.mirah.macros.MacroBuilder
-import org.mirah.typer.simple.TypePrinter2
+import org.mirah.typer.TypePrinter2
 import org.mirah.typer.CallFuture
 import org.mirah.typer.BaseTypeFuture
 import org.mirah.util.AstFormatter

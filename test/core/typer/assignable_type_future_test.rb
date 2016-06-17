@@ -19,15 +19,18 @@ class TypeFutureTest < Test::Unit::TestCase
   include Mirah::Util::ProcessErrors
   java_import 'org.mirah.typer.TypeFuture'
   java_import 'org.mirah.typer.AssignableTypeFuture'
-  java_import 'org.mirah.typer.SimpleFuture'
-  java_import 'org.mirah.typer.simple.SimpleScoper'
-  java_import 'org.mirah.typer.simple.SimpleTypes'
-  java_import 'org.mirah.typer.simple.SimpleType'
+  java_import 'org.mirah.typer.SimpleScoper'
   java_import 'org.mirah.typer.ErrorType'
+  java_import 'org.mirah.typer.BaseTypeFuture'
   java_import 'mirah.lang.ast.VCall'
   java_import 'mirah.lang.ast.FunctionalCall'
   java_import 'mirah.lang.ast.PositionImpl'
   java_import 'mirah.lang.ast.LocalAccess'
+  java_import 'mirah.objectweb.asm.Type'
+  java_import 'org.mirah.jvm.mirrors.MirrorTypeSystem'
+  java_import 'org.mirah.jvm.mirrors.ClassLoaderResourceLoader'
+  java_import 'org.mirah.jvm.mirrors.ClassResourceLoader'
+  java_import 'org.mirah.IsolatedResourceLoader'
 
   module TypeFuture
     def inspect
@@ -37,36 +40,58 @@ class TypeFutureTest < Test::Unit::TestCase
   
   POS = PositionImpl.new(nil, 0, 0, 0, 0, 0, 0)
 
-# error type test
+  def setup
+    class_based_loader = ClassResourceLoader.new(MirrorTypeSystem.java_class)
+    loader = ClassLoaderResourceLoader.new(
+        IsolatedResourceLoader.new([TEST_DEST,FIXTURE_TEST_DEST].map{|u|java.net.URL.new "file:"+u}),
+        class_based_loader)
+    @types = MirrorTypeSystem.new nil, loader
+  end
 
-# END error type test
+  def load(desc)
+    @types.wrap(desc).resolve
+  end
 
   def test_assignable_future_when_declared_resolves_to_declared_type
     future = AssignableTypeFuture.new POS
-    type = SimpleType.new("Object",false,false)
-    future.declare SimpleFuture.new(type), POS
-
+    type = load(Type.getType("Ljava/lang/Object;"))
+    r_future = BaseTypeFuture.new
+    r_future.resolved(type)
+    future.declare r_future, POS
     assert_equal type, future.resolve, "Expected #{future.resolve} to be a #{type}"
   end
 
 
   def test_assignable_future_doesnt_allow_multiple_declarations_of_different_types
     future = AssignableTypeFuture.new POS
-    future.declare SimpleFuture.new(SimpleType.new("Object",false,false)), POS
-    future.declare SimpleFuture.new(SimpleType.new("NotObject",false,false)), POS
+    type = load(Type.getType("Ljava/lang/Object;"))
+    obj_future = BaseTypeFuture.new
+    obj_future.resolved(type)
+    type = load(Type.getType("LNotObject;"))
+    not_obj_future = BaseTypeFuture.new
+    not_obj_future.resolved(type)
 
-    assign_future = future.assign SimpleFuture.new(SimpleType.new("Object",false,false)), POS
+    future.declare obj_future, POS
+    future.declare not_obj_future, POS
+
+    assign_future = future.assign obj_future, POS
 
     assert_kind_of ErrorType, assign_future.resolve
   end
 
   def test_assignable_future_doesnt_allow_invalid_assignment_to_declared_type
     future = AssignableTypeFuture.new POS
-    f = SimpleFuture.new(SimpleType.new("Object",false,false))
+    type = load(Type.getType("Ljava/lang/Object;"))
+    obj_future = BaseTypeFuture.new
+    obj_future.resolved(type)
 
-    future.declare f, POS
-    
-    assignment_future = future.assign SimpleFuture.new(SimpleType.new("NotObject",false,false)), POS
+    future.declare obj_future, POS
+
+    type = load(Type.getType("LNotObject;"))
+    not_obj_future = BaseTypeFuture.new
+    not_obj_future.resolved(type)
+
+    assignment_future = future.assign not_obj_future, POS
     
     assert_kind_of ErrorType, assignment_future.resolve
   end

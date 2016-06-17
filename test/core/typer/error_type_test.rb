@@ -19,24 +19,39 @@ class ErrorTypeTest < Test::Unit::TestCase
   include Mirah::Util::ProcessErrors
   java_import 'org.mirah.typer.TypeFuture'
   java_import 'org.mirah.typer.AssignableTypeFuture'
-  java_import 'org.mirah.typer.SimpleFuture'
-  java_import 'org.mirah.typer.simple.SimpleScoper'
-  java_import 'org.mirah.typer.simple.SimpleTypes'
-  java_import 'org.mirah.typer.simple.SimpleType'
+  java_import 'org.mirah.typer.SimpleScoper'
   java_import 'org.mirah.typer.ErrorType'
   java_import 'mirah.lang.ast.VCall'
   java_import 'mirah.lang.ast.FunctionalCall'
   java_import 'mirah.lang.ast.PositionImpl'
   java_import 'mirah.lang.ast.LocalAccess'
+  java_import 'mirah.objectweb.asm.Type'
+  java_import 'org.mirah.jvm.mirrors.MirrorTypeSystem'
+  java_import 'org.mirah.jvm.mirrors.ClassLoaderResourceLoader'
+  java_import 'org.mirah.jvm.mirrors.ClassResourceLoader'
+  java_import 'org.mirah.IsolatedResourceLoader'
 
-  module TypeFuture
+
+    module TypeFuture
     def inspect
       toString
     end
   end
   
   POS = PositionImpl.new(nil, 0, 0, 0, 0, 0, 0)
-  
+
+  def setup
+    class_based_loader = ClassResourceLoader.new(MirrorTypeSystem.java_class)
+    loader = ClassLoaderResourceLoader.new(
+        IsolatedResourceLoader.new([TEST_DEST,FIXTURE_TEST_DEST].map{|u|java.net.URL.new "file:"+u}),
+        class_based_loader)
+    @types = MirrorTypeSystem.new nil, loader
+  end
+
+  def load(desc)
+    @types.wrap(desc).resolve
+  end
+
   def test_error_type_matches_anything
     type = ErrorType.new [["",POS]]
     assert type.matchesAnything, "errors match any type"
@@ -44,7 +59,7 @@ class ErrorTypeTest < Test::Unit::TestCase
 
   def test_error_type_is_not_assignable_from
     type = ErrorType.new [["",POS]]
-    assert !type.assignableFrom(SimpleType.new("Object",false,false))
+    assert !type.assignableFrom(load(Type.getType("Ljava/lang/Object;")))
   end
 
   def test_error_type_equal_to_another_error_type_when_message_same

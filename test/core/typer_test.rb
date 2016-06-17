@@ -18,11 +18,16 @@ class TyperTest < Test::Unit::TestCase
   include Mirah
   include Mirah::Util::ProcessErrors
   java_import 'org.mirah.typer.TypeFuture'
-  java_import 'org.mirah.typer.simple.SimpleScoper'
-  java_import 'org.mirah.typer.simple.SimpleTypes'
+  java_import 'org.mirah.typer.SimpleScoper'
   java_import 'mirah.lang.ast.VCall'
   java_import 'mirah.lang.ast.FunctionalCall'
   java_import 'mirah.lang.ast.LocalAccess'
+  java_import 'org.mirah.jvm.mirrors.MirrorTypeSystem'
+  java_import 'org.mirah.jvm.mirrors.ClassLoaderResourceLoader'
+  java_import 'org.mirah.jvm.mirrors.ClassResourceLoader'
+  java_import 'org.mirah.IsolatedResourceLoader'
+  java_import 'org.mirah.jvm.mirrors.BetterScopeFactory'
+  java_import 'mirah.objectweb.asm.Type'
 
   module TypeFuture
     def inspect
@@ -31,7 +36,7 @@ class TyperTest < Test::Unit::TestCase
   end
 
   def setup
-    @scopes = SimpleScoper.new
+    @scopes = SimpleScoper.new BetterScopeFactory.new
     new_typer('Bar')
   end
 
@@ -40,7 +45,7 @@ class TyperTest < Test::Unit::TestCase
   end
 
   def new_typer(n)
-    @types = SimpleTypes.new(n.to_s)
+    @types = MirrorTypeSystem.new
     @typer = Mirah::Typer::Typer.new(@types, @scopes, nil, nil)
     @mirah = Transform::Transformer.new(@typer)
     @typer
@@ -83,55 +88,55 @@ class TyperTest < Test::Unit::TestCase
   def test_script_is_void
     ast = parse("x='a script'")
     infer(ast)
-    assert_equal(@types.getVoidType, inferred_type(ast))
+    assert_resolved(@types.getVoidType, inferred_type(ast))
   end
 
   def test_fixnum
     ast = parse("1")
-    assert_equal(@types.getFixnumType(1), infer(ast))
+    assert_resolved(@types.getFixnumType(1), infer(ast))
   end
 
   def test_float
     ast = parse("1.0")
     new_typer(:bar).infer(ast, true)
-    assert_equal(@types.getFloatType(1.0), infer(ast))
+    assert_resolved(@types.getFloatType(1.0), infer(ast))
   end
 
   def test_string
     ast = parse("'foo'")
 
-    assert_equal(@types.getStringType, infer(ast))
+    assert_resolved(@types.getStringType, infer(ast))
   end
 
   def test_boolean
     ast1 = parse("true")
     ast2 = parse("false")
 
-    assert_equal(@types.getBooleanType, infer(ast1))
-    assert_equal(@types.getBooleanType, infer(ast2))
+    assert_resolved(@types.getBooleanType, infer(ast1))
+    assert_resolved(@types.getBooleanType, infer(ast2))
   end
 
   def test_body
     ast1 = parse("'foo'; 1.0; 1")
     ast2 = parse("begin; end")
 
-    assert_equal(@types.getFixnumType(1), infer(ast1))
-    assert_equal(@types.getNullType, infer(ast2))
+    assert_resolved(@types.getFixnumType(1), infer(ast1))
+    assert_resolved(@types.getImplicitNilType, infer(ast2))
   end
 
   def test_local
     ast1 = parse("a = 1; a")
     infer(ast1)
 
-    assert_equal(@types.getFixnumType(1), @types.getLocalType(@scopes.getScope(ast1), 'a', nil).resolve)
-    assert_equal(@types.getFixnumType(1), inferred_type(ast1.body.get(0)))
-    assert_equal(@types.getFixnumType(1), inferred_type(ast1.body.get(1)))
+    assert_resolved(@types.getFixnumType(1), @types.getLocalType(@scopes.getScope(ast1), 'a', nil).resolve)
+    assert_resolved(@types.getFixnumType(1), inferred_type(ast1.body.get(0)))
+    assert_resolved(@types.getFixnumType(1), inferred_type(ast1.body.get(1)))
 
     ast2 = parse("b = a = 1")
     infer(ast2)
 
-    assert_equal(@types.getFixnumType(1), @types.getLocalType(@scopes.getScope(ast2), 'a', nil).resolve)
-    assert_equal(@types.getFixnumType(1), inferred_type(ast2.body.get(0)))
+    assert_resolved(@types.getFixnumType(1), @types.getLocalType(@scopes.getScope(ast2), 'a', nil).resolve)
+    assert_resolved(@types.getFixnumType(1), inferred_type(ast2.body.get(0)))
   end
 
   def test_signature
@@ -161,10 +166,10 @@ class TyperTest < Test::Unit::TestCase
     mdef = ast1.body.get(0)
     inner_scope = @scopes.getScope(mdef.body)
 
-#    assert_equal(@types.getNullType, @types.getMethodType(type, 'foo', [@types.getStringType.resolve]).resolve)
-    assert_equal(@types.getStringType, @types.getLocalType(inner_scope, 'a', nil).resolve)
-    assert_equal(@types.getNullType, inferred_type(mdef).returnType)
-    assert_equal(@types.getStringType, inferred_type(mdef.arguments.required.get(0)))
+#    assert_resolved(@types.getImplicitNilType, @types.getMethodType(type, 'foo', [@types.getStringType.resolve]).resolve)
+    assert_resolved(@types.getStringType, @types.getLocalType(inner_scope, 'a', nil).resolve)
+    assert_resolved(@types.getImplicitNilType, inferred_type(mdef).returnType)
+    assert_resolved(@types.getStringType, inferred_type(mdef.arguments.required.get(0)))
 
     ast1 = parse("#{def_foo}(a:String); a; end")
     typer = new_typer :bar
@@ -172,27 +177,27 @@ class TyperTest < Test::Unit::TestCase
     mdef = ast1.body.get(0)
     inner_scope = @scopes.getScope(mdef.body)
 
-    # assert_equal(@types.getStringType, @types.getMethodType(type, 'foo', [@types.getStringType.resolve]).resolve)
-    assert_equal(@types.getStringType, @types.getLocalType(inner_scope, 'a', nil).resolve)
-    assert_equal(@types.getStringType, inferred_type(mdef).returnType)
-    assert_equal(@types.getStringType, inferred_type(mdef.arguments.required.get(0)))
+    # assert_resolved(@types.getStringType, @types.getMethodType(type, 'foo', [@types.getStringType.resolve]).resolve)
+    assert_resolved(@types.getStringType, @types.getLocalType(inner_scope, 'a', nil).resolve)
+    assert_resolved(@types.getStringType, inferred_type(mdef).returnType)
+    assert_resolved(@types.getStringType, inferred_type(mdef.arguments.required.get(0)))
   end
 
   def test_call
-    ast = parse("class Int;def foo(a:Int):String; end; end; 1.foo(2)")
+    ast = parse("class Int;def foo(a:int):String; end; end; Int.new.foo(2)")
 
-    assert_equal(@types.getStringType, infer(ast))
+    assert_resolved(@types.getStringType, infer(ast))
 
-    ast = parse("def bar(a:Int, b:String); 1.0; end; def baz; bar(1, 'x'); end")
+    ast = parse("def bar(a:int, b:String); 1.0; end; def baz; bar(1, 'x'); end")
 
     infer(ast)
     ast = ast.body
     self_type = @scopes.getScope(ast.get(0)).selfType
-    assert_equal(@types.getFloatType(1.0), inferred_type(ast.get(0)).returnType)
-    assert_equal(@types.getFloatType(1.0), inferred_type(ast.get(1)).returnType)
+    assert_resolved(@types.getFloatType(1.0), inferred_type(ast.get(0)).returnType)
+    assert_resolved(@types.getFloatType(1.0), inferred_type(ast.get(1)).returnType)
 
     # Reverse the order, ensure deferred inference succeeds
-    ast = parse("def baz; bar(1, 'x'); end; def bar(a:Int, b:String); 1.0; end")
+    ast = parse("def baz; bar(1, 'x'); end; def bar(a:int, b:String); 1.0; end")
     typer = new_typer("bar")
 
     typer.infer(ast, true)
@@ -200,25 +205,25 @@ class TyperTest < Test::Unit::TestCase
 
     assert_no_errors(typer, ast)
 
-    assert_equal(@types.getFloatType(1.0), inferred_type(ast.get(0)).returnType)
-    assert_equal(@types.getFloatType(1.0), inferred_type(ast.get(1)).returnType)
+    assert_resolved(@types.getFloatType(1.0), inferred_type(ast.get(0)).returnType)
+    assert_resolved(@types.getFloatType(1.0), inferred_type(ast.get(1)).returnType)
 
     # modify bar call to have bogus types, ensure resolution fails
-    ast = parse("def baz; bar(1, 1); end; def bar(a:Int, b:String); 1.0; end")
+    ast = parse("def baz; bar(1, 1); end; def bar(a:int, b:String); 1.0; end")
     typer = new_typer("bar")
 
     typer.infer(ast, true)
     ast = ast.body
 
     assert_equal(":error", inferred_type(ast.get(0)).name)
-    assert_equal(@types.getFloatType(1.0), inferred_type(ast.get(1)).returnType)
+    assert_resolved(@types.getFloatType(1.0), inferred_type(ast.get(1)).returnType)
   end
 
   def test_if_incompatible_body_types_float_string
     pend_on_jruby "1.7.13" do
       ast = parse("if true; 1.0; else; ''; end").body
 
-      assert_equal(':error', infer(ast).name)
+      assert_equal('java.lang.Comparable<? extends java.io.Serializable & java.lang.Comparable<? extends java.lang.Comparable<? extends java.io.Serializable & java.lang.Comparable<? extends java.lang.Comparable<? extends java.io.Serializable & java.lang.Comparable<? extends ...>> & java.io.Serializable>> & java.io.Serializable>> & java.io.Serializable', infer(ast).name)
     end
   end
 
@@ -227,9 +232,9 @@ class TyperTest < Test::Unit::TestCase
 
     assert_not_equal(':error', infer(ast).name)
 
-    assert_equal(@types.getBooleanType, inferred_type(ast.condition))
-    assert_equal(@types.getFloatType(1.0), inferred_type(ast.body))
-    assert_equal(@types.getFloatType(1.0), inferred_type(ast.elseBody))
+    assert_resolved(@types.getBooleanType, inferred_type(ast.condition))
+    assert_resolved(@types.getFloatType(1.0), inferred_type(ast.body))
+    assert_resolved(@types.getFloatType(1.0), inferred_type(ast.elseBody))
   end
 
   def test_if
@@ -246,16 +251,16 @@ class TyperTest < Test::Unit::TestCase
     # unresolved types for the baz call
     assert_equal(':error', inferred_type(ast.elseBody).name)
 
-    assert_equal(@types.getFixnumType(1), inferred_type(ast.condition))
-    assert_equal(@types.getFloatType(1.0), inferred_type(ast.body))
+    assert_resolved(@types.getFixnumType(1), inferred_type(ast.condition))
+    assert_resolved(@types.getFloatType(1.0), inferred_type(ast.body))
 
     ast2 = parse("def baz; 2.0; end")
     typer.infer(ast2, true)
 
-    assert_equal(@types.getFloatType(1.0), inferred_type(ast2.body).returnType)
+    assert_resolved(@types.getFloatType(1.0), inferred_type(ast2.body).returnType)
 
-    assert_equal(@types.getFloatType(1.0), inferred_type(ast))
-    assert_equal(@types.getFloatType(1.0), inferred_type(ast.elseBody))
+    assert_resolved(@types.getFloatType(1.0), inferred_type(ast))
+    assert_resolved(@types.getFloatType(1.0), inferred_type(ast.elseBody))
   end
 
   def test_class
@@ -271,8 +276,8 @@ class TyperTest < Test::Unit::TestCase
   end
 
   def test_rescue_w_different_type_raises_inference_error_when_expression
-    pend_on_jruby "1.7.13" do
-      ast = parse("1 + begin true; 1.0; rescue; ''; end")
+    pend "should verification be done in infer phase" do
+      ast = parse("a:Integer = begin true; 1.0; rescue; ''; end")
       infer(ast, true)
       assert_errors_including "Incompatible types", @typer, ast
     end
@@ -293,7 +298,7 @@ class TyperTest < Test::Unit::TestCase
 
   def test_static_method
     ast = parse("class Foo; def self.bar;1; end; end; Foo.bar")
-    assert_equal(@types.getFixnumType(1), infer(ast))
+    assert_resolved(@types.getFixnumType(1), infer(ast))
   end
 
   def test_vcall
@@ -301,8 +306,9 @@ class TyperTest < Test::Unit::TestCase
     assert_kind_of(VCall, ast.body(2))
     assert_kind_of(VCall, ast.body(3))
     infer(ast)
-    assert_equal(@types.getFixnumType(1), inferred_type(ast.body(2)))
-    assert_equal(@types.getNullType, inferred_type(ast.body(3)))
+    assert_resolved(@types.getFixnumType(1), inferred_type(ast.body(2)))
+    object_future = @types.wrap(Type.getType("Ljava/lang/Object;"))
+    assert_resolved(object_future, inferred_type(ast.body(3)).member.returnType)
 
     assert_kind_of(LocalAccess, ast.body(2).get(0))
     assert_kind_of(FunctionalCall, ast.body(3).get(0).get(0))
@@ -310,11 +316,16 @@ class TyperTest < Test::Unit::TestCase
 
   def test_import
     pend_on_jruby "1.7.13" do
-      ast = parse("import FooBar")
-      assert_equal("Void", infer(ast).name)
+      ast = parse("import java.util.Map")
+      assert_equal("void", infer(ast).name)
       ast = parse("import foobar")
       infer(ast)
       assert_errors_including("Cannot find class foobar", @typer, ast)
     end
   end
+
+  def assert_resolved(a, b)
+    assert_equal a.resolve, b
+  end
+
 end
