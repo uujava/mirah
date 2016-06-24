@@ -112,6 +112,24 @@ class CollectionExtensionsTest < Test::Unit::TestCase
   end
 
   # implicitly tests each_with_index
+  def test_each_with_index
+    cls, = compile(%q[
+      [0,1,2,3,4].each_with_index do |a, index|
+        puts index
+        next if index == 2
+      end
+    ])
+    assert_run_output("0\n1\n2\n3\n4\n", cls)
+    cls, = compile(%q[
+      [0,1,2,3,4].each_with_index do |a, index|
+        next if index == 2
+        puts index
+      end
+    ])
+    assert_run_output("0\n1\n3\n4\n", cls)
+
+  end
+  # implicitly tests each_with_index
   def test_mapa_on_list
     cls, = compile(%q[
       x = ["a","b","c","d"].mapa do |s|

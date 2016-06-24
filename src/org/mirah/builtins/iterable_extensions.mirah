@@ -46,13 +46,27 @@ class IterableExtensions
   
   # Iterates over each element of the Iterable, yielding each time both the element and the index in the Iterable.
   macro def each_with_index(block:Block)
-    value = block.arguments.required(0)
-    count = block.arguments.required(1).name.identifier
+    if block.arguments && block.arguments.required_size() > 0
+      arg = block.arguments.required(0)
+      name = arg.name.identifier
+      type = arg.type if arg.type
+    else
+      name = gensym
+      type = nil:TypeName
+    end
+    it = gensym
+
+    getter = quote { `it`.next }
+    if type
+      getter = Cast.new(type.position, type, getter)
+    end
+    i = block.arguments.required(1).name.identifier
     quote do
-      `count` = 0
-      `@call.target`.each do |`value`|
+      while `it`.hasNext
+        init {`it` = `@call.target`.iterator; ; `i` = 0}
+        pre {`name` = `getter`}
+        post {`i` = `i` + 1}
         `block.body`
-        `count` = `count`+1 
       end
     end
   end
