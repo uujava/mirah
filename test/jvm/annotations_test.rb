@@ -18,7 +18,7 @@ class AnnotationsTest < Test::Unit::TestCase
 
   def test_annotation_on_a_argument
     cls, = compile(<<-EOF)
-      def foo($Deprecated x:int)
+      def foo($Deprecated x:int, $Deprecated y:String='', $Deprecated *z:Integer)
         'foo'
       end
     EOF
@@ -27,6 +27,8 @@ class AnnotationsTest < Test::Unit::TestCase
     java_method = cls.java_class.declared_class_methods[0]
     assert_nil java_method.annotation(deprecated)
     assert_not_nil java_method.parameter_annotations[0][0]
+    assert_not_nil java_method.parameter_annotations[1][0]
+    assert_not_nil java_method.parameter_annotations[2][0]
   end
 
   def test_annotation_on_a_argumenttest_from_constant
