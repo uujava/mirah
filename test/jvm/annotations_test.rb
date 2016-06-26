@@ -1,4 +1,5 @@
 class AnnotationsTest < Test::Unit::TestCase
+
   def deprecated
     @deprecated ||= java.lang.Deprecated.java_class
   end
@@ -13,6 +14,36 @@ class AnnotationsTest < Test::Unit::TestCase
 
     assert_not_nil cls.java_class.java_method('foo').annotation(deprecated)
     assert_nil cls.java_class.annotation(deprecated)
+  end
+
+  def test_annotation_on_a_argument
+    cls, = compile(<<-EOF)
+      def foo($Deprecated x:int)
+        'foo'
+      end
+    EOF
+
+    assert_nil cls.java_class.annotation(deprecated)
+    java_method = cls.java_class.declared_class_methods[0]
+    assert_nil java_method.annotation(deprecated)
+    assert_not_nil java_method.parameter_annotations[0][0]
+  end
+
+  def test_annotation_on_a_argumenttest_from_constant
+    return
+    cls, = compile(<<-EOF)
+      import org.foo.IntAnno
+      class IntValAnnotation
+        Value = 1
+        def bar($IntAnno[name: "bar", value: Value] x:int):void
+        end
+      end
+      method = IntValAnnotation.class.getDeclaredMethods[0]
+      anno = method.getAnnotation(IntAnno.class)
+      puts anno.value
+    EOF
+
+    assert_run_output("1\n", cls)
   end
 
   def test_annotation_on_a_class

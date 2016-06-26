@@ -1089,16 +1089,19 @@ class Typer < SimpleNodeVisitor
   end
 
   def visitRequiredArgument(arg, expression)
+    inferAll(arg.annotations)
     getArgumentType arg
   end
 
   def visitOptionalArgument(arg, expression)
+    inferAll(arg.annotations)
     type = getArgumentType arg
     type.assign(infer(arg.value), arg.value.position)
     type
   end
 
   def visitRestArgument(arg, expression)
+    inferAll(arg.annotations)
     if arg.type
       getLocalType(arg).declare(
         @types.getArrayType(getTypeOf(arg, arg.type.typeref)),

@@ -69,7 +69,9 @@ class MethodCompiler < BaseCompiler
   def compile(cv:ClassVisitor, mdef:MethodDefinition):void
     @@log.fine "Compiling method #{mdef.name.identifier}"
     @builder = createBuilder(cv, mdef)
-    context[AnnotationCompiler].compile(mdef.annotations, @builder)
+    anno_compiler = context[AnnotationCompiler]
+    anno_compiler.compile(mdef.annotations, @builder)
+    anno_compiler.compile(mdef.arguments, @builder)
     isExpression = isVoid() ? nil : Boolean.TRUE
     if (@flags & (Opcodes.ACC_ABSTRACT | Opcodes.ACC_NATIVE)) == 0
       prepareBinding(mdef)

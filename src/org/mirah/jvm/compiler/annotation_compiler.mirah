@@ -50,6 +50,17 @@ class MethodAnnotationFactory implements AnnotationVisitorFactory
   end
 end
 
+class ArgumentsAnnotationFactory implements AnnotationVisitorFactory
+  def initialize(visitor:MethodVisitor, arg_index:int)
+    @visitor = visitor
+    @arg_index = arg_index
+  end
+
+  def create(type, runtime)
+    @visitor.visitParameterAnnotation(@arg_index, type, runtime)
+  end
+end
+
 class FieldAnnotationFactory implements AnnotationVisitorFactory
   def initialize(visitor:FieldVisitor)
     @visitor = visitor
@@ -77,6 +88,29 @@ class AnnotationCompiler < BaseCompiler
   
   def compile(annotations:AnnotationList, visitor:MethodVisitor):void
     compile(annotations, MethodAnnotationFactory.new(visitor))
+  end
+
+  def compile(args:Arguments, visitor:MethodVisitor):void
+    arg_index = 0
+    args.required_size.times do |a|
+      arg = args.required(a)
+      compile(arg.annotations, ArgumentsAnnotationFactory.new(visitor, arg_index))
+      arg_index += 1
+    end
+    args.optional_size.times do |a|
+      optarg = args.optional(a)
+      compile(optarg.annotations, ArgumentsAnnotationFactory.new(visitor, arg_index))
+      arg_index += 1
+    end
+    if args.rest
+      compile(args.rest.annotations, ArgumentsAnnotationFactory.new(visitor, arg_index))
+      arg_index += 1
+    end
+    args.required2_size.times do |a|
+      arg = args.required2(a)
+      compile(arg.annotations, ArgumentsAnnotationFactory.new(visitor, arg_index))
+      arg_index += 1
+    end
   end
 
   def compile(annotations:AnnotationList, visitor:FieldVisitor):void
