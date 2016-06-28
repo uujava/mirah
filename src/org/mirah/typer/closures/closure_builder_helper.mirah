@@ -260,18 +260,23 @@ class ClosureBuilderHelper
 
     m_types= mtype.parameterTypes
 
-
+    # TODO better handle verification errors
+    raise IllegalStateException.new "Block #{block.position} has #{args.required.size} argument(s). That is more than implemented method: #{mtype}" if m_types.size < args.required.size
     # Add check casts in if the argument has a type
+    # create a bridge method if necessary
+    requires_bridge = false
     i=0
     args.required.each do |a: RequiredArgument|
       if a.type
         m_type = m_types[i]:MirrorType
         a_type = types.get(parent_scope, a.type.typeref).resolve
         if !a_type.equals(m_type) # && m_type:BaseType.assignableFrom(a_type) # could do this, then it'd only add the checkcast if it will fail...
+          @@log.fine("#{name} requires bridge method because declared type: #{a_type} != iface type: #{m_type}")
           block_method.body.insert(0,
             Cast.new(a.position,
               Constant.new(SimpleString.new(m_type.name)), LocalAccess.new(a.position, a.name))
             )
+          requires_bridge = true
         end
       end
       i+=1
@@ -281,31 +286,6 @@ class ClosureBuilderHelper
 #   @scoper.setScope(block_method,method_scope)
 
     methods.add(block_method)
-
-    # create a bridge method if necessary
-    requires_bridge = false
-    # What I'd like it to look like:
-    # args.required.zip(m_types).each do |a, m|
-    #   next unless a.type
-    #   a_type = @types.get(parent_scope, a.type.typeref)
-    #   if a_type != m
-    #     requires_bridge = true
-    #     break
-    #   end
-    # end
-    i=0
-    args.required.each do |a: RequiredArgument|
-      if a.type
-        m_type = m_types[i]:MirrorType
-        a_type = types.get(parent_scope, a.type.typeref).resolve
-        if !a_type.equals(m_type) # && m_type:BaseType.assignableFrom(a_type)
-          @@log.fine("#{name} requires bridge method because declared type: #{a_type} != iface type: #{m_type}")
-          requires_bridge = true
-          break
-        end
-      end
-      i+=1
-    end
 
     if requires_bridge
       # Copy args without type information so that the normal iface lookup will happen
