@@ -163,13 +163,12 @@ class MacroBuilder; implements org.mirah.macros.Compiler
   def buildExtension(cloned: MacroDefinition, orig: MacroDefinition )
     @scopes.copyScopeFrom(orig, cloned)
     ast = constructAst(cloned)
-    @backend.logAst(ast)
-    @typer.infer(ast)
+
     klass = @backend.compileAndLoadExtension(ast)
 
     class_def:ClassDefinition = orig.findAncestor(ClassDefinition.class)
 
-    addToExtensions(class_def, klass)
+    addToExtensions(class_def, klass.getName)
     registerLoadedMacro(cloned, klass)
   end
 
@@ -446,7 +445,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
              SimpleString.new('block'), Collections.emptyList, nil)
   end
 
-  def addToExtensions(classdef: ClassDefinition, klass: Class): void
+  def addToExtensions(classdef: ClassDefinition, class_name: String): void
     if classdef.nil?
       return
     end
@@ -471,7 +470,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
     end
 
     array:Array = extensions.values(0).value
-    new_entry = SimpleString.new(klass.getName)
+    new_entry = SimpleString.new(class_name)
     entry_type = @typer.infer(new_entry)
     array.values.add(new_entry)
     if @loader

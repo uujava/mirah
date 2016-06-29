@@ -15,22 +15,11 @@
 
 package org.mirah.tool
 
-import java.io.BufferedOutputStream
-import java.io.File
-import java.io.FileOutputStream
+
 import org.mirah.Version
 
 class Mirahc < MirahTool
   VERSION = Version.VERSION
-
-  def consumeClass(filename:String, bytes:byte[]):void
-    file = File.new(destination, "#{filename.replace(?., ?/)}.class")
-    parent = file.getParentFile
-    parent.mkdirs if parent
-    output = BufferedOutputStream.new(FileOutputStream.new(file))
-    output.write(bytes)
-    output.close
-  end
 
   def self.main(args:String[]):void
     result = Mirahc.new.compile(args)

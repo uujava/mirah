@@ -48,13 +48,11 @@ class ExtensionCleanup < NodeScanner
   end
 
   def initialize(macro_backend: Backend,
-                 extension_classes: Map,
-                 macro_destination: String,
-                 macro_typer: Typer)
+                 macro_typer: Typer,
+                 macro_consumer: BytecodeConsumer)
     @macro_backend = macro_backend
-    @extension_classes = extension_classes
-    @macro_destination = macro_destination
     @macro_typer = macro_typer
+    @macro_consumer = macro_consumer
   end
 
   def enterPackage(pac, map)
@@ -91,10 +89,7 @@ class ExtensionCleanup < NodeScanner
     @macro_typer.infer(script, false)
     @macro_backend.clean(script, nil)
     @macro_backend.compile(script, nil)
-
-    class_name_written = Backend.write_out_file(
-      @macro_backend, @extension_classes, @macro_destination)
-    @@log.fine "extensions file compiled #{class_name_written}"
+    @macro_backend.generate(@macro_consumer)
     true
   end
 end

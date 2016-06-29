@@ -35,7 +35,13 @@ class RunCommand < MirahTool
   end
 
   def consumeClass(filename:String, bytes:byte[]):void
-    @class_map[filename] = bytes
+    # skip extensions - they are loaded by macro_builder at compile time
+    unless filename.contains "$Extension"
+      @class_map[filename] = bytes
+    else
+      # store extensions to disk. used in test_separate_compilation
+      super
+    end
   end
 
   def run

@@ -24,7 +24,11 @@ import org.mirah.jvm.mirrors.debug.DebuggerInterface
 import org.mirah.util.SimpleDiagnostics
 import org.mirah.util.TooManyErrorsException
 
-abstract class MirahTool implements BytecodeConsumer
+import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileOutputStream
+
+class MirahTool implements BytecodeConsumer
   def initialize
     reset()
   end
@@ -48,7 +52,6 @@ abstract class MirahTool implements BytecodeConsumer
     end
     @compiler = MirahCompiler.new(@compiler_args)
     parseAllFiles()
-    @compiler.infer
     @compiler.compile(self)
     0
   rescue TooManyErrorsException
@@ -107,5 +110,14 @@ abstract class MirahTool implements BytecodeConsumer
 
   def compiler
     @compiler
+  end
+
+  def consumeClass(filename:String, bytes:byte[]):void
+    file = File.new(destination, "#{filename.replace(?., ?/)}.class")
+    parent = file.getParentFile
+    parent.mkdirs if parent
+    output = BufferedOutputStream.new(FileOutputStream.new(file))
+    output.write(bytes)
+    output.close
   end
 end

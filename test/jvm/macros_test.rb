@@ -457,22 +457,6 @@ class MacrosTest < Test::Unit::TestCase
     assert_run_output("one\n", script)
   end
 
-  def test_separate_compilation_different_macro_dest
-    compile(<<-CODE, separate_macro_dest: true)
-      class InlineTwoSayer
-        macro def say_two
-          quote do
-            puts "two"
-          end
-        end
-      end
-    CODE
-    script, _ =compile(<<-CODE, separate_macro_dest: true)
-      InlineTwoSayer.new.say_two
-    CODE
-    assert_run_output("two\n", script)
-  end
-  
   def test_import_star_with_macro_def
     cls1, cls2 = compile([<<-EOF1, <<-EOF2])
       package org.bar.p1

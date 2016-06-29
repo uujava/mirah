@@ -66,11 +66,6 @@ module JVMCompiler
     if options[:verbose]
       args << '--verbose'
     end
-    if options[:separate_macro_dest]
-      macro_dest = TEST_DEST.sub('classes','macro_classes')
-      args += ["--macro-dest", macro_dest,
-               "--macroclasspath", Mirah::Env.encode_paths([macro_dest])]
-    end
 
     cmd = build_command name, code
     compile_or_raise cmd, args

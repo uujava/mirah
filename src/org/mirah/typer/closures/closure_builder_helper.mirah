@@ -260,14 +260,12 @@ class ClosureBuilderHelper
 
     m_types= mtype.parameterTypes
 
-    # TODO better handle verification errors
-    raise IllegalStateException.new "Block #{block.position} has #{args.required.size} argument(s). That is more than implemented method: #{mtype}" if m_types.size < args.required.size
     # Add check casts in if the argument has a type
     # create a bridge method if necessary
     requires_bridge = false
     i=0
     args.required.each do |a: RequiredArgument|
-      if a.type
+      if a.type and i < m_types.size
         m_type = m_types[i]:MirrorType
         a_type = types.get(parent_scope, a.type.typeref).resolve
         if !a_type.equals(m_type) # && m_type:BaseType.assignableFrom(a_type) # could do this, then it'd only add the checkcast if it will fail...

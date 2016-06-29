@@ -39,6 +39,7 @@ import org.mirah.MirahLogFormatter
 import org.mirah.jvm.compiler.Backend
 import org.mirah.jvm.compiler.ExtensionCleanup
 import org.mirah.jvm.compiler.BytecodeConsumer
+import org.mirah.jvm.compiler.MacroConsumer
 import org.mirah.jvm.compiler.JvmVersion
 import org.mirah.jvm.mirrors.MirrorTypeSystem
 import org.mirah.jvm.mirrors.BetterScopeFactory
@@ -75,8 +76,7 @@ class MirahCompiler implements JvmBackend
   def initialize(diagnostics: SimpleDiagnostics, compiler_args: MirahArguments, debugger: DebuggerInterface=nil)
     @diagnostics = diagnostics
     @jvm = compiler_args.jvm_version
-    @destination = compiler_args.destination
-    @macro_destination = compiler_args.real_macro_destination
+
     @debugger = debugger
 
     @context = context = Context.new
@@ -166,7 +166,7 @@ class MirahCompiler implements JvmBackend
     node
   end
 
-  def infer
+  private def infer
     sorted_asts = @asts # ImportSorter.new.sort(@asts)
 
     sorted_asts.each do |node: Node|
@@ -222,6 +222,9 @@ class MirahCompiler implements JvmBackend
   end
 
   def compileAndLoadExtension(ast)
+    logAst(ast)
+    @macro_typer.infer(ast)
+
     logInferred(Level.FINE, ast, @macro_typer)
     processInferenceErrors(ast, @macro_context)
     failIfErrors
@@ -231,20 +234,17 @@ class MirahCompiler implements JvmBackend
     failIfErrors
 
     @macro_backend.compile(ast, nil)
-
-    class_name = Backend.write_out_file(
-      @macro_backend, @extension_classes, @macro_destination)
-
-    @extension_loader.loadClass(class_name)
+    @macro_consumer.reset
+    @macro_backend.generate @macro_consumer
+    @macro_consumer.load_class
   end
 
-  def clean:void
+  private def clean:void
     @asts.each do |node: Script|
       @backend.clean(node, nil)
       node.accept(ExtensionCleanup.new(@macro_backend,
-                 @extension_classes,
-                 @macro_destination,
-                 @macro_typer),
+                 @macro_typer,
+                 @macro_consumer),
                 HashMap.new)
 
       processInferenceErrors(node, @context)
@@ -258,6 +258,8 @@ class MirahCompiler implements JvmBackend
   end
 
   def compile(generator: BytecodeConsumer)
+    @macro_consumer = MacroConsumer.new generator
+    infer
     clean
     unless context[MirahArguments].skip_compile
       @asts.each do |node: Script|
@@ -312,12 +314,6 @@ class MirahCompiler implements JvmBackend
         macrocp, MirahCompiler.class.getClassLoader())
     @context[ClassLoader] = macro_class_loader
     @macro_context[ClassLoader] = macro_class_loader
-
-    @extension_classes = {}
-    extension_parent = URLClassLoader.new(
-       macrocp, Mirahc.class.getClassLoader())
-    @extension_loader = MirahClassLoader.new(
-       extension_parent, @extension_classes)
 
     @macro_context[TypeSystem] = @macro_types = MirrorTypeSystem.new(
         @macro_context, macroloader)

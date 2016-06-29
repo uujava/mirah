@@ -44,7 +44,6 @@ class MirahArguments
                 code_sources: List,
                 jvm_version: JvmVersion,
                 destination: String,
-                macro_destination: String,
                 diagnostics: SimpleDiagnostics,
                 vloggers: String,
                 verbose: boolean,
@@ -69,10 +68,6 @@ class MirahArguments
     @env = env
     @encoding = EncodedCodeSource.DEFAULT_CHARSET
     @skip_compile = false
-  end
-
-  def real_macro_destination
-    @macro_destination || @destination
   end
 
   def classpath= classpath: String
@@ -195,8 +190,8 @@ class MirahArguments
 
     parser.addFlag(
         ['macro-dest'], 'DESTINATION',
-        'Directory where macro class files should be saved. Defaults to dest.'
-    ) { |dest| compiler_args.macro_destination = dest }
+        'DEPRECATED: Use of macro-dest is deprecated and has no effect. Use macro registration API.'
+    ) { System.err.puts 'DEPRECATED: Use of macro-dest is deprecated and has no effect. Use macro registration API.'  }
 
     parser.addFlag(['all-errors'],
         'Display all compilation errors, even if there are a lot.') {

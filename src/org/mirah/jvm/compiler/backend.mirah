@@ -17,6 +17,7 @@ package org.mirah.jvm.compiler
 
 import java.util.Map
 
+
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -26,13 +27,16 @@ import mirah.lang.ast.Script
 import org.mirah.typer.Typer
 import org.mirah.util.Context
 import org.mirah.util.SimpleDiagnostics
+import org.mirah.util.Logger
 import org.mirah.macros.Compiler
+import org.mirah.MirahClassLoader
 
 interface BytecodeConsumer
   def consumeClass(filename:String, bytecode:byte[]):void; end
 end
 
 class Backend
+
   def initialize(context:Context)
     @context = context
     @diagnostics = context[SimpleDiagnostics]
@@ -42,21 +46,6 @@ class Backend
     unless @context[JvmVersion]
       @context[JvmVersion] = JvmVersion.new
     end
-  end
-
-  def initialize(typer:Typer)
-    @context = Context.new
-    @context[Typer] = typer
-    @diagnostics = SimpleDiagnostics.new(true)
-    @context[DiagnosticListener] = @diagnostics
-    @context[Compiler] = typer.macro_compiler
-    @context[AnnotationCompiler] = AnnotationCompiler.new(@context)
-    @compiler = ScriptCompiler.new(@context)
-  end
-
-  def visit(script:Script, arg:Object):void
-    clean(script, arg)
-    compile(script, arg)
   end
 
   def clean(script:Script, arg:Object):void
@@ -73,22 +62,33 @@ class Backend
     @compiler.generate(consumer)
   end
 
+end
 
-  def self.write_out_file(macro_backend: Backend, class_map: Map, destination: String): String
-    first_class_name = nil
-    macro_backend.generate do |filename, bytes|
+class MacroConsumer implements BytecodeConsumer
+
+  @@log = Logger.getLogger(MacroConsumer.class.getName)
+
+  def initialize(parent:BytecodeConsumer)
+    @extension_classes = {}
+    extension_parent = MacroConsumer.class.getClassLoader()
+    @extension_loader = MirahClassLoader.new(
+       extension_parent, @extension_classes)
+    @parent = parent
+  end
+
+  def consumeClass(filename, bytes):void
       classname = filename.replace(?/, ?.)
-      first_class_name ||= classname if classname.contains('$Extension')
-      class_map[classname] = bytes
+      @class_name ||= classname if classname.contains('$Extension')
+      @extension_classes[classname] = bytes
+      @parent.consumeClass(filename, bytes)
+      @@log.fine "extensions file #{filename} compiled for: #{@class_name}"
+  end
 
-      file = File.new(destination, "#{filename.replace(?., ?/)}.class")
-      parent = file.getParentFile
-      parent.mkdirs if parent
+  def reset
+    @class_name = nil
+  end
 
-      output = BufferedOutputStream.new(FileOutputStream.new(file))
-      output.write(bytes)
-      output.close
-    end
-    first_class_name
+  def load_class:Class
+     @extension_loader.loadClass @class_name
   end
 end
