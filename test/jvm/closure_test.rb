@@ -103,7 +103,7 @@ class ClosureTest < Test::Unit::TestCase
 
   def test_doubly_nested_lambda
     cls, = compile(%q[
-      class Foo
+      abstract class Foo
         abstract def test(param:String); end
       end
       

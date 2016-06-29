@@ -17,12 +17,16 @@ package org.mirah.jvm.compiler
 
 import java.io.File
 import java.util.Collections
+import java.util.List
 import java.util.LinkedList
 import org.mirah.util.Logger
 import mirah.lang.ast.*
 import org.mirah.util.Context
 import org.mirah.jvm.types.JVMType
 import org.mirah.jvm.types.JVMTypeUtils
+import org.mirah.jvm.mirrors.Member
+import org.mirah.jvm.mirrors.MirrorType
+import org.mirah.jvm.mirrors.MacroMember
 
 import mirah.objectweb.asm.ClassWriter
 import mirah.objectweb.asm.Opcodes
@@ -181,5 +185,52 @@ class ClassCompiler < BaseCompiler implements InnerClassCompiler
   
   def innerClasses
     Collections.unmodifiableCollection(@innerClasses)
+  end
+
+  protected def verify
+    return if JVMTypeUtils.isAbstract(@type)
+    # naive check all abstract methods implemented
+    abstract_methods = []
+    impl_methods = []
+    # TODO does this check cover bridge, synthetic and generic methods properly???
+    type = @type:MirrorType
+    collect_methods(type.getAllDeclaredMethods, abstract_methods, impl_methods)
+    type.directSupertypes.each do |super_type: MirrorType|
+       collect_methods(super_type.getAllDeclaredMethods, abstract_methods, impl_methods)
+    end
+    @@log.fine "#{@type} abstract signatures: #{abstract_methods}"
+    @@log.fine "#{@type} implemented signatures: #{impl_methods}"
+    abstract_methods.removeAll(impl_methods) if abstract_methods.size > 0
+
+    if abstract_methods.size > 0
+      raise VerifyError.new("Abstract methods not implemented: #{get_methods_spec(abstract_methods)} for not abstract class #{@type}")
+    end
+  end
+
+  private def collect_methods(members: List, abstract_methods:List, impl_methods:List)
+    members.each do |member: Member|
+      next if member.kind_of? MacroMember
+      next if JVMTypeUtils.isStatic(member)
+      spec = [member.name, member.argumentTypes]
+      if member.isAbstract
+        abstract_methods << spec
+      else
+        impl_methods << spec
+      end
+    end
+  end
+
+  private def get_methods_spec(list:List):String
+    sb = StringBuilder.new
+    list.each_with_index do |data:List, i|
+      sb.append(';') unless i == 0
+      sb.append(data[0]).append('(')
+      data[1]:List.each_with_index do |arg, j|
+        sb.append (',') unless j == 0
+        sb.append arg
+      end
+      sb.append(')')
+    end
+    sb.toString
   end
 end

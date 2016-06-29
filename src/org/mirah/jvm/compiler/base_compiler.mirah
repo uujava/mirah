@@ -160,6 +160,7 @@ class BaseCompiler < SimpleNodeVisitor
 
   def visit(node:Node, arg:Object):void
     begin
+      verify
       node.accept(self, arg)
     rescue ReportedException => ex
       raise ex
@@ -201,5 +202,8 @@ class BaseCompiler < SimpleNodeVisitor
   def visitFieldAnnotationRequest(node, expression)
     # ignore
   end
-  
+
+  protected def verify
+    # raise exception in subclasses if not verified
+  end
 end
