@@ -126,7 +126,7 @@ class CallCompiler < BaseCompiler implements MemberVisitor
           argTypes[i] = getInferredType(@args[i])
         end
         method = getInferredType(@target).getMethod(@name, Arrays.asList(argTypes))
-        raise "couldn't find method with name '#{@name}' for #{@target} with type #{getInferredType(@target)} #{getInferredType(@target).getClass} during compile." unless method
+        raise VerifyError, "couldn't find method with name '#{@name}' for #{@target} with type #{getInferredType(@target)} #{getInferredType(@target).getClass} during compile." unless method
         method
       end
     end
@@ -213,7 +213,7 @@ class CallCompiler < BaseCompiler implements MemberVisitor
     elsif name == '^'
       GeneratorAdapter.XOR
     else
-      raise IllegalArgumentException, "Unsupported operator #{name}"
+      raise VerifyError, "Unsupported operator #{name}"
     end
   end
 
@@ -244,7 +244,7 @@ class CallCompiler < BaseCompiler implements MemberVisitor
     elsif name == '!=' || name == '!=='
       GeneratorAdapter.NE
     else
-      raise IllegalArgumentException, "Unsupported comparison #{name}"
+      raise VerifyError, "Unsupported comparison #{name}"
     end
   end
   
@@ -342,7 +342,7 @@ class CallCompiler < BaseCompiler implements MemberVisitor
     recordPosition
     name = method.name
     name = name.substring(0, name.length - 1) if name.endsWith("=")
-    raise IllegalArgumentException.new if name.endsWith("=")
+    raise VerifyError, "field #{name} ends with =" if name.endsWith("=")
     @method.putField(method.declaringClass.getAsmType, name, method.returnType.getAsmType)
   end
   def visitStaticFieldAssign(method:JVMMethod, expression:boolean)
@@ -351,7 +351,7 @@ class CallCompiler < BaseCompiler implements MemberVisitor
     recordPosition
     name = method.name
     name = name.substring(0, name.length - 1) if name.endsWith("=")
-    raise IllegalArgumentException.new if name.endsWith("=")
+    raise VerifyError, "field #{name} ends with =" if name.endsWith("=")
     @method.putStatic(method.declaringClass.getAsmType, name, method.returnType.getAsmType)
   end
   def visitArrayAccess(method:JVMMethod, expression:boolean)

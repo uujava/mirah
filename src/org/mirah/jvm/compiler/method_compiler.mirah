@@ -271,7 +271,7 @@ class MethodCompiler < BaseCompiler
     end
 
     if method == nil or target == nil
-     raise "No method #{@name} params: #{paramTypes} found for super call in #{node.position}"
+     raise VerifyError, "No method #{@name} params: #{paramTypes} found for super call in #{node.position}"
     end
 
     @builder.invokeSpecial(target.getAsmType, methodDescriptor(method))
@@ -307,7 +307,7 @@ class MethodCompiler < BaseCompiler
     end
     future = typer.type_system.getLocalType(
         getScope(local), name, local.position)
-    raise "error type found by compiler #{future.resolve}" if future.resolve.kind_of? ErrorType
+    raise VerifyError, "error type found by compiler #{future.resolve}" if future.resolve.kind_of? ErrorType
 
     type = JVMType(
       future.resolve
@@ -371,7 +371,7 @@ class MethodCompiler < BaseCompiler
   end
 
   def visitFunctionalCall(call, expression)
-    raise "call to #{call.name.identifier}'s block has not been converted to a closure at #{call.position}" if call.block
+    raise VerifyError, "call to #{call.name.identifier}'s block has not been converted to a closure at #{call.position}" if call.block
 
     name = call.name.identifier
 
@@ -387,7 +387,7 @@ class MethodCompiler < BaseCompiler
   end
   
   def visitCall(call, expression)
-    raise "call to #{call.name.identifier}'s block has not been converted to a closure at #{call.position}" if call.block
+    raise VerifyError, "call to #{call.name.identifier}'s block has not been converted to a closure at #{call.position}" if call.block
 
     compiler = CallCompiler.new(self, @builder, call.position, call.target, call.name.identifier, call.parameters, getInferredType(call))
     compiler.compile(expression != nil)
@@ -482,7 +482,7 @@ class MethodCompiler < BaseCompiler
   def visitFieldAssign(node, expression)
     klass = @selfType.getAsmType
     name = node.name.identifier
-    raise IllegalArgumentException.new if name.endsWith("=")
+    raise VerifyError, "field name #{name} ends with ="  if name.endsWith("=")
     isStatic = node.isStatic || self.isStatic
     type = @klass.getDeclaredField(node.name.identifier).returnType
     @builder.loadThis unless isStatic

@@ -26,12 +26,6 @@ class SimpleDiagnostics implements DiagnosticListener
     end
   end
 
-  def log(kind:Kind, position:String, message:String):void
-    System.err.println(position) if position
-    System.err.print(@prefixes[kind])
-    System.err.println(message)
-  end
-
   def report(diagnostic)
     source = diagnostic.getSource:CodeSource if diagnostic.getSource.kind_of?(CodeSource)
     position = if source
@@ -75,5 +69,11 @@ class SimpleDiagnostics implements DiagnosticListener
       end
     end
     log(diagnostic.getKind, position, message)
+  end
+
+  private def log(kind:Kind, position:String, message:String):void
+    System.err.println(position) if position
+    System.err.print(@prefixes[kind])
+    System.err.println(message)
   end
 end

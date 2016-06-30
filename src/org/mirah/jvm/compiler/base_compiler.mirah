@@ -84,7 +84,8 @@ class BaseCompiler < SimpleNodeVisitor
     elsif ex.getClass.getName.equals "org.jruby.exceptions.RaiseException"
       raise ex
     else
-      @@log.log Level.SEVERE, "Exception in compiler for #{position}", ex
+      @@log.log Level.SEVERE, "Exception #{ex} in compiler at #{position}"
+      @@log.log Level.FINE,"Stack trace at #{position}", ex
       reportError("Internal error in compiler: #{ex.getClass} #{ex.getMessage}", position)
       
      # @diagnostics.report(MirahDiagnostic.error(position, "Internal compiler error: #{ex} #{ex.getMessage}"))
