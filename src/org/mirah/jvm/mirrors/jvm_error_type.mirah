@@ -98,4 +98,16 @@ class JvmErrorType < ErrorType implements MirrorType, ErrorTypeModel
   def erasure
     self
   end
+  def add(method)
+    raise UnsupportedOperationException.new "operation add(method) unsupported for #{self}"
+  end
+  def hasMember(name)
+    raise UnsupportedOperationException.new "operation hasMember(name) unsupported for #{self}"
+  end
+  def declareField(field)
+    raise UnsupportedOperationException.new "operation declareField(field) unsupported for #{self}"
+  end
+  def getDeclaredMethods(name)
+    raise UnsupportedOperationException.new "operation getDeclaredMethods(name) unsupported for #{self}"
+  end
 end

@@ -16,13 +16,21 @@ require 'test_helper'
 
 module JVMCompiler
   java_import 'org.mirah.tool.RunCommand'
-  java_import 'org.mirah.util.SimpleDiagnostics'
+  java_import 'javax.tools.DiagnosticListener'
   
   System = java.lang.System
   JVM_VERSION = ENV['MIRAH_TEST_JVM_VERSION'] || '1.7'
 
-  class TestDiagnostics < SimpleDiagnostics
+  class TestDiagnostics
+    include DiagnosticListener
+
     java_import 'java.util.Locale'
+    attr_reader :errors
+
+    def initialize
+      @errors = []
+    end
+
     def report(diagnostic)
       if diagnostic.kind.name == "ERROR"
         source =  if diagnostic.source
@@ -40,11 +48,11 @@ module JVMCompiler
                   else
                     "<unknown>"
                   end
-        raise Mirah::MirahError.new(diagnostic.getMessage(Locale.getDefault), source, diagnostic)
+        @errors << Mirah::MirahError.new(diagnostic.getMessage(Locale.getDefault), source, diagnostic)
       end
-      super
     end
   end
+
   def parse_and_resolve_types name, code
     cmd = build_command name, code
     compile_or_raise cmd, ["-d", TEST_DEST]
@@ -84,14 +92,21 @@ module JVMCompiler
     else
       cmd.addFakeFile(name, code)
     end
-    cmd.setDiagnostics(TestDiagnostics.new(false))
     cmd
   end
 
   def compile_or_raise cmd, args
-    if 0 != cmd.compile(args)
-      raise Mirah::MirahError, "Compilation failed"
+    diag = TestDiagnostics.new()
+    cmd.setDiagnostics(diag)
+    catch_err = nil
+    begin
+      error_code = cmd.compile(args)
+    rescue Exception => ex
+      catch_err = ex
     end
+    raise diag.errors[0] unless diag.errors.empty?
+    raise catch_err if catch_err
+    raise Mirah::MirahError, "Compilation failed" if error_code.nil? or error_code != 0
   end
 
   def compiler_name

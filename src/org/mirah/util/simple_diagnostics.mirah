@@ -7,11 +7,8 @@ import javax.tools.Diagnostic.Kind
 import javax.tools.DiagnosticListener
 import mirah.lang.ast.CodeSource
 
-class TooManyErrorsException < RuntimeException; end
-
-class SimpleDiagnostics; implements DiagnosticListener
+class SimpleDiagnostics implements DiagnosticListener
   def initialize(color:boolean)
-    @errors = 0
     @newline = /\r?\n/
     @prefixes = HashMap.new
     if color
@@ -27,14 +24,7 @@ class SimpleDiagnostics; implements DiagnosticListener
       @prefixes.put(Kind.NOTE, "")
       @prefixes.put(Kind.OTHER, "")
     end
-    @max_errors = 20
   end
-
-  def setMaxErrors(count:int):void
-    @max_errors = count
-  end
-
-  def errorCount; @errors; end
 
   def log(kind:Kind, position:String, message:String):void
     System.err.println(position) if position
@@ -43,7 +33,6 @@ class SimpleDiagnostics; implements DiagnosticListener
   end
 
   def report(diagnostic)
-    @errors += 1 if Kind.ERROR == diagnostic.getKind
     source = diagnostic.getSource:CodeSource if diagnostic.getSource.kind_of?(CodeSource)
     position = if source
       String.format("%s:%d:%n", source.name, diagnostic.getLineNumber)
@@ -86,8 +75,5 @@ class SimpleDiagnostics; implements DiagnosticListener
       end
     end
     log(diagnostic.getKind, position, message)
-    if @errors > @max_errors && @max_errors > 0
-      raise TooManyErrorsException
-    end
   end
 end

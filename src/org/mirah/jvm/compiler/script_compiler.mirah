@@ -20,6 +20,7 @@ import org.mirah.util.Logger
 import org.mirah.typer.Typer
 import org.mirah.typer.TypePrinter
 import org.mirah.util.Context
+import org.mirah.util.ErrorCounter
 
 class ScriptCompiler < BaseCompiler
   def self.initialize:void
@@ -29,21 +30,20 @@ class ScriptCompiler < BaseCompiler
     super(context)
     @typer = context[Typer]
     @classes = LinkedList.new
+    @diagnostics = context[ErrorCounter]
   end
   
   def visitScript(script, expression)
     visit(script.body, expression)
-  rescue Exception => ex
-    #TypePrinter.new(@typer, System.out).scan(script, nil)
-
-    buf = java::io::ByteArrayOutputStream.new
-    ps = java::io::PrintStream.new(buf)
-    printer = TypePrinter.new(@typer, ps)
-    printer.scan(script, nil)
-    ps.close()
-    @@log.fine("Inferred types for expression with errors:\n#{String.new(buf.toByteArray)}")
-
-    raise ex
+  rescue Throwable => ex
+    if @@log.fine?
+      buf = java::io::ByteArrayOutputStream.new
+      ps = java::io::PrintStream.new(buf)
+      printer = TypePrinter.new(@typer, ps)
+      printer.scan(script, nil)
+      ps.close()
+      @@log.fine("Inferred types for expression with errors:\n#{String.new(buf.toByteArray)}")
+    end
   end
     
   def visitClassDefinition(class_def, expression)
@@ -61,7 +61,7 @@ class ScriptCompiler < BaseCompiler
   def generate(consumer:BytecodeConsumer)
     until @classes.isEmpty
       compiler = @classes.removeFirst:ClassCompiler
-      consumer.consumeClass(compiler.internal_name, compiler.getBytes)
+      consumer.consumeClass(compiler.internal_name, compiler.getBytes) if @diagnostics.errorCount == 0
       @classes.addAll(compiler.innerClasses)
     end
   end

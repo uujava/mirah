@@ -43,6 +43,9 @@ class PrintStreamAdapter < Writer
   def write(str:String)
     @out.print(str)
   end
+
+  def close;end
+  def flush; @out.flush; end
 end
 
 # Prints an AST along with its inferred types.

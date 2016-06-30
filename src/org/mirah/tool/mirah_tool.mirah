@@ -15,14 +15,14 @@
 
 package org.mirah.tool
 import org.mirah.util.Logger
+import org.mirah.util.CompilationFailure
 import mirah.impl.MirahParser
 import mirah.lang.ast.CodeSource
 import mirah.lang.ast.StringCodeSource
 import org.mirah.jvm.compiler.BytecodeConsumer
 import org.mirah.jvm.compiler.JvmVersion
 import org.mirah.jvm.mirrors.debug.DebuggerInterface
-import org.mirah.util.SimpleDiagnostics
-import org.mirah.util.TooManyErrorsException
+import javax.tools.DiagnosticListener
 
 import java.io.BufferedOutputStream
 import java.io.File
@@ -41,7 +41,7 @@ class MirahTool implements BytecodeConsumer
     @compiler_args = MirahArguments.new
   end
 
-  def setDiagnostics(diagnostics: SimpleDiagnostics):void
+  def setDiagnostics(diagnostics: DiagnosticListener):void
     @compiler_args.diagnostics = diagnostics
   end
 
@@ -54,11 +54,8 @@ class MirahTool implements BytecodeConsumer
     parseAllFiles()
     @compiler.compile(self)
     0
-  rescue TooManyErrorsException
-    puts "Too many errors."
-    1
-  rescue CompilationFailure
-    puts "#{compiler_args.diagnostics.errorCount} errors"
+  rescue CompilationFailure => ex
+    puts ex.getMessage
     1
   end
 

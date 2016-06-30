@@ -123,4 +123,26 @@ class Types implements TypesModel
 
     Wildcard.new(@context, @object, extendsBound, superBound)
   end
+
+  def getDeclaredType(container,type,args)
+    raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
+  def contains(outer,inner)
+    raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
+  def unboxedType(type)
+    raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
+  def asMemberOf(type,element)
+    raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
+  def capture(type)
+    raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
+  def isSubsignature(type1,type2)
+    raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
+  def isAssignable(from,to)
+    raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
 end

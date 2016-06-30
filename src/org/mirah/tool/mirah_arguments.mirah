@@ -44,7 +44,7 @@ class MirahArguments
                 code_sources: List,
                 jvm_version: JvmVersion,
                 destination: String,
-                diagnostics: SimpleDiagnostics,
+                diagnostics: DiagnosticListener,
                 vloggers: String,
                 verbose: boolean,
                 silent: boolean,
@@ -238,8 +238,6 @@ class MirahArguments
       puts e.getMessage
       prep_for_exit 1
     end
-
-    self.diagnostics.setMaxErrors(max_errors)
 
    if @use_type_debugger && !@debugger
       console_debugger = ConsoleDebugger.new

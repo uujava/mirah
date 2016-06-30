@@ -88,4 +88,8 @@ class MethodType
   def isFullyResolved:boolean
     true
   end
+
+  def isBlock
+    false
+  end
 end

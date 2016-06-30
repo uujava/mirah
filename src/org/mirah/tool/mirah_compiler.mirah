@@ -58,9 +58,9 @@ import org.mirah.typer.Scoper
 import org.mirah.typer.Typer
 import org.mirah.typer.TypeSystem
 import org.mirah.util.ParserDiagnostics
-import org.mirah.util.SimpleDiagnostics
+import org.mirah.util.ErrorCounter
+import org.mirah.util.CompilationFailure
 import org.mirah.util.AstFormatter
-import org.mirah.util.TooManyErrorsException
 import org.mirah.util.LazyTypePrinter
 import org.mirah.util.Context
 import org.mirah.util.OptionParser
@@ -68,13 +68,11 @@ import org.mirah.util.AstChecker
 import org.mirah.plugin.CompilerPlugin
 import org.mirah.plugin.CompilerPlugins
 
-class CompilationFailure < Exception
-end
-
 class MirahCompiler implements JvmBackend
 
-  def initialize(diagnostics: SimpleDiagnostics, compiler_args: MirahArguments, debugger: DebuggerInterface=nil)
-    @diagnostics = diagnostics
+  def initialize(diagnostics: DiagnosticListener, compiler_args: MirahArguments, debugger: DebuggerInterface=nil)
+    @diagnostics = ErrorCounter.new diagnostics
+    @diagnostics.setMaxErrors(compiler_args.max_errors)
     @jvm = compiler_args.jvm_version
 
     @debugger = debugger
@@ -83,14 +81,14 @@ class MirahCompiler implements JvmBackend
     context[MirahArguments] = compiler_args
     context[JvmBackend] = self
     context[DiagnosticListener] = @diagnostics
-    context[SimpleDiagnostics] = @diagnostics
+    context[ErrorCounter] = @diagnostics
     context[JvmVersion] = @jvm
     context[DebuggerInterface] = debugger
 
     @macro_context = Context.new
     @macro_context[JvmBackend] = self
     @macro_context[DiagnosticListener] = @diagnostics
-    @macro_context[SimpleDiagnostics] = @diagnostics
+    @macro_context[ErrorCounter] = @diagnostics
     @macro_context[JvmVersion] = @jvm
     @macro_context[DebuggerInterface] = @debugger
     @macro_context[MirahArguments] = compiler_args
@@ -217,7 +215,7 @@ class MirahCompiler implements JvmBackend
 
   private def failIfErrors
     if @diagnostics.errorCount > 0
-      raise CompilationFailure.new
+      raise CompilationFailure.new @diagnostics.errorCount
     end
   end
 
@@ -268,6 +266,7 @@ class MirahCompiler implements JvmBackend
       @backend.generate(generator)
     end
     @plugins.stop
+    failIfErrors
   end
 
 

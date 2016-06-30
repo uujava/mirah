@@ -34,7 +34,6 @@ interface TypeSystem do
 
   def getRegexType:TypeFuture; end
   def getStringType:TypeFuture; end
-  def getHashType:TypeFuture; end
   def getBooleanType:TypeFuture; end
 
   # TODO: These should take a position

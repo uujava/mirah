@@ -214,6 +214,7 @@ class BetterScope
 
   # override
   def import(fullname:String, shortname:String):void; raise "import: no imports for #{getClass}" end
+  def add_import(fullname:String, shortname:String):void; raise "import: no imports for #{getClass}" end
   def staticImport(type:TypeFuture):void; raise "staticImport no imports for #{getClass}" end
   def imports:Map;  raise "imports: no imports for #{getClass}" end  # Map of short -> long; probably should be reversed.
 

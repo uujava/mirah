@@ -284,6 +284,14 @@ class MirrorProxy implements MirrorType,
       Collections.emptyMap
     end
   end
+
+  def asElement()
+    @target:DeclaredType.asElement
+  end
+
+  def getEnclosingType()
+    @target:DeclaredType.getEnclosingType
+  end
 end
 
 class MirrorFuture < BaseTypeFuture

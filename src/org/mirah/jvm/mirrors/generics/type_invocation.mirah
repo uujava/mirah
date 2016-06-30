@@ -141,4 +141,8 @@ class TypeInvocation < AsyncMirror implements DeclaredMirrorType
   def erasure
     @raw
   end
+
+  def ensure_linked
+    raise UnsupportedOperationException.new "operation ensure_linked unsupported for #{self}"
+  end
 end

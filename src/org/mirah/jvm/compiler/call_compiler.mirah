@@ -407,4 +407,8 @@ class CallCompiler < BaseCompiler implements MemberVisitor
       @method.pop
     end
   end
+
+  def visitStaticInitializer(method, expression)
+    raise UnsupportedOperationException.new "visitStaticInitializer(method, expression) unsupported for #{self}"
+  end
 end

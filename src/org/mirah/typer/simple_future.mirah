@@ -37,4 +37,7 @@ class SimpleFuture; implements TypeFuture
   def toString
     "<SimpleFuture: #{resolve}>"
   end
+  def peekInferredType
+    raise UnsupportedOperationException.new "Operation not supported: peekInferredType"
+  end
 end

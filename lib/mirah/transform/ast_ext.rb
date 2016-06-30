@@ -3,7 +3,6 @@ module Mirah
     java_import 'mirah.impl.MirahParser'
     java_import 'mirah.lang.ast.StringCodeSource'
     java_import 'org.mirah.macros.Macro'
-    java_import 'org.mirah.util.SimpleDiagnostics'
 
     def parse(src, filename='dash_e', raise_errors=false, transformer=nil)
       raise ArgumentError unless transformer
@@ -16,14 +15,8 @@ module Mirah
       #filename = transformer.tag_filename(src, filename)
       parser = MirahParser.new
       source = StringCodeSource.new(filename, src)
-      diagnostics = SimpleDiagnostics.new(true)
-#     parser.diagnostics = diagnostics # Field "diagnostics" does not seem to exist in the current mirah/mmeta source code, but it did exist in an ancient mmeta.jar.
       begin
         ast = parser.parse(source)
-        if diagnostics.error_count > 0
-          puts "#{parser.diagnostics.error_count} errors, exiting"
-          throw :exit, 1
-        end
         return ast
       rescue NativeException => ex
         ex.cause.printStackTrace

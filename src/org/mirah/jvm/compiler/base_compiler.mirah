@@ -85,7 +85,7 @@ class BaseCompiler < SimpleNodeVisitor
       raise ex
     else
       @@log.log Level.SEVERE, "Exception in compiler for #{position}", ex
-      reportError("Internal error in compiler: #{ex} #{ex.getMessage}", position)
+      reportError("Internal error in compiler: #{ex.getClass} #{ex.getMessage}", position)
       
      # @diagnostics.report(MirahDiagnostic.error(position, "Internal compiler error: #{ex} #{ex.getMessage}"))
       

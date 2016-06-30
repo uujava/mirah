@@ -36,4 +36,29 @@ class TypeElement implements TypeElementModel
   def hashCode
     descriptor.hashCode
   end
+
+  def  getSuperclass()
+     raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
+  def getSimpleName()
+     raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
+  def getEnclosedElements()
+     raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
+  def getNestingKind()
+     raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
+  def getTypeParameters()
+     raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
+  def getInterfaces()
+     raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
+  def getQualifiedName()
+     raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
+  def getEnclosingElement()
+   raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
 end
