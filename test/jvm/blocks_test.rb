@@ -369,6 +369,22 @@ class BlocksTest < Test::Unit::TestCase
                   exception.message
   end
 
+  def test_block_with_too_many_params_with_type
+    exception = assert_raises Mirah::MirahError do
+      parse_and_type(<<-CODE)
+        class ExpectsNoArgMethod
+          def self.foo(a:Runnable)
+            1
+          end
+        end
+        ExpectsNoArgMethod.foo do |a:Object|
+          1
+        end
+      CODE
+    end
+    assert exception.message.start_with? 'Internal error in compiler: class java.lang.VerifyError Abstract methods not implemented: run() for not abstract'
+  end
+
   def test_call_with_block_assigned_to_macro
     cls, = compile(<<-CODE)
         class S
