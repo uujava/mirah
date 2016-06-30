@@ -19,13 +19,13 @@ class JVMCommandsTest < Test::Unit::TestCase
 
   def test_dash_e_eval
     assert_output "1\n" do
-      Mirah.run('-e','puts 1')
+      Mirah.run('-d', TEST_DEST, '-e','puts 1')
     end
   end
 
   def test_dash_e_with_methods
     assert_output "1\n2\n" do
-      Mirah.run('-e','
+      Mirah.run('-d', TEST_DEST, '-e','
        def self.sprint(*args:Object):void
           args.each do|x|
             puts x
@@ -42,7 +42,7 @@ class JVMCommandsTest < Test::Unit::TestCase
 
   def test_dash_e_with_macro
     assert_output "1\n" do
-      Mirah.run('-e','
+      Mirah.run('-d', TEST_DEST, '-e','
        macro def sprint(node):void
          quote { puts `node` }
        end
@@ -54,7 +54,7 @@ class JVMCommandsTest < Test::Unit::TestCase
 
   def test_dash_e_with_macro_and_package
     assert_output "1\n" do
-      Mirah.run('-e','
+      Mirah.run('-d', TEST_DEST, '-e','
        package xxx
        macro def sprint(node):void
          quote { puts `node` }
@@ -67,7 +67,7 @@ class JVMCommandsTest < Test::Unit::TestCase
 
   def test_dash_e_with_closure
     assert_output "1\n" do
-      Mirah.run('-e','
+      Mirah.run('-d', TEST_DEST, '-e','
        t = Thread.new {puts 1}
        t.start
        t.join
@@ -77,7 +77,7 @@ class JVMCommandsTest < Test::Unit::TestCase
 
   def test_dash_e_with_closure_and_package
     assert_output "1\n" do
-      Mirah.run('-e','
+      Mirah.run('-d', TEST_DEST, '-e','
        package xxx
        t = Thread.new {puts 1}
        t.start
@@ -95,7 +95,7 @@ class JVMCommandsTest < Test::Unit::TestCase
 
   def test_runtime_classpath_modifications
     assert_output "1234\n" do
-      Mirah.run('-cp', FIXTURE_TEST_DEST,
+      Mirah.run('-d', TEST_DEST, '-cp', FIXTURE_TEST_DEST,
                                 '-e',
                                   'import org.foo.LowerCaseInnerClass
                                   puts LowerCaseInnerClass.inner.field'
@@ -105,7 +105,7 @@ class JVMCommandsTest < Test::Unit::TestCase
 
   def test_dash_c_is_deprecated
     assert_output "WARN: option -c is deprecated.\n1234\n" do
-      Mirah.run('-c', FIXTURE_TEST_DEST,
+      Mirah.run('-d', TEST_DEST, '-c', FIXTURE_TEST_DEST,
                                 '-e',
                                   'import org.foo.LowerCaseInnerClass
                                   puts LowerCaseInnerClass.inner.field'
