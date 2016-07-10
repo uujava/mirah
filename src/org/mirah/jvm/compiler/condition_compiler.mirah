@@ -61,13 +61,15 @@ class ConditionCompiler < BaseCompiler
   end
 
   def doJump(label:Label)
-    if isPrimitive(@type)
-      if "boolean".equals(@type.name)
-        mode = @negated ? GeneratorAdapter.EQ : GeneratorAdapter.NE
-        @bytecode.ifZCmp(mode, label)
-      else # Do not allow numeric primitives!
-         reportError("Numeric expression is not supported for condition argument", @node.position)
+    if 'boolean'.equals(@type.name) or 'java.lang.Boolean'.equals(@type.name)
+      mode = @negated ? GeneratorAdapter.EQ : GeneratorAdapter.NE
+      if 'java.lang.Boolean'.equals(@type.name)
+        @bytecode.convertValue(@type, @type.unbox)
       end
+      @bytecode.ifZCmp(mode, label)
+    elsif isPrimitive(@type)
+      # Do not allow numeric primitives!
+      reportError("Numeric expression is not supported for condition argument", @node.position)
     else
       if @negated
         @bytecode.ifNull(label)

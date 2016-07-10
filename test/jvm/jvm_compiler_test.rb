@@ -2410,4 +2410,31 @@ class JVMCompilerTest < Test::Unit::TestCase
     })
     assert_run_output("true\nfalse\n1\n2\ntrue\nfalse\n1\n1\n1\n1\n", cls)
   end
+
+  def test_if_condition_boxing
+    cls, arg = compile(%q{
+      puts Boolean.TRUE ? 1 : 2
+      puts Boolean.FALSE ? 1 : 2
+      puts 3 unless nil
+      x = if nil; -4; else; 4; end
+      puts x
+      begin
+        y = Boolean.TRUE
+        y = nil
+        puts(-5) if y:boolean
+      rescue NullPointerException => ex
+        puts 5
+      end
+
+      y = Boolean.TRUE
+      y = nil
+      begin
+        puts(-6) if y
+      rescue NullPointerException => ex
+        puts 6
+      end
+    })
+    assert_run_output("1\n2\n3\n4\n5\n6\n", cls)
+  end
+
 end
