@@ -418,6 +418,10 @@ class MethodCompiler < BaseCompiler
       compiler.negate
       compiler.compile(node.condition, elseLabel)
       compileBody(node.body, expression, type)
+      bodyType = getInferredType(node.body)
+      if needConversion(bodyType, type)
+        @builder.convertValue(bodyType, type)
+      end
       @builder.goTo(endifLabel)
     else
       compiler.compile(node.condition, endifLabel)
@@ -426,6 +430,10 @@ class MethodCompiler < BaseCompiler
     @builder.mark(elseLabel)
     if need_else
       compileBody(node.elseBody, expression, type)
+      bodyType = getInferredType(node.elseBody)
+      if needConversion(bodyType, type)
+        @builder.convertValue(bodyType, type)
+      end
     end
     recordPosition(node.position, true)
     @builder.mark(endifLabel)
@@ -449,10 +457,10 @@ class MethodCompiler < BaseCompiler
     compile(node.value)
     from = getInferredType(node.value)
     to = getInferredType(node)
-    if isPrimitive(from) && !isPrimitive(to) && supportBoxing(to)
+    if needConversion(from, to)
       @builder.cast(from.getAsmType, to.unbox.getAsmType)
       @builder.box(to.unbox.getAsmType)
-    elsif isPrimitive(to) && !isPrimitive(from) && supportBoxing(from)
+    elsif needConversion(to, from)
       @builder.unbox(from.unbox.getAsmType)
       @builder.cast(from.unbox.getAsmType, to.getAsmType)
     else
@@ -798,5 +806,13 @@ class MethodCompiler < BaseCompiler
   def self.checkSuperFlags(member:Member, flags:int):boolean
      _flags = member.flags
      _flags & Opcodes.ACC_ABSTRACT == 0 and  (flags & Opcodes.ACC_STATIC == _flags & Opcodes.ACC_STATIC)
+  end
+
+  def needConversion(from: JVMType, to: JVMType)
+    return false unless from and to
+    return false if from.equals(to)
+    return false if from.getAsmType.getSort == AsmType.VOID
+    return false if to.getAsmType.getSort == AsmType.VOID
+    isPrimitive(from) && !isPrimitive(to) && supportBoxing(to)
   end
 end

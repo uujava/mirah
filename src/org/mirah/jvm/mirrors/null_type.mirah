@@ -31,6 +31,8 @@ class NullType < BaseType implements NullTypeModel
   def widen(other:ResolvedType):ResolvedType
     if other.matchesAnything
       self
+    elsif other.kind_of?(JVMType) and other:JVMType.box
+      other:JVMType.box
     else
       other
     end

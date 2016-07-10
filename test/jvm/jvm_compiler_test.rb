@@ -2390,4 +2390,24 @@ class JVMCompilerTest < Test::Unit::TestCase
       assert e.message.match(/somespecificfilename/)
     end
   end
+
+  def test_if_boxing
+    cls, arg = compile(%q{
+      puts true ? true : nil
+      puts false ? nil : false
+      puts true ? 1 : nil
+      puts false ? nil : 2
+      puts true ? Boolean.TRUE : false
+      puts false ? Boolean.TRUE : false
+      x = if true; 1; end
+      puts x
+      x = if true; Integer.new 1; end
+      puts x
+      x = unless false; 1; end
+      puts x
+      x = unless false; Integer.new 1; end
+      puts x
+    })
+    assert_run_output("true\nfalse\n1\n2\ntrue\nfalse\n1\n1\n1\n1\n", cls)
+  end
 end
