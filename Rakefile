@@ -326,7 +326,7 @@ class Version
    private def initialize(major:String, minor:String)
      @major = major
      @minor = minor
-     @str =  major +'-'+ minor
+     @str =  major + '-' + minor
    end
 
    def toString

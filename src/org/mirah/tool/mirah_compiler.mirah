@@ -153,7 +153,7 @@ class MirahCompiler implements JvmBackend
       raise Exception.new("#{code.name} failed to parse. #{e}",e)
     end
     if node.nil?
-      puts "#{code.name} failed to parse."
+      raise "#{code.name} parsed to null."
     else
       @asts.add(node)
       if @debugger

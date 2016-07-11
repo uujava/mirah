@@ -71,7 +71,7 @@ class AstFormatter < NodeScanner
     childCount = @childCounts.removeLast:Integer.intValue
     lastIndex = @out.length - 1
     if lastIndex > 0 && @out.charAt(lastIndex) == ?\n &&
-       (@out.charAt(lastIndex -1) == ?[ || @out.charAt(lastIndex - 1) == ?])
+       (@out.charAt(lastIndex - 1) == ?[ || @out.charAt(lastIndex - 1) == ?])
       @out.insert(lastIndex, "]")
     else
       if childCount == 0

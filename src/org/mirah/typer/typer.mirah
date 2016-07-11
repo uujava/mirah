@@ -191,11 +191,17 @@ class Typer < SimpleNodeVisitor
 
   def visitFunctionalCall(call, expression)
     workaroundASTBug call
+
+    # if we have (a -1) => Call(a, [Call(-@, 1)]) we also should try Call(-, [a, 1])
+    # check AST before inferring rewrite call parameters
+    rwr_unary = get_rewrite_unary(call)
+
     parameters = inferParameterTypes call
     @futures[call] = methodType = callMethodType(call, parameters)
 
     proxy = ProxyNode.new(self, call)
     children = ArrayList.new(2)
+    children.add(rwr_unary) if rwr_unary
 
     if call.parameters.size == 1
       # This might actually be a cast instead of a method call, so try
@@ -219,6 +225,8 @@ class Typer < SimpleNodeVisitor
 
     proxy.setChildren(children)
 
+    # have to infer cloned params for rewritten unary call
+    infer_rewrite_unary rwr_unary
     @futures[proxy] = proxy.inferChildren(expression != nil)
   end
 
@@ -253,6 +261,14 @@ class Typer < SimpleNodeVisitor
   end
 
   def visitCall(call, expression)
+    proxy = ProxyNode.new(self, call)
+    children = ArrayList.new(3)
+
+    # if we have (a -1) => Call(a, [Call(-@, 1)]) we also should try Call(-, [a, 1])
+    # check AST before inferring rewrite call parameters
+    rwr_unary = get_rewrite_unary(call)
+    children.add(rwr_unary) if rwr_unary
+
     target = infer(call.target)
     parameters = inferParameterTypes call
     methodType = CallFuture.new(@types,
@@ -262,11 +278,9 @@ class Typer < SimpleNodeVisitor
                                 parameters,
                                 call)
     @futures[call] = methodType
-    
-    proxy = ProxyNode.new(self, call)
-    children = ArrayList.new(2)
-    
+
     if  call.parameters.size == 1
+
       # This might actually be a cast or array instead of a method call, so try
       # both. If the cast works, we'll go with that. If not, we'll leave
       # the method call.
@@ -287,7 +301,8 @@ class Typer < SimpleNodeVisitor
     end
     children.add(call)
     proxy.setChildren(children)
-
+    # have to infer cloned params for rewritten unary call
+    infer_rewrite_unary rwr_unary
     @futures[proxy] = proxy.inferChildren(expression != nil)
   end
 
@@ -1653,6 +1668,43 @@ class Typer < SimpleNodeVisitor
       pos.source.substring(pos.startChar, pos.endChar)
     rescue => e
       "<error getting source: #{e}  start:#{pos.startChar} end:#{pos.endChar}>"
+    end
+  end
+
+  def get_rewrite_unary(call:Call):Call
+    return nil unless call.parameters
+    return nil unless call.parameters.size == 1
+    return nil unless call.parameters.get(0).kind_of?(Call)
+
+    unary = call.parameters.get(0):Call
+    op = unary.name.identifier
+    return nil unless '-@'.equals(op) or '+@'.equals(op)
+
+    operator = op.substring(0,1) # '-' or '+'
+    no_arg_call = Call.new(call.position, call.target.clone:Node, call.name.clone:Identifier, [], nil)
+    Call.new(unary.position, no_arg_call, SimpleString.new(call.position, operator), [unary.target.clone], nil)
+
+  end
+
+  def get_rewrite_unary(call:FunctionalCall):Call
+    return nil unless call.parameters
+    return nil unless call.parameters.size == 1
+    return nil unless call.parameters.get(0).kind_of?(Call)
+
+    unary = call.parameters.get(0):Call
+    op = unary.name.identifier
+    return nil unless '-@'.equals(op) or '+@'.equals(op)
+
+    operator = op.substring(0,1) # '-' or '+'
+    no_arg_call = VCall.new(call.position, call.name.clone:Identifier)
+    Call.new(unary.position, no_arg_call, SimpleString.new(call.position, operator), [unary.target.clone], nil)
+
+  end
+
+  def infer_rewrite_unary(call:Call):void
+    if call
+      @futures[call.target] = infer(call.target)
+      @futures[call.parameters(0)] = infer(call.parameters(0))
     end
   end
 end

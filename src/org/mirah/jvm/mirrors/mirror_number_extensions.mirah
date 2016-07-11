@@ -24,4 +24,9 @@ class MirrorNumberExtensions
   macro def -@
     quote {0 - `@call.target`}
   end
+
+  macro def +@
+    quote {`@call.target`}
+  end
+
 end
