@@ -312,7 +312,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     member = klass.getDeclaredField(name)
     if member
       @@log.finest "found declared field future for target: #{target} name: #{name}"
-      return member:AsyncMember.asyncReturnType:AssignableTypeFuture
+      return member:Member.asyncReturnType:AssignableTypeFuture
     end
 
     undeclared_future = @unpinned_field_futures[unpinned_key(klass, name)]
@@ -332,7 +332,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     klass = resolved.unmeta:MirrorType
     member = klass.getDeclaredField(name)
     future = if member
-      member:AsyncMember.asyncReturnType
+      member:Member.asyncReturnType
     else
       if resolved.isMeta and (flags & Opcodes.ACC_STATIC) == 0
         @@log.warning "implicitly enable static flag for meta field #{name} #{target}"
