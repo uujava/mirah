@@ -311,8 +311,13 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     klass = resolved.unmeta:MirrorType
     member = klass.getDeclaredField(name)
     if member
-      @@log.finest "found declared field future for target: #{target} name: #{name}"
-      return member:Member.asyncReturnType:AssignableTypeFuture
+      future = member:Member.asyncReturnType
+      if future.kind_of? AssignableTypeFuture
+         @@log.finest "found declared field future for target: #{target} name: #{name}"
+         return member:Member.asyncReturnType:AssignableTypeFuture
+      else
+         @@log.finest "name: #{name} member #{member} return type is not an AssignableTypeFuture: #{future}"
+      end
     end
 
     undeclared_future = @unpinned_field_futures[unpinned_key(klass, name)]
