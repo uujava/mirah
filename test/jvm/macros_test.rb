@@ -682,9 +682,9 @@ class MacrosTest < Test::Unit::TestCase
       class MacroWithVarargs
         macro def  self.vararg(first:Node, *args:Node)
          list = NodeList.new
-         list.add quote do
+         list.add quote {
            puts `first`
-         end
+         }
 
          args.each do |arg:Node|
            m = if arg.kind_of? Block
