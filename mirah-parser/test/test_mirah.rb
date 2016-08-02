@@ -655,8 +655,8 @@ EOF
     assert_parse("[Script, [[FunctionalCall, [SimpleString, A], [[VCall, [SimpleString, b]]], null]]]", 'A b')
     assert_parse("[Script, [[Call, [Constant, [SimpleString, Foo]], [SimpleString, Bar], [[VCall, [SimpleString, x]]], null]]]", 'Foo::Bar x')
     assert_parse("[Script, [[Call, [VCall, [SimpleString, foo]], [SimpleString, bar], [[VCall, [SimpleString, x]]], null]]]", 'foo.bar x')
-    assert_parse("[Script, [[Super, [[VCall, [SimpleString, x]]]]]]", 'super x')
-    assert_parse("[Script, [[Yield, [[VCall, [SimpleString, x]]]]]]", 'yield x')
+    assert_parse("[Script, [[Super, [[VCall, [SimpleString, x]]], null]]]", 'super x')
+    #assert_parse("[Script, [[Yield, [[VCall, [SimpleString, x]]]]]]", 'yield x')
     assert_parse("[Script, [[Return, [VCall, [SimpleString, x]]]]]", 'return x')
     assert_parse("[Script, [[FunctionalCall, [SimpleString, a], [[CharLiteral, 97]], null]]]", 'a ?a')
     # assert_parse("[Script, [[FunctionalCall, [SimpleString, a], [[Splat, [VCall, [SimpleString, b]]]], null]]]", 'a *b')
@@ -794,9 +794,9 @@ assert_parse("[Script, [[LocalAssignment, [SimpleString, a], [Rescue, [[VCall, [
      assert_parse("[Script, [[Call, [VCall, [SimpleString, foo]], [SimpleString, !==], [[VCall, [SimpleString, bar]]], null]]]", "foo!==bar")
    end
 
-   def test_command
-     assert_parse("[Script, [[]]]", "begin  # hi\nend")
-   end
+  def test_command_2
+    assert_parse("[Script, [[]]]", "begin  # hi\nend")
+  end
 
    def test_macros
      assert_parse("[Script, [[Unquote, [VCall, [SimpleString, x]]]]]", '`x`')
