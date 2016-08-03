@@ -172,7 +172,6 @@ class Typer < SimpleNodeVisitor
 
   def visitVCall(call, expression)
     @@log.fine "visitVCall #{call}"
-    workaroundASTBug call
 
     # This might be a local, method call, or primitive access,
     # so try them all.
@@ -199,7 +198,6 @@ class Typer < SimpleNodeVisitor
   end
 
   def visitFunctionalCall(call, expression)
-    workaroundASTBug call
 
     # if we have (a -1) => Call(a, [Call(-@, 1)]) we also should try Call(-, [a, 1])
     # check AST before inferring rewrite call parameters
@@ -611,7 +609,7 @@ class Typer < SimpleNodeVisitor
                                constant.name.clone:Identifier,
                                nil, nil)
       fcall.setParent(constant.parent)
-      workaroundASTBug fcall
+
       methodType = callMethodType fcall, Collections.emptyList
       targetType = infer(fcall.target)
       @futures[fcall] = methodType
@@ -1653,12 +1651,6 @@ class Typer < SimpleNodeVisitor
                      expandMacro(fcall, picked_type),
                      expression)
     end
-  end
-
-  # FIXME: there's a bug in the AST that doesn't set the
-  # calls target correctly
-  def workaroundASTBug(call: CallSite)
-    call.target.setParent(call)
   end
 
   def sourceContent node: Node

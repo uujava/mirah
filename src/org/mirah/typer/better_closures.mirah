@@ -252,9 +252,7 @@ class BetterClosureBuilder < ClosureBuilderHelper
       new_node = Call.new(
         block.position, target,
         SimpleString.new("new"), 
-        constructor_params, nil)
-      typer.workaroundASTBug new_node
-
+        binding_locals, nil)
 
 
       if block.parent.kind_of?(CallSite)
