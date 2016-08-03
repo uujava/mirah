@@ -93,16 +93,18 @@ class TypePrinter < NodeScanner
     end
     node.object.nil?
   end
+
+  def enterJavaDoc(node, arg)
+    # just skip
+    false
+  end
+
+
   def exitDefault(node, arg)
     @indent -= 2
     nil
   end
 end
-
-
-
-
-
 
 class TypePrinter2 < NodeScanner
   def initialize(typer:Typer)
@@ -361,6 +363,7 @@ class TypePrinter2 < NodeScanner
     decIndent
     nil
   end
+
   def enterUnquote(node, arg)
     super(node, arg)
     if node.object
@@ -387,6 +390,11 @@ class TypePrinter2 < NodeScanner
     #decIndent
     nil
   end
-  
+
+  def enterJavaDoc(node, arg)
+    # just skip
+    false
+  end
+
 end
 

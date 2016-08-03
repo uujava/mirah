@@ -1126,9 +1126,9 @@ class Typer < SimpleNodeVisitor
     end
   end
 
-
-
-
+  def visitJavaDoc(jdoc, expression)
+    # just skip
+  end
 
   def addScopeForMethod(mdef: Block): void
     scope = addScopeWithSelfType(mdef, selfTypeOf(mdef))

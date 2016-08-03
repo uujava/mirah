@@ -5,6 +5,10 @@ package org.foo
  */
 class AOne
   CONST = 1
+
+  /** getter and setter for field @x */
+  attr_accessor x: int
+
   def call:void;end
 
   def call(a:int, b:String):int

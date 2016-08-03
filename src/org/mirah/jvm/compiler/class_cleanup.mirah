@@ -275,7 +275,13 @@ class ClassCleanup < NodeScanner
     addMethodState(MethodState.new(node))
     false
   end
-  
+
+  def enterJavaDoc(node, arg)
+    # just skip
+    false
+  end
+
+
   def addOptionalMethods(mdef:MethodDefinition):void
     if mdef.arguments.optional_size > 0
       parent = mdef.parent:NodeList
@@ -289,6 +295,10 @@ class ClassCleanup < NodeScanner
         arg = new_args.optional.remove(i)
         params.set(optional_arg_offset + i, arg.value)
         method = buildOptargBridge(mdef, new_args, params)
+        # TODO better handle bridge java doc
+        orig_java_doc = mdef.java_doc
+        parent.add(orig_java_doc) if orig_java_doc
+
         parent.add(method)
         @typer.infer(method)
       end

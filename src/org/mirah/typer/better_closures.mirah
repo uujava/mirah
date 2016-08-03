@@ -233,7 +233,7 @@ class BetterClosureBuilder < ClosureBuilderHelper
 
       constructor = ConstructorDefinition.new(
         SimpleString.new('initialize'), args,
-        SimpleString.new('void'), constructor_body, nil, nil, nil)
+        SimpleString.new('void'), constructor_body, nil, nil)
       closure_klass.body.add(constructor)
 
       enclosing_b  = find_enclosing_body block

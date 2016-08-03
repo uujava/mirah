@@ -137,7 +137,11 @@ class ScriptCleanup < NodeScanner
     # Scan the children
     true
   end
-  
+
+  def enterJavaDoc(node, arg)
+    false
+  end
+
   def getOrCreateClass(script:Script)
     if @main_class.nil?
       @main_class = @parser.quote do

@@ -191,7 +191,11 @@ class BaseCompiler < SimpleNodeVisitor
   def visitUnquote(node, arg)
     node.nodes.each {|n: Node| visit(n, arg)}
   end
-  
+
+  def visitJavaDoc(jdoc, expression)
+    # just skip
+  end
+
   def findType(name:String):JVMType
     @typer.type_system.get(nil, TypeRefImpl.new(name, false, false, nil)).resolve:JVMType
   end

@@ -7,6 +7,11 @@ public class AOne {
     public static final int CONST = 0;
     private int a;
     private static java.lang.String test;
+    private int x;
+  /** getter and setter for field @x */
+    public int x(){ return 0; }
+  /** getter and setter for field @x */
+    public void x_set(int value){}
     public void call(){}
     public int call(int a,java.lang.String b){ return 0; }
     public java.lang.Integer call(int[] a,java.lang.String b){ return null; }
