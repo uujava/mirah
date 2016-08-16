@@ -70,9 +70,8 @@ class GenericMethodLookup
             result.add(generic_method)
           end
         rescue Throwable => ex
-          @@log.log(Level.WARNING,
-                    "Error during generic method processing for #{member}",
-                    ex)
+          @@log.log(Level.WARNING, "Error during generic method processing for #{member} #{ex}. Have to use manual type cast to declare specific type.")
+          @@log.log(Level.FINE, "Trace for generic processing error #{member} #{ex}: ", ex)
           result.add(member)
         end
       end
