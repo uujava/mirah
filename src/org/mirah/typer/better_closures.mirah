@@ -271,6 +271,8 @@ class BetterClosureBuilder < ClosureBuilderHelper
       @@log.fine "inferring enclosing_b #{enclosing_b}"
       infer enclosing_b
 
+      # hack? we need to call resolve for proper binding locals in nesting scopes
+      ResolveScanner.new(typer).scan enclosing_b, nil
       @@log.fine "done with #{enclosing_b}"
       @@log.log(Level.FINE, "Inferred AST: #{enclosing_b.position}\n{0}", AstFormatter.new(enclosing_b))
       @@log.log(Level.FINE, "Inferred types: #{enclosing_b.position}\n{0}", LazyTypePrinter.new(typer, enclosing_b))

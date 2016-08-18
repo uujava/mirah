@@ -238,5 +238,43 @@ class ClosureTest < Test::Unit::TestCase
     })
     assert_run_output("3\n", cls)
   end
-end
 
+  def test_nested_binding
+    cls, = compile(%q{
+          class test_closure_scope
+            def self.run r:MyRunnable
+              r.run
+            end
+
+            def self.main(*args:String):void
+              s1 = "s1"
+
+              run do
+                s2 = "s2"
+                run do
+                  my_puts s1
+                  my_puts s2
+                end
+              end
+
+              run do
+                s2 = "s22"
+                s1 = "s11"
+                run do
+                  my_puts s1
+                  my_puts s2
+                end
+              end
+              puts s1
+            end
+          end
+
+          abstract class MyRunnable implements Runnable
+            def my_puts x:Object
+              puts "my #{x}"
+            end
+          end
+    })
+    assert_run_output("my s1\nmy s2\nmy s11\nmy s22\ns11\n", cls)
+  end
+end

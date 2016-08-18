@@ -74,7 +74,7 @@ class TypePrinter < NodeScanner
     @out.print(node)
     type = @typer.getInferredType(node)
     if type
-      @out.print ": #{type.resolve}"
+      print_resolve type
     end
     @out.println
     @indent += 2
@@ -103,6 +103,17 @@ class TypePrinter < NodeScanner
   def exitDefault(node, arg)
     @indent -= 2
     nil
+  end
+
+  def print_resolve(type:TypeFuture, suffix='')
+    peek = type.peekInferredType
+    resolved = type.resolve
+    if peek == resolved
+      @out.print " : #{resolved}"
+    else
+      @out.print " : #{resolved} HAVING SIDE EFFECT => type was:#{peek} for type: #{type}"
+    end
+    @out.print suffix
   end
 end
 
@@ -170,7 +181,7 @@ class TypePrinter2 < NodeScanner
     node.arguments.accept(self, arg)
 
     if type
-      @out.print " # #{type.resolve}"
+      print_resolve type
     end
     @out.println
     incIndent
@@ -193,7 +204,7 @@ class TypePrinter2 < NodeScanner
     @out.print ", "
     type = @typer.getInferredType(node)
     if type
-      @out.print " # #{type.resolve}\n"
+      print_resolve type, "\n"
     end
     
     false
@@ -261,7 +272,7 @@ class TypePrinter2 < NodeScanner
 
     type = @typer.getInferredType(node)
     if type
-      @out.print " # #{type.resolve}"
+      print_resolve type
     end
     @out.println
     false
@@ -272,7 +283,7 @@ class TypePrinter2 < NodeScanner
 
     type = @typer.getInferredType(node)
     if type
-      @out.print " # #{type.resolve}"
+      print_resolve type
     end
     @out.println
     node.value.accept self, arg
@@ -318,7 +329,7 @@ class TypePrinter2 < NodeScanner
 
     type = @typer.getInferredType(node)
     if type
-      @out.print " # #{type.resolve}"
+      print_resolve type
     end
     @out.println
     node.value.accept self, arg
@@ -349,7 +360,7 @@ class TypePrinter2 < NodeScanner
     @out.print(node)
     type = @typer.getInferredType(node)
     if type
-      @out.print " # #{type.resolve}"
+      print_resolve type
     end
     @out.println
     incIndent
@@ -396,5 +407,15 @@ class TypePrinter2 < NodeScanner
     false
   end
 
+  def print_resolve(type:TypeFuture, suffix='')
+    peek = type.peekInferredType
+    resolved = type.resolve
+    if peek == resolved
+      @out.print " # #{resolved}"
+    else
+      @out.print " # #{resolved} HAVING SIDE EFFECT => type was:#{peek} for type: #{type}"
+    end
+    @out.print suffix
+  end
 end
 
