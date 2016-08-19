@@ -80,4 +80,10 @@ class FloatOperators
     }
   end
 
+  macro def -@()
+      quote {
+        (0-`@call.target`.floatValue):Float
+      }
+  end
+
 end

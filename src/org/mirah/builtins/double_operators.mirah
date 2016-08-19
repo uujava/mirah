@@ -80,4 +80,10 @@ class DoubleOperators
     }
   end
 
+  macro def -@()
+      quote {
+        (0-`@call.target`.doubleValue):Double
+      }
+  end
+
 end

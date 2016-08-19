@@ -115,4 +115,11 @@ class IntegerOperators
         `@call.target`.intValue >>> `n2`
       }
   end
+
+  macro def -@()
+      quote {
+        (0-`@call.target`.intValue):Integer
+      }
+  end
+
 end

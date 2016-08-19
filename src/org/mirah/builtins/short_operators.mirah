@@ -110,4 +110,10 @@ class ShortOperators
       }
   end
 
+  macro def -@()
+      quote {
+        (0-`@call.target`.intValue):Short
+      }
+  end
+
 end

@@ -102,4 +102,15 @@ class NumericOperatorsTest < Test::Unit::TestCase
       define_cast_test_methods(numeric_class, primitive_class)
     end
   end
+
+  def test_unary_minus
+    FIXNUM_TYPES.each do |type|
+      cls, = compile("x = -1:#{type}; puts x; puts x.getClass.getName")
+      assert_run_output("-1\njava.lang.#{type}\n", cls)
+    end
+    FLOAT_TYPES.each do |type|
+      cls, = compile("x = -1.0:#{type}; puts x; puts x.getClass.getName")
+      assert_run_output("-1.0\njava.lang.#{type}\n", cls)
+    end
+  end
 end

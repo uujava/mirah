@@ -110,4 +110,9 @@ class ByteOperators
       }
   end
 
+  macro def -@()
+      quote {
+        (0-`@call.target`.intValue):Byte
+      }
+  end
 end
