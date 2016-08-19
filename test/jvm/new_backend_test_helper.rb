@@ -63,7 +63,7 @@ module JVMCompiler
     name = options.fetch :name, tmp_script_name
 
     args = ["-d", TEST_DEST,
-            "--vmodule", "org.mirah.jvm.compiler.ClassCompiler=OFF",
+            "--vmodule", "org.mirah=OFF",
            # "--verbose",
             "--classpath", Mirah::Env.encode_paths([FIXTURE_TEST_DEST, TEST_DEST]) ]
 

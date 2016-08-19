@@ -55,7 +55,7 @@ class MirahTool implements BytecodeConsumer
     @compiler.compile(self)
     0
   rescue CompilationFailure => ex
-    puts ex.getMessage
+    @@log.severe ex.getMessage
     1
   end
 

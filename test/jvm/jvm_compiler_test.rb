@@ -1889,15 +1889,13 @@ class JVMCompilerTest < Test::Unit::TestCase
   end
 
   def test_inconvertible_default_classes_cause_cast_error
-    pend "waiting on better error picking" do
-      ex = assert_raise Mirah::MirahError  do
-        compile(<<-EOF)
-        import java.lang.Integer
-        "a string":java::lang::Integer
-        EOF
-      end
-      assert_equal("Cannot cast java.lang.Integer to java.lang.String.", ex.message)
+    ex = assert_raise Mirah::MirahError  do
+      compile(<<-EOF)
+      import java.lang.Integer
+      "a string":java::lang::Integer
+      EOF
     end
+    assert_equal("Cannot cast java.lang.String to java.lang.Integer.", ex.message)
   end
 
   def test_casting_up_should_work
@@ -2066,17 +2064,15 @@ class JVMCompilerTest < Test::Unit::TestCase
   end
 
   def test_double_equals_with_arrays
-    pend "arrays are tricky" do
-      cls, = compile(<<-EOF)
-        a = Object[1]
-        b = Object[1]
-        puts a == a
-        puts a == b
-        puts a != b
-        puts a != a
-      EOF
-      assert_run_output("true\true\nfalse\nfalse\n", cls)
-    end
+    cls, = compile(<<-EOF)
+      a = Object[1]
+      b = Object[1]
+      puts a == a
+      puts a == b
+      puts a != b
+      puts a != a
+    EOF
+    assert_run_output("true\ntrue\nfalse\nfalse\n", cls)
   end
 
   def test_field_setter_with_nil
