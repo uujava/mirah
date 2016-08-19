@@ -103,4 +103,18 @@ class HashTest < Test::Unit::TestCase
     map = cls.new.foo
     assert_equal("value", map["key"])
   end
+
+  def test_boxing_for_keys_and_values
+    cls, = compile(<<-EOF)
+     class HashKeyBoxing
+       def foo
+         {1 => 1}
+       end
+     end
+    EOF
+
+    map = cls.new.foo
+    assert_equal(1, map[java.lang.Integer.new(1)])
+  end
+
 end

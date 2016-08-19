@@ -53,6 +53,7 @@ class HashCompiler < BaseCompiler
       @bytecode.dup
       entry = hash.get(i)
       @method.visit(entry.key, Boolean.TRUE)
+      @bytecode.convertValue(getInferredType(entry.key), @object)
       @method.visit(entry.value, Boolean.TRUE)
       @bytecode.convertValue(getInferredType(entry.value), @object)
       @bytecode.invokeInterface(@map.getAsmType, @put)
