@@ -277,4 +277,62 @@ class ClosureTest < Test::Unit::TestCase
     })
     assert_run_output("my s1\nmy s2\nmy s11\nmy s22\ns11\n", cls)
   end
+
+  def test_nested_binding_with_inheritance_and_outer
+    cls, = compile(%q{
+      class test_nested_binding_with_inheritance
+        def self.outer_method
+         puts "outer"
+        end
+        def self.main(*args:String):void
+          s1 = "s1"
+          s2 = "s1"
+          MyRunnableF.run s1 do
+            s3 = s1
+            my_puts s3
+            outer_method
+            run2 do
+              object s2
+              my_puts_1 s1
+              my_puts_2 s3
+              outer_method
+            end
+          end
+        end
+      end
+      class MyRunnableF
+        def self.run(arg:String, r:MyRunnable):void
+          r.run
+        end
+      end
+
+      abstract class MyRunnable implements Runnable
+        def my_puts x:Object
+          puts "my #{x}"
+        end
+
+        def run2 r:MyRunnable2
+          r.run
+        end
+      end
+
+      abstract class MyRunnable1 implements Runnable
+        def my_puts_1(x:String):void
+          puts "my1 #{x}"
+        end
+
+        def object(x:String):void; puts "o: #{x}"; end
+        def object(l:int):void;end
+
+      end
+
+      abstract class MyRunnable2 < MyRunnable1
+        def my_puts_2(x:String):void
+          puts "my2 #{x}"
+        end
+      end
+    })
+    assert_run_output("my s1\nouter\no: s1\nmy1 s1\nmy2 s1\nouter\n", cls)
+  end
+
 end

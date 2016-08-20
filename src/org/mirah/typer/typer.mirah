@@ -201,7 +201,7 @@ class Typer < SimpleNodeVisitor
 
     proxy = ProxyNode.new(self, call)
     children = ArrayList.new(2)
-
+    children.add(call)
     if call.parameters.size == 1
       # This might actually be a cast instead of a method call, so try
       # both. If the cast works, we'll go with that. If not, we'll leave
@@ -209,7 +209,6 @@ class Typer < SimpleNodeVisitor
       children.add(Cast.new(call.position, call.typeref:TypeName,
                             call.parameters.get(0).clone:Node))
     end
-    children.add(call)
 
     scope = scopeOf(call)
     # support calls to outer methods for closures
@@ -222,7 +221,7 @@ class Typer < SimpleNodeVisitor
       children.add Call.new(call.position, outer, call.name, params, call.block)
     end
     children.add(rwr_unary) if rwr_unary
-    proxy.setChildren(children)
+    proxy.setChildren(children, 0)
 
     # have to infer cloned params for rewritten unary call
     infer_rewrite_unary rwr_unary
@@ -262,7 +261,7 @@ class Typer < SimpleNodeVisitor
   def visitCall(call, expression)
     proxy = ProxyNode.new(self, call)
     children = ArrayList.new(3)
-
+    children.add(call)
     # if we have (a -1) => Call(a, [Call(-@, 1)]) we also should try Call(-, [a, 1])
     # check AST before inferring rewrite call parameters
     rwr_unary = get_rewrite_unary(call)
@@ -297,9 +296,8 @@ class Typer < SimpleNodeVisitor
         end)
       end
     end
-    children.add(call)
     children.add(rwr_unary) if rwr_unary
-    proxy.setChildren(children)
+    proxy.setChildren(children, 0)
     # have to infer cloned params for rewritten unary call
     infer_rewrite_unary rwr_unary
     @futures[proxy] = proxy.inferChildren(expression != nil)
