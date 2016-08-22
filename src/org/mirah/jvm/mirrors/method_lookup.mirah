@@ -543,16 +543,21 @@ class MethodLookup
       false
     elsif getPackage(type).equals(getPackage(selfType))
       true
-    elsif (0 != (access & Opcodes.ACC_PROTECTED) &&
-           MethodLookup.isJvmSubType(selfType, type))
+    elsif 0 != (access & Opcodes.ACC_PROTECTED)
+      if MethodLookup.isJvmSubType(selfType, type)
       # A subclass may call protected methods from the superclass,
       # but only on instances of the subclass.
       # NOTE: There's no way to differentiate between a call to super
       # or just trying to access protected methods on a random instance
       # of the superclass. For now I guess we just allow both and let
       # the latter raise a runtime exception.
-      true
-      #return target.nil? || MethodLookup.isJvmSubType(target, selfType)
+        true
+      elsif inClosurePackage(getPackage(type), scope)
+        # Closure has access to protected methods in the same package
+        true
+      else
+        false
+      end
     else
       false
     end
@@ -566,6 +571,19 @@ class MethodLookup
     else
       name.substring(0, lastslash)
     end
+  end
+
+  # return true if same as closure parent scope type package
+  def self.inClosurePackage(pckg:String,scope:Scope):boolean
+    return false unless scope.kind_of? ClosureScope
+    outer = outerParent(scope:ClosureScope)
+    return false unless outer.selfType
+    getPackage(outer.selfType.peekInferredType:JVMType).equals(pckg)
+  end
+
+  def self.outerParent(scope:Scope)
+    return scope if scope.parent.nil?
+    outerParent(scope.parent)
   end
 
   def removeInaccessible(methods:List, scope:Scope, target:JVMType):List

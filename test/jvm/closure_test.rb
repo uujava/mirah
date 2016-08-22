@@ -334,5 +334,31 @@ class ClosureTest < Test::Unit::TestCase
     })
     assert_run_output("my s1\nouter\no: s1\nmy1 s1\nmy2 s1\nouter\n", cls)
   end
+  def test_access_protected_methods
+    cls, = compile(%q{
+      package testAccess
+      class TestAccessProtectedMethods < TestAccessProtectedMethodsFoo
+        def initialize
+          create_foo do
+            bar
+            create_foo do
+              bar
+            end
+          end
+        end
 
+        def create_foo(x:Runnable):void
+          x.run
+        end
+      end
+      class TestAccessProtectedMethodsFoo
+        protected def bar:void; puts 'bar'; end
+      end
+    })
+    # just test it compile!
+    # getting :
+    # Java::JavaLang::IllegalAccessError: tried to access method testAccess.TestAccessProtectedMethodsFoo.bar()V from class testAccess.TestAccessProtectedMethods$initialize$Closure1
+    # when trying to run it from rake, while it's run under plain java without errors
+    # assert_output("bar\nbar\n") { cls.newInstance }
+  end
 end
