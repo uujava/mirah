@@ -43,14 +43,14 @@ class SimpleDiagnostics implements DiagnosticListener
       else
         diagnostic.getColumnNumber - 1
       end
-      start_col = (0):long if start_col < 0
+      start_col = 0 if start_col < 0
       lines = @newline.split(source.contents)
       if target_line < lines.length
         line = lines[target_line]
         buffer.append(line)
         buffer.append(newline)
         space = char[(start_col):int]
-        prefix = line.substring(0,(start_col):int)
+        prefix = line.substring(0,Math.min(start_col, line.length):int)
         prefix.length.times do |i|
           c = prefix.charAt(i) 
           if Character.isWhitespace(c)
