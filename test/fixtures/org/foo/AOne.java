@@ -2,7 +2,7 @@ package org.foo;
  /**
     java doc
  */
-public class AOne {
+public abstract class AOne implements org.foo.AOneX{
     /** values for constants not implemented */
     public static final int CONST = 0;
     private int a;

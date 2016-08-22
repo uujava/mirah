@@ -3,7 +3,7 @@ package org.foo
  /**
     java doc
  */
-class AOne
+abstract class AOne implements AOneX
   CONST = 1
 
   /** getter and setter for field @x */
@@ -36,5 +36,5 @@ class AOne
   end
 end
 
-interface AOneX
+interface AOneX < Runnable
 end

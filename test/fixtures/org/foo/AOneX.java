@@ -1,3 +1,3 @@
 package org.foo;
-public interface AOneX {
+public interface AOneX extends java.lang.Runnable{
 }
