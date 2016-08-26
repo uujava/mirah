@@ -50,7 +50,7 @@ class SimpleDiagnostics implements DiagnosticListener
         buffer.append(line)
         buffer.append(newline)
         space = char[(start_col):int]
-        prefix = line.substring(0,Math.min(start_col, line.length):int)
+        prefix = line.substring(0,start_col:int)
         prefix.length.times do |i|
           c = prefix.charAt(i) 
           if Character.isWhitespace(c)

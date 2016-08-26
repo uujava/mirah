@@ -67,9 +67,9 @@ class MacroConsumer implements BytecodeConsumer
 
   @@log = Logger.getLogger(MacroConsumer.class.getName)
 
-  def initialize(parent:BytecodeConsumer)
+  def initialize(root_loader: ClassLoader, parent:BytecodeConsumer)
     @extension_classes = {}
-    extension_parent = MacroConsumer.class.getClassLoader()
+    extension_parent = root_loader || MacroConsumer.class.getClassLoader()
     @extension_loader = MirahClassLoader.new(
        extension_parent, @extension_classes)
     @parent = parent

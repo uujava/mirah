@@ -256,7 +256,7 @@ class MirahCompiler implements JvmBackend
   end
 
   def compile(generator: BytecodeConsumer)
-    @macro_consumer = MacroConsumer.new generator
+    @macro_consumer = MacroConsumer.new context[ClassLoader], generator
     infer
     clean
     unless context[MirahArguments].skip_compile
@@ -310,7 +310,7 @@ class MirahCompiler implements JvmBackend
     macroloader = createMacroLoader(macrocp)
 
     macro_class_loader = URLClassLoader.new(
-        macrocp, MirahCompiler.class.getClassLoader())
+        macrocp, createRootClassLoader())
     @context[ClassLoader] = macro_class_loader
     @macro_context[ClassLoader] = macro_class_loader
 
@@ -318,5 +318,10 @@ class MirahCompiler implements JvmBackend
         @macro_context, macroloader)
     @context[TypeSystem] = @types = MirrorTypeSystem.new(
         @context, classloader)
+  end
+
+  # could be overriden for embedding cases
+  def createRootClassLoader:ClassLoader
+    MirahCompiler.class.getClassLoader()
   end
 end
