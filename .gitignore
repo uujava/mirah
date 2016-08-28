@@ -33,6 +33,7 @@ javalib/jarjar.jar
 javalib/mirah-asm-5.jar
 javalib/*.jarjar
 maven/mirah/lib/
+maven/mvn-repo/
 #git ignore netbeans files
 nb-configuration.xml
 .idea
