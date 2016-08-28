@@ -15,6 +15,12 @@
             <version>${mirahc.build.number}</version>
         </dependency>
     </dependencies>
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>${repo.url}</url>
+        </repository>
+    </repositories>
     <build>
         <plugins>
             <plugin>
@@ -48,10 +54,12 @@
                 <build.number.major>${env.MIRAH_VERSION_MAJOR}</build.number.major>
                 <build.number.minor>${env.MIRAH_VERSION_MINOR}</build.number.minor>
                 <mirahc.build.number>${build.number.major}-${build.number.minor}</mirahc.build.number>
+                <repo.url>${env.MVN_REMOTE_URL}</repo.url>
             </properties>
         </profile>
     </profiles>
     <properties>
         <mirahc.build.number>0.1.5-SNAPSHOT</mirahc.build.number>
+        <repo.url>https://repo.maven.apache.org/maven2</repo.url>
     </properties>
 </project>
