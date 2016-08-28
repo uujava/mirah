@@ -73,11 +73,13 @@
         <profile>
             <id>teamcity</id>
             <properties>
-                <mirahc.build.number>${env.BUILD_NUMBER}</mirahc.build.number>
+                <build.number.major>${env.MIRAH-VERION-MAJOR}</build.number.major>
+                <build.number.minor>${env.MIRAH-VERION-MINOR}</build.number.minor>
+                <mirahc.build.number>${build.number.major}-${build.number.minor}</mirahc.build.number>
             </properties>
         </profile>
     </profiles>
     <properties>
-        <build.number>0.1.5-SNAPSHOT</build.number>
+        <mirahc.build.number>0.1.5-SNAPSHOT</mirahc.build.number>
     </properties>
 </project>
