@@ -45,8 +45,8 @@
         <profile>
             <id>teamcity</id>
             <properties>
-                <build.number.major>${env.MIRAH-VERION-MAJOR}</build.number.major>
-                <build.number.minor>${env.MIRAH-VERION-MINOR}</build.number.minor>
+                <build.number.major>${env.MIRAH-VERSION-MAJOR}</build.number.major>
+                <build.number.minor>${env.MIRAH-VERSION-MINOR}</build.number.minor>
                 <mirahc.build.number>${build.number.major}-${build.number.minor}</mirahc.build.number>
             </properties>
         </profile>
