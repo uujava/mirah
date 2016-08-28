@@ -576,8 +576,12 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def extendClass(classname:String, extensions:Class)
-    type = loadNamedType(classname).resolve:BaseType
-    BytecodeMirrorLoader.extendClass(type, extensions)
+    type = loadNamedType(classname).resolve
+    if type.kind_of? BaseType
+      BytecodeMirrorLoader.extendClass(type:BaseType, extensions)
+    else
+      raise "Class #{classname} resolved as wrong type: #{type} could not be extended: #{extensions}"
+    end
   end
 
   def register_array_extension(clazz:Class)
