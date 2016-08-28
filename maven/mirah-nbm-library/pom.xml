@@ -15,13 +15,6 @@
             <version>${mirahc.build.number}</version>
         </dependency>
     </dependencies>
-    <repositories>
-        <repository>
-            <id>mvn-fake-repo</id>
-            <url>file:../mvn-repo</url>
-        </repository>
-    </repositories>
-
     <build>
         <plugins>
             <plugin>
@@ -37,27 +30,6 @@
                     </publicPackages>
                     <verifyRuntime>warn</verifyRuntime>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>2.5.2</version>
-                <executions>
-                    <execution>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <configuration>
-                            <localRepositoryPath>../mvn-repo</localRepositoryPath>
-                            <groupId>org.mirah</groupId>
-                            <artifactId>mirahc</artifactId>
-                            <version>${mirahc.build.number}</version>
-                            <packaging>jar</packaging>
-                            <file>${basedir}/../../dist/mirahc3.jar</file>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
