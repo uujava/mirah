@@ -8,19 +8,15 @@
     <packaging>nbm</packaging>
     <version>0.1.5-SNAPSHOT</version>
     <name>Mirah NBM Wrapper</name>
+
     <dependencies>
         <dependency>
             <groupId>org.mirah</groupId>
             <artifactId>mirahc</artifactId>
-            <version>${mirahc.build.number}</version>
+            <version>0.1.5-SNAPSHOT</version>
         </dependency>
     </dependencies>
-    <repositories>
-        <repository>
-            <id>central</id>
-            <url>${repo.url}</url>
-        </repository>
-    </repositories>
+
     <build>
         <plugins>
             <plugin>
@@ -47,19 +43,4 @@
             </plugin>
         </plugins>
     </build>
-    <profiles>
-        <profile>
-            <id>teamcity</id>
-            <properties>
-                <build.number.major>${env.MIRAH_VERSION_MAJOR}</build.number.major>
-                <build.number.minor>${env.MIRAH_VERSION_MINOR}</build.number.minor>
-                <mirahc.build.number>${build.number.major}-${build.number.minor}</mirahc.build.number>
-                <repo.url>${env.MVN_REMOTE_URL}</repo.url>
-            </properties>
-        </profile>
-    </profiles>
-    <properties>
-        <mirahc.build.number>0.1.5-SNAPSHOT</mirahc.build.number>
-        <repo.url>https://repo.maven.apache.org/maven2</repo.url>
-    </properties>
 </project>
