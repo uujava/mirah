@@ -16,7 +16,12 @@
             <version>0.1.5-SNAPSHOT</version>
         </dependency>
     </dependencies>
-
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>${repo.url}</url>
+        </repository>
+    </repositories>
     <build>
         <plugins>
             <plugin>
@@ -43,4 +48,15 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>teamcity</id>
+            <properties>
+                <repo.url>${env.MVN_REMOTE_URL}</repo.url>
+            </properties>
+        </profile>
+    </profiles>
+    <properties>
+        <repo.url>https://repo.maven.apache.org/maven2</repo.url>
+    </properties>
 </project>
