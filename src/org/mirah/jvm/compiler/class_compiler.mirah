@@ -19,6 +19,8 @@ import java.io.File
 import java.util.Collections
 import java.util.List
 import java.util.LinkedList
+import java.util.HashSet
+import java.util.Set
 import org.mirah.util.Logger
 import mirah.lang.ast.*
 import org.mirah.util.Context
@@ -190,14 +192,12 @@ class ClassCompiler < BaseCompiler implements InnerClassCompiler
   protected def verify
     return if JVMTypeUtils.isAbstract(@type)
     # naive check all abstract methods implemented
-    abstract_methods = []
-    impl_methods = []
+    abstract_methods = HashSet.new
+    impl_methods = HashSet.new
     # TODO does this check cover bridge, synthetic and generic methods properly???
     type = @type:MirrorType
     collect_methods(type.getAllDeclaredMethods, abstract_methods, impl_methods)
-    type.directSupertypes.each do |super_type: MirrorType|
-       collect_methods(super_type.getAllDeclaredMethods, abstract_methods, impl_methods)
-    end
+    collect_super_methods(type, abstract_methods, impl_methods)
     @@log.fine "#{@type} abstract signatures: #{abstract_methods}"
     @@log.fine "#{@type} implemented signatures: #{impl_methods}"
     abstract_methods.removeAll(impl_methods) if abstract_methods.size > 0
@@ -207,7 +207,14 @@ class ClassCompiler < BaseCompiler implements InnerClassCompiler
     end
   end
 
-  private def collect_methods(members: List, abstract_methods:List, impl_methods:List)
+  private def self.collect_super_methods(type:MirrorType, abstract_methods:Set, impl_methods:Set):void
+    type.directSupertypes.each do |super_type: MirrorType|
+      collect_methods(super_type.getAllDeclaredMethods, abstract_methods, impl_methods)
+      collect_super_methods(super_type, abstract_methods, impl_methods)
+    end
+  end
+
+  private def self.collect_methods(members: List, abstract_methods:Set, impl_methods:Set):void
     members.each do |member: Member|
       next if member.kind_of? MacroMember
       next if JVMTypeUtils.isStatic(member)
@@ -220,16 +227,15 @@ class ClassCompiler < BaseCompiler implements InnerClassCompiler
     end
   end
 
-  private def get_methods_spec(list:List):String
+  private def get_methods_spec(list:Set):String
     sb = StringBuilder.new
-    list.each_with_index do |data:List, i|
-      sb.append(';') unless i == 0
+    list.each do |data:List|
       sb.append(data[0]).append('(')
       data[1]:List.each_with_index do |arg, j|
         sb.append (',') unless j == 0
         sb.append arg
       end
-      sb.append(')')
+      sb.append(');')
     end
     sb.toString
   end

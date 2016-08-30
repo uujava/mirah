@@ -21,7 +21,7 @@ repositories {
 apply plugin: 'cz.kubacki.nbm'
 
 nbm {
-	moduleName = "${theGroup}.${theName}"
+	moduleName = "${theGroup}.${theName}-nbm"
 	specificationVersion = implementationVersion = theVersion
 	friendPackages {
 		add 'mirah.**'

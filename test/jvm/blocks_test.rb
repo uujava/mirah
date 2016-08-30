@@ -379,7 +379,7 @@ class BlocksTest < Test::Unit::TestCase
         end
       CODE
     end
-    assert exception.message.start_with? 'Internal error in compiler: class java.lang.VerifyError Abstract methods not implemented: run() for not abstract'
+    assert exception.message.start_with? 'Internal error in compiler: class java.lang.VerifyError Abstract methods not implemented: run(); for not abstract'
   end
 
   def test_call_with_block_assigned_to_macro
