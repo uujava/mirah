@@ -60,7 +60,7 @@ project(':nbm') {
 
 	description = 'The Mirah Programming Language'
 	nbm {
-		moduleName = "${theGroup}.${theName}-nbm"
+		moduleName = "${theGroup}.${theName}.nbm"
 		specificationVersion = implementationVersion = theVersion
 		friendPackages {
 			add 'mirah.**'
@@ -71,8 +71,6 @@ project(':nbm') {
 	dependencies {
 		runtime group: theGroup, name: theName, version: theVersion
 	}
-
-	println configurations.runtime.allDependencies
 
 	apply plugin: 'maven-publish'
 
