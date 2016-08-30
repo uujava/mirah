@@ -1,3 +1,4 @@
+
 def theGroup = 'org.mirah'
 def theName = 'mirahc'
 def theVersion = System.env.MIRAH_VERSION_MAJOR + '-' + System.env.MIRAH_VERSION_MINOR
@@ -97,5 +98,3 @@ project(':nbm') {
 	tasks.publish.dependsOn tasks.nbm
 
 }
-
-

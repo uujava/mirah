@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+require 'test_helper'
 
 class JVMCompilerTest < Test::Unit::TestCase
 
@@ -2433,4 +2434,42 @@ class JVMCompilerTest < Test::Unit::TestCase
     assert_run_output("1\n2\n3\n4\n5\n6\n", cls)
   end
 
+  def test_validation_for_abstract_methods
+    exception = assert_raises Mirah::MirahError do
+      parse_and_resolve_types('test_validation_for_abstract_methods', %q{
+       interface Subscriber
+         def subscribe(c:Class):void;end
+       end
+       interface MarkerSubscriber < Subscriber
+       end
+       abstract class Base
+       end
+
+       class BaseS < Base
+       end
+
+       class Final < BaseS
+         implements MarkerSubscriber
+       end
+      })
+    end
+    assert exception.message.start_with? 'Internal error in compiler: class java.lang.VerifyError Abstract methods not implemented: subscribe'
+
+    c1,c2,c3,c4 = compile(%q{
+       interface Subscriber
+         def subscribe(c:Class):void;end
+       end
+
+       abstract class Base
+         def subscribe(c:Class):void;end
+       end
+
+       class BaseS < Base
+       end
+
+       class Final < BaseS
+         implements Subscriber
+       end
+    })
+  end
 end
