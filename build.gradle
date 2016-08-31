@@ -3,6 +3,7 @@ def theGroup = 'org.mirah'
 def theName = 'mirahc'
 def theVersion = System.env.MIRAH_VERSION_MAJOR + '-' + System.env.MIRAH_VERSION_MINOR
 
+
 buildscript {
 	repositories {
 		maven { url project.properties['repo.url'] ?: System.env.REPO_URL }
@@ -13,47 +14,85 @@ buildscript {
 	}
 }
 
-repositories {
-	maven { url project.properties['repo.url'] ?: System.env.REPO_URL }
-}
 
 
-apply plugin: 'cz.kubacki.nbm'
-
-nbm {
-	moduleName = "${theGroup}.${theName}-nbm"
-	specificationVersion = implementationVersion = theVersion
-	friendPackages {
-		add 'mirah.**'
-		add 'org.mirah.**'
-	}
-}
-
-description = 'The Mirah Programming Language'
-dependencies {
-	compile files('dist/mirahc3.jar')
-}
-
-apply plugin: 'maven-publish'
-
-publishing {
+subprojects {
 	repositories {
-		maven {
-			url project.properties['publish.url'] ?: System.env.PUBLISH_URL
-		}
+		maven { url project.properties['repo.url'] ?: System.env.REPO_URL }
+	}
+}
+
+
+
+project(':mirahc3') {
+	apply plugin: 'java'
+
+	dependencies {
+		compile files('../dist/mirahc3.jar')
 	}
 
-	publications {
-		mirah3(MavenPublication) {
-			groupId theGroup
-			artifactId theName
-			version theVersion
+	apply plugin: 'maven-publish'
 
-			artifact 'dist/mirahc3.jar'
-			artifact source: 'dist/mirahc-stub.jar', classifier: 'source'
-			artifact tasks.nbm.outputFile
+	publishing {
+		repositories {
+			maven {
+				url project.properties['publish.url'] ?: System.env.PUBLISH_URL
+			}
+		}
+
+		publications {
+			mirahc3(MavenPublication) {
+				groupId theGroup
+				artifactId theName
+				version theVersion
+
+				artifact '../dist/mirahc3.jar'
+				artifact source: '../dist/mirahc-stub.jar', classifier: 'source'
+			}
 		}
 	}
 }
 
 
+
+project(':nbm') {
+	apply plugin: 'cz.kubacki.nbm'
+
+	description = 'The Mirah Programming Language'
+	nbm {
+		moduleName = "${theGroup}.${theName}.nbm"
+		specificationVersion = implementationVersion = theVersion
+		friendPackages {
+			add 'mirah.**'
+			add 'org.mirah.**'
+		}
+	}
+
+	dependencies {
+		runtime group: theGroup, name: theName, version: theVersion
+	}
+
+	apply plugin: 'maven-publish'
+
+	publishing {
+		repositories {
+			maven {
+				url project.properties['publish.url'] ?: System.env.PUBLISH_URL
+			}
+		}
+		publications {
+			nbm(MavenPublication) {
+				groupId theGroup
+				artifactId "$theName-nbm"
+				version theVersion
+
+				from components.java
+
+				artifact tasks.nbm.outputFile
+			}
+		}
+	}
+
+	tasks.publish.dependsOn tasks.nbm
+
+}
