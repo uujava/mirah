@@ -18,6 +18,7 @@ package org.mirah.jvm.model
 import java.util.ArrayList
 import javax.lang.model.element.TypeElement as TypeElementModel
 import org.mirah.jvm.mirrors.MirrorType
+import javax.lang.model.element.ElementVisitor
 
 class TypeElement implements TypeElementModel
   def initialize(type:MirrorType)
@@ -53,12 +54,33 @@ class TypeElement implements TypeElementModel
      raise UnsupportedOperationException.new "operation unsupported for #{self}"
   end
   def getInterfaces()
-     raise UnsupportedOperationException.new "operation unsupported for #{self}"
+    raise UnsupportedOperationException.new "operation unsupported for #{self}"
   end
   def getQualifiedName()
-     raise UnsupportedOperationException.new "operation unsupported for #{self}"
+    raise UnsupportedOperationException.new "operation unsupported for #{self}"
   end
   def getEnclosingElement()
-   raise UnsupportedOperationException.new "operation unsupported for #{self}"
+    raise UnsupportedOperationException.new "operation unsupported for #{self}"
+  end
+  def getAnnotation(clazz:Class)
+    raise UnsupportedOperationException.new "operation getAnnotation(clazz:Class) unsupported for #{self}"
+  end
+  def getAnnotationsByType(clazz:Class)
+    raise UnsupportedOperationException.new "operation getAnnotationsByType(clazz:Class) unsupported for #{self}"
+  end
+  def getAnnotationMirrors()
+    raise UnsupportedOperationException.new "operation getAnnotationMirrors() unsupported for #{self}"
+  end
+  def accept(visitor:ElementVisitor,ctx:Object)
+    raise UnsupportedOperationException.new "operation accept(javax.lang.model.element.ElementVisitor,java.lang.Object) unsupported for #{self}"
+  end
+  def getKind()
+    raise UnsupportedOperationException.new "operation getKind() unsupported for #{self}"
+  end
+  def getModifiers()
+    raise UnsupportedOperationException.new "operation getModifiers() unsupported for #{self}"
+  end
+  def asType()
+    raise UnsupportedOperationException.new "operation asType() unsupported for #{self}"
   end
 end

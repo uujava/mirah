@@ -110,4 +110,28 @@ class JvmErrorType < ErrorType implements MirrorType, ErrorTypeModel
   def getDeclaredMethods(name)
     raise UnsupportedOperationException.new "operation getDeclaredMethods(name) unsupported for #{self}"
   end
+  def asElement()
+    raise UnsupportedOperationException.new "operation asElement() unsupported for #{self}"
+  end
+  def getTypeArguments()
+    raise UnsupportedOperationException.new "operation getTypeArguments() unsupported for #{self}"
+  end
+  def getAnnotation(clazz:Class)
+    raise UnsupportedOperationException.new "operation getAnnotation(java.lang.Class) unsupported for #{self}"
+  end
+  def getAnnotationsByType(clazz:Class)
+    raise UnsupportedOperationException.new "operation getAnnotationsByType(java.lang.Class) unsupported for #{self}"
+  end
+  def box()
+    raise UnsupportedOperationException.new "operation box() unsupported for #{self}"
+  end
+  def getEnclosingType()
+    raise UnsupportedOperationException.new "operation getEnclosingType() unsupported for #{self}"
+  end
+  def getAnnotationMirrors()
+    raise UnsupportedOperationException.new "operation getAnnotationMirrors() unsupported for #{self}"
+  end
+  def unbox()
+    raise UnsupportedOperationException.new "operation unbox() unsupported for #{self}"
+  end
 end
