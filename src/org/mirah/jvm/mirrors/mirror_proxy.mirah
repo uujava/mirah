@@ -292,6 +292,16 @@ class MirrorProxy implements MirrorType,
   def getEnclosingType()
     @target:DeclaredType.getEnclosingType
   end
+
+  def getAnnotation(clazz:Class)
+    raise UnsupportedOperationException.new "operation getAnnotation(clazz:Class) unsupported for #{self}"
+  end
+  def getAnnotationsByType(clazz:Class)
+    raise UnsupportedOperationException.new "operation getAnnotationsByType(clazz:Class) unsupported for #{self}"
+  end
+  def getAnnotationMirrors()
+    raise UnsupportedOperationException.new "operation getAnnotationMirrors() unsupported for #{self}"
+  end
 end
 
 class MirrorFuture < BaseTypeFuture
@@ -380,4 +390,5 @@ class ResolvedCall < MirrorProxy implements CallType
       false
     end
   end
+
 end

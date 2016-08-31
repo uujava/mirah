@@ -2453,7 +2453,7 @@ class JVMCompilerTest < Test::Unit::TestCase
        end
       })
     end
-    assert exception.message.start_with? 'Internal error in compiler: class java.lang.VerifyError Abstract methods not implemented: subscribe'
+    assert exception.message.start_with? 'Internal error in compiler: class java.lang.VerifyError Abstract methods not implemented'
 
     c1,c2,c3,c4 = compile(%q{
        interface Subscriber

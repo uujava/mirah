@@ -203,7 +203,7 @@ class ClassCompiler < BaseCompiler implements InnerClassCompiler
     abstract_methods.removeAll(impl_methods) if abstract_methods.size > 0
 
     if abstract_methods.size > 0
-      raise VerifyError.new("Abstract methods not implemented: #{get_methods_spec(abstract_methods)} for not abstract class #{@type}")
+      raise VerifyError.new("Abstract methods not implemented for not abstract class #{@type}:\n#{get_methods_spec(abstract_methods)}")
     end
   end
 
@@ -218,7 +218,7 @@ class ClassCompiler < BaseCompiler implements InnerClassCompiler
     members.each do |member: Member|
       next if member.kind_of? MacroMember
       next if JVMTypeUtils.isStatic(member)
-      spec = [member.name, member.argumentTypes]
+      spec = [member.name, member.argumentTypes, member.returnType.toString]
       if member.isAbstract
         abstract_methods << spec
       else
@@ -235,7 +235,8 @@ class ClassCompiler < BaseCompiler implements InnerClassCompiler
         sb.append (',') unless j == 0
         sb.append arg
       end
-      sb.append(');')
+      sb.append('):').append(data[2])
+      sb.append(';').append("\n")
     end
     sb.toString
   end
