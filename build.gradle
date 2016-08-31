@@ -1,4 +1,3 @@
-
 def theGroup = 'org.mirah'
 def theName = 'mirahc'
 def theVersion = System.env.MIRAH_VERSION_MAJOR + '.' + System.env.MIRAH_VERSION_MINOR
@@ -69,7 +68,7 @@ project(':nbm') {
 	}
 
 	dependencies {
-		runtime group: theGroup, name: theName, version: theVersion
+		compile group: theGroup, name: theName, version: theVersion
 	}
 
 	apply plugin: 'maven-publish'
@@ -89,6 +88,19 @@ project(':nbm') {
 				from components.java
 
 				artifact tasks.nbm.outputFile
+
+				// workaround
+				// https://discuss.gradle.org/t/maven-publish-plugin-generated-pom-making-dependency-scope-runtime/7494/6
+				pom.withXml {
+					asNode().dependencies.'*'.findAll() {
+						it.scope.text() == 'runtime' && project.configurations.compile.allDependencies.find { dep ->
+							dep.name == it.artifactId.text()
+						}
+					}.each() {
+						it.scope*.value = 'compile'
+					}
+				}
+
 			}
 		}
 	}
