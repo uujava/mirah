@@ -608,6 +608,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
         @object, MirrorObjectExtensions.class)
     bool = getBooleanType.resolve:JVMType
     object_meta = getMetaType(@object_future).resolve
+    void = getVoidType.resolve:JVMType
     methods = [
       Member.new(
           Opcodes.ACC_PUBLIC, @object, 'nil?', [],
@@ -621,6 +622,12 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
       Member.new(
         Opcodes.ACC_PUBLIC, @object, '!==', [@object],
         bool, MemberKind.COMPARISON_OP),
+      Member.new(
+        Opcodes.ACC_PUBLIC, @object, '$monitor_enter', [],
+        void, MemberKind.MONITOR_ENTER),
+      Member.new(
+        Opcodes.ACC_PUBLIC, @object, '$monitor_exit', [],
+        void, MemberKind.MONITOR_EXIT),
     ]
     nullType = getNullType.resolve:NullType
     methods.each do |m:Member|

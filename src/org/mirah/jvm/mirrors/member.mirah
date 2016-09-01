@@ -93,6 +93,10 @@ class Member implements GenericMethod
       visitor.visitInstanceof(self, expression)
     elsif kind == 'IS_NULL'
       visitor.visitIsNull(self, expression)
+    elsif kind == 'MONITOR_ENTER'
+      visitor.visitMonitorEnter(self, expression)
+    elsif kind == 'MONITOR_EXIT'
+      visitor.visitMonitorExit(self, expression)
     else
       raise IllegalArgumentException, "Member #{kind} not supported"
     end

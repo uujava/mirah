@@ -256,4 +256,25 @@ class ObjectExtensions
     SyntheticLambdaDefinition.new(@call.position, type:TypeName, parameters, args[args.length-1]:Block)
   end
 
+  macro def synchronize(block:Block)
+    monitor_enter = Call.new(block.position, @call.target, SimpleString.new('$monitor_enter'), [], nil)
+    monitor_exit  = Call.new(block.position, @call.target, SimpleString.new('$monitor_exit'), [], nil)
+    body = block.body
+    quote do
+      `monitor_enter`
+      begin
+        `body`
+        `monitor_exit`
+      rescue Throwable => ex
+        while true do
+          begin
+            `monitor_exit`
+            break
+          rescue Throwable
+          end
+        end
+        raise ex
+      end
+    end
+  end
 end

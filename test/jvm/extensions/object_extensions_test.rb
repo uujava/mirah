@@ -119,4 +119,16 @@ class ObjectExtensionsTest < Test::Unit::TestCase
     assert_run_output("true\nfalse\nfalse\nfalse\n", cls)
   end
 
+  def test_synchronize
+    cls, = compile(%q[
+      o = Object.new
+      o.synchronize do
+        puts 'wait'
+        o.wait(1)
+        puts 'done'
+      end
+    ])
+    assert_run_output("wait\ndone\n", cls)
+  end
+
 end

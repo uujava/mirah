@@ -411,4 +411,14 @@ class CallCompiler < BaseCompiler implements MemberVisitor
   def visitStaticInitializer(method, expression)
     raise UnsupportedOperationException.new "visitStaticInitializer(method, expression) unsupported for #{self}"
   end
+
+  def visitMonitorEnter(method, expression)
+    compile(@target)
+    @method.monitorEnter
+  end
+
+  def visitMonitorExit(method, expression)
+    compile(@target)
+    @method.monitorExit
+  end
 end

@@ -17,4 +17,6 @@ interface MemberVisitor
   def visitClassLiteral(method:JVMMethod, expression:boolean):void; end
   def visitInstanceof(method:JVMMethod, expression:boolean):void; end
   def visitIsNull(method:JVMMethod, expression:boolean):void; end
+  def visitMonitorEnter(method:JVMMethod, expression:boolean):void; end
+  def visitMonitorExit(method:JVMMethod, expression:boolean):void; end
 end
