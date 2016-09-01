@@ -387,7 +387,7 @@ def bootstrap_mirah_from(old_jar, new_jar, options={})
       x.report "Compile Mirah core" do
         args = task_args[:verbose] == 'true' ? ['-V'] : []
         args += ['-classpath', default_class_path]
-        run_mirahc("core-#{old_jar}", old_jar, *(args + optargs + mirah_srcs))
+        run_mirahc("core-#{old_jar}", "#{build_dir}#{File::PATH_SEPARATOR}#{old_jar}", *(args + optargs + mirah_srcs))
       end
 
       x.report "compile ant stuff" do
