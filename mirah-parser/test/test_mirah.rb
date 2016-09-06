@@ -1,16 +1,16 @@
 require 'test/unit'
 require 'java'
 
-$CLASSPATH << 'build/mirah-parser.jar'
+$CLASSPATH << 'dist/mirah-parser.jar'
 
 class TestParsing < Test::Unit::TestCase
-  java_import 'org.mirahparser.mmeta.SyntaxError'
-  java_import 'org.mirahparser.mmeta.BaseParser'
-  java_import 'mirahparser.impl.MirahParser'
-  java_import 'mirahparser.lang.ast.NodeScanner'
-  java_import 'mirahparser.lang.ast.Modifier'
-  java_import 'mirahparser.lang.ast.StringCodeSource'
-  java_import 'mirahparser.lang.ast.AnnotationList'
+  java_import 'org.mirah.mmeta.SyntaxError'
+  java_import 'org.mirah.mmeta.BaseParser'
+  java_import 'mirah.impl.MirahParser'
+  java_import 'mirah.lang.ast.NodeScanner'
+  java_import 'mirah.lang.ast.Modifier'
+  java_import 'mirah.lang.ast.StringCodeSource'
+  java_import 'mirah.lang.ast.AnnotationList'
 
   class AstPrinter < NodeScanner
     def initialize
