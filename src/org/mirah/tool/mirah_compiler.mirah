@@ -81,14 +81,12 @@ class MirahCompiler implements JvmBackend
     context[MirahArguments] = compiler_args
     context[JvmBackend] = self
     context[DiagnosticListener] = @diagnostics
-    context[ErrorCounter] = @diagnostics
     context[JvmVersion] = @jvm
     context[DebuggerInterface] = debugger
 
     @macro_context = Context.new
     @macro_context[JvmBackend] = self
     @macro_context[DiagnosticListener] = @diagnostics
-    @macro_context[ErrorCounter] = @diagnostics
     @macro_context[JvmVersion] = @jvm
     @macro_context[DebuggerInterface] = @debugger
     @macro_context[MirahArguments] = compiler_args
@@ -213,7 +211,7 @@ class MirahCompiler implements JvmBackend
     @@log.log(Level.FINE, "AST: #{ast.position}\n{0}", AstFormatter.new(ast))
   end
 
-  private def failIfErrors
+  public def failIfErrors
     if @diagnostics.errorCount > 0
       raise CompilationFailure.new @diagnostics.errorCount
     end

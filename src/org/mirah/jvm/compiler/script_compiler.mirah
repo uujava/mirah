@@ -20,7 +20,6 @@ import org.mirah.util.Logger
 import org.mirah.typer.Typer
 import org.mirah.typer.TypePrinter
 import org.mirah.util.Context
-import org.mirah.util.ErrorCounter
 
 class ScriptCompiler < BaseCompiler
   def self.initialize:void
@@ -30,7 +29,6 @@ class ScriptCompiler < BaseCompiler
     super(context)
     @typer = context[Typer]
     @classes = LinkedList.new
-    @diagnostics = context[ErrorCounter]
   end
   
   def visitScript(script, expression)
@@ -61,7 +59,7 @@ class ScriptCompiler < BaseCompiler
   def generate(consumer:BytecodeConsumer)
     until @classes.isEmpty
       compiler = @classes.removeFirst:ClassCompiler
-      consumer.consumeClass(compiler.internal_name, compiler.getBytes) if @diagnostics.errorCount == 0
+      consumer.consumeClass(compiler.internal_name, compiler.getBytes)
       @classes.addAll(compiler.innerClasses)
     end
   end

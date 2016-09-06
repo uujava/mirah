@@ -26,7 +26,6 @@ import javax.tools.DiagnosticListener
 import mirah.lang.ast.Script
 import org.mirah.typer.Typer
 import org.mirah.util.Context
-import org.mirah.util.ErrorCounter
 import org.mirah.util.Logger
 import org.mirah.macros.Compiler
 import org.mirah.MirahClassLoader
@@ -39,7 +38,6 @@ class Backend
 
   def initialize(context:Context)
     @context = context
-    @diagnostics = context[ErrorCounter]
     @context[Compiler] = @context[Typer].macro_compiler
     @context[AnnotationCompiler] = AnnotationCompiler.new(@context)
     @compiler = ScriptCompiler.new(@context)
