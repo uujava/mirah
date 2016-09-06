@@ -17,7 +17,7 @@ package org.mirah.builtins
 
 import org.mirah.macros.anno.ExtensionsRegistration
 
-$ExtensionsRegistration[['int']]
+$ExtensionsRegistration[['int', 'long', 'short', 'byte', 'java.lang.Integer', 'java.lang.Long', 'java.lang.Short', 'java.lang.Byte']]
 class IntExtensions
   macro def times(block:Block)
     i = if block.arguments && block.arguments.required_size() > 0

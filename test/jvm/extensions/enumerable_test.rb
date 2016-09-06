@@ -127,7 +127,7 @@ class EnumerableTest < Test::Unit::TestCase
 
   def test_upto
     cls, = compile(<<-EOF)
-      def foo(i:int)
+      def foo(i:long)
         i.upto(3) {|x| puts x }
       end
     EOF
@@ -139,7 +139,7 @@ class EnumerableTest < Test::Unit::TestCase
 
   def test_times_with_arg
     cls, = compile(<<-EOF)
-      def foo(i:int)
+      def foo(i:short)
         i.times {|x| puts x }
       end
     EOF
@@ -151,7 +151,7 @@ class EnumerableTest < Test::Unit::TestCase
 
   def test_times_without_arg
     cls, = compile(<<-EOF)
-      def foo(i:int)
+      def foo(i:byte)
         i.times { puts "Hi" }
       end
     EOF
@@ -555,4 +555,53 @@ class EnumerableTest < Test::Unit::TestCase
       cls.test("Hi")
     end
   end
+
+  def test_downto_numeric
+    cls, = compile(<<-EOF)
+      def foo(i:Integer)
+        i.downto(1) {|x| puts x }
+      end
+    EOF
+
+    assert_output("3\n2\n1\n") do
+      cls.foo(3)
+    end
+  end
+
+  def test_upto_numeric
+    cls, = compile(<<-EOF)
+      def foo(i:Long)
+        i.upto(3) {|x| puts x }
+      end
+    EOF
+
+    assert_output("1\n2\n3\n") do
+      cls.foo(1)
+    end
+  end
+
+  def test_times_with_arg_numeric
+    cls, = compile(<<-EOF)
+      def foo(i:Short)
+        i.times {|x| puts x }
+      end
+    EOF
+
+    assert_output("0\n1\n2\n") do
+      cls.foo(3)
+    end
+  end
+
+  def test_times_without_arg_numeric
+    cls, = compile(<<-EOF)
+      def foo(i:Byte)
+        i.times { puts "Hi" }
+      end
+    EOF
+
+    assert_output("Hi\nHi\nHi\n") do
+      cls.foo(3)
+    end
+  end
+
 end
