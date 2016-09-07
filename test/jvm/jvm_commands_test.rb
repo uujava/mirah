@@ -132,5 +132,9 @@ class JVMCommandsTest < Test::Unit::TestCase
     generated = File.read target_dir + '/org/foo/AOneX.java'
     expected = File.read fixture_dir + '/org/foo/AOneX.java'
     assert_equal expected.gsub(/\r/, ''), generated.gsub(/\r/, '')
+    generated = File.read target_dir + '/org/foo/StubPluginTestTopLevel.java'
+    expected = File.read fixture_dir + '/org/foo/StubPluginTestTopLevel.java'
+    assert_equal expected.gsub(/\r/, ''), generated.gsub(/\r/, '')
+
   end
 end

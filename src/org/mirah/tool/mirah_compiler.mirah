@@ -261,6 +261,7 @@ class MirahCompiler implements JvmBackend
       @asts.each do |node: Script|
         @backend.compile(node, nil)
       end
+      failIfErrors
       @backend.generate(generator)
     end
     @plugins.stop

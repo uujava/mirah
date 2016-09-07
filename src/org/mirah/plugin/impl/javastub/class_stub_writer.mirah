@@ -35,20 +35,34 @@ class ClassStubWriter < StubWriter
 
   attr_accessor append_self: boolean
 
+
   def initialize(plugin:JavaStubPlugin, node:ClassDefinition)
     super(plugin, nil, node)
     @dest_path = plugin.stub_dir
     @encoding = plugin.encoding
-    @class_name = node.name.identifier
     @node = node # hides superclass field to avoid casts!!!
     @fields = []
     @methods = []
     @imports = []
     @append_self = false
+    # handle TopLevel scripts package
+    ppath = node.name.identifier.split("\\.")
+    if ppath.length > 1
+      @class_name = ppath[ppath.length-1]
+      @class_package = ppath.as_list.subList(0, ppath.length-1).join('.')
+    else
+      @class_name = node.name.identifier
+      @class_package = nil
+    end
+
   end
 
   def set_package(pckg:String):void
-    @package = pckg
+    if pckg
+      @package = @class_package ? "#{pckg}.#{@class_package}" : pckg
+    else
+      @package = @class_package
+    end
   end
 
   def add_imports(nodes:List):void
@@ -110,7 +124,7 @@ class ClassStubWriter < StubWriter
   end
 
   def write_definition:void
-    writeln @node.java_doc:JavaDoc.value if @node.java_doc
+    writeln @node.java_doc.value if @node.java_doc
     modifier = 'public'
     flags = HashSet.new
     process_modifiers(@node) do |atype:int, value:String|

@@ -1,10 +1,11 @@
 package org.foo;
+import static java.awt.Color.*;
  /**
     java doc
  */
 public abstract class AOne implements org.foo.AOneX{
     /** values for constants not implemented */
-    public static final int CONST = 0;
+    public static final java.awt.Color CONST = null;
     private int a;
     private static java.lang.String test;
     private int x;

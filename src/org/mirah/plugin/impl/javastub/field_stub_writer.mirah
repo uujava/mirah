@@ -66,6 +66,8 @@ class FieldStubWriter < StubWriter
 
     if _final
       writeln StubWriter.TAB, "/** values for constants not implemented */"
+      # field declaration does not inherit java doc!!
+      # writeln @node.java_doc.value if @node.java_doc
     end
 
     write StubWriter.TAB, access, ' '

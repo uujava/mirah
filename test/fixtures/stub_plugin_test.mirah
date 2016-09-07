@@ -1,10 +1,12 @@
 package org.foo
 
+import static java.awt.Color.*
  /**
     java doc
  */
 abstract class AOne implements AOneX
-  CONST = 1
+  /** pending: field declaration javadoc */
+  CONST = RED
 
   /** getter and setter for field @x */
   attr_accessor x: int
@@ -12,6 +14,7 @@ abstract class AOne implements AOneX
   def call:void;end
 
   def call(a:int, b:String):int
+    /** pending: field declaration javadoc */
     @a = 1
   end
 
@@ -38,3 +41,5 @@ end
 
 interface AOneX < Runnable
 end
+
+puts 1

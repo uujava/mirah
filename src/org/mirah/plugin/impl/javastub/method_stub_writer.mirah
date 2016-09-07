@@ -74,7 +74,7 @@ class MethodStubWriter < StubWriter
 
     return if type.name.endsWith 'init>' and static
 
-    writeln @node.java_doc:JavaDoc.value if @node.java_doc
+    writeln @node.java_doc.value if @node.java_doc
     writeln(start_position) if @preserve_lines
     write StubWriter.TAB, modifier, ' '
     #constructor
