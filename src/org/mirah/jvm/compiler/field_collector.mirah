@@ -101,10 +101,11 @@ class FieldCollector < NodeScanner
     field = Member @type.getDeclaredField(name)
 
     # invalidate constant field assign in instance method
-    is_meta = parent.kind_of?(StaticMethodDefinition) || parent.kind_of?(ClassDefinition) || parent.kind_of?(InterfaceDeclaration)
+    is_meta = parent.kind_of?(ClassDefinition) || parent.kind_of?(InterfaceDeclaration)|| ( parent.kind_of?(StaticMethodDefinition) && "initialize".equals(parent:StaticMethodDefinition.name.identifier) )
+
     is_constant = isFinal(field) && isStatic(field)
     if !is_meta && is_constant
-      error("Static final field #{node} assigned in instance method: #{parent}", node.position)
+      error("Constant #{node.name.identifier} assigned in a method: #{parent}. Use def self.initialize for constant initialization", node.position)
     end
   end
 
