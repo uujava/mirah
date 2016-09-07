@@ -110,11 +110,13 @@ class MirahTool implements BytecodeConsumer
   end
 
   def consumeClass(filename:String, bytes:byte[]):void
-    file = File.new(destination, "#{filename.replace(?., ?/)}.class")
-    parent = file.getParentFile
-    parent.mkdirs if parent
-    output = BufferedOutputStream.new(FileOutputStream.new(file))
-    output.write(bytes)
-    output.close
+    unless @compiler_args.skip_compile
+      file = File.new(destination, "#{filename.replace(?., ?/)}.class")
+      parent = file.getParentFile
+      parent.mkdirs if parent
+      output = BufferedOutputStream.new(FileOutputStream.new(file))
+      output.write(bytes)
+      output.close
+    end
   end
 end
