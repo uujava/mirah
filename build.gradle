@@ -1,7 +1,7 @@
 def theGroup = 'org.mirah'
 def theName = 'mirahc'
 def theVersion = System.env.MIRAH_VERSION_MAJOR + '.' + System.env.MIRAH_VERSION_MINOR
-
+def netbeansVersion = 'RELEASE802'
 
 buildscript {
 	repositories {
@@ -69,6 +69,7 @@ project(':nbm') {
 
 	dependencies {
 		compile group: theGroup, name: theName, version: theVersion
+		providedCompile group: 'org.netbeans.api', name: 'org-netbeans-libs-javacapi', version: netbeansVersion
 	}
 
 	apply plugin: 'maven-publish'
