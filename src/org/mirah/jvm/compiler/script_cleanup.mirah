@@ -61,14 +61,23 @@ class ScriptCleanup < NodeScanner
       klass = getOrCreateClass(script)
       unless @main_code.isEmpty
         main = @parser.quote { def self.main(argv:String[]):void; end }
+        clinit = nil
         @main_code.each do |node: Node|
           node.parent.removeChild(node)
           node.setParent(nil)  # TODO: ast bug
-          main.body.add(node)
+          if constant?(node)
+            clinit ||= @parser.quote { def self.initialize():void; end }
+            clinit.body.add node
+          else
+            main.body.add(node)
+          end
         end
         klass.body.add(main)
+        klass.body.add(clinit) if clinit
         @typer.scoper.copyScopeFrom(script, main)
         @typer.infer(main, false)
+        @typer.scoper.copyScopeFrom(script, clinit)
+        @typer.infer(clinit, false) if clinit
       end
       unless @methods.isEmpty
         nodes = @parser.quote { class << self; end }
@@ -154,5 +163,12 @@ class ScriptCleanup < NodeScanner
       @typer.infer(@main_class, false)
     end
     @main_class:ClassDefinition
+  end
+
+  private def constant?(node:Node)
+    return false unless node
+    return true if node.kind_of? ConstantAssign
+    return false unless node.kind_of? FieldAssign
+    return constant? node.originalNode
   end
 end
