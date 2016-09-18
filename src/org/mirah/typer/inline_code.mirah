@@ -37,7 +37,11 @@ class InlineCode < SpecialType
   # Returns the replacement AST.
   def expand(node:Node, typer:Typer)
     if @block
-      @block.buildNode(node, typer)
+      begin
+        @block.buildNode(node, typer)
+      rescue Error => ex
+        ErrorNode.new(node.position, "Unable to expand macro: #{ex}")
+      end
     else
       @node
     end
