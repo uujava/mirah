@@ -58,7 +58,7 @@ class RunCommand < MirahTool
       main_method.invoke(nil, args)
       0
     else
-      puts "No main method found"
+      puts "Error: No main method found."
       1
     end
   end
@@ -78,7 +78,9 @@ class RunCommand < MirahTool
 
   def self.main(args:String[]):void
     result = run(args)
-    System.exit(result)
+
+    # NB only exit from a run if it failed.
+    System.exit(result) unless result == 0
   end
 
   def self.run(args: String[]): int
