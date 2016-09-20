@@ -248,7 +248,15 @@ task :zip => 'jar:complete' do
 end
 
 desc "Build java stub"
-task :stub => 'dist/mirahc-stub.jar'
+task :stub => [:clean_stub, 'dist/mirahc-stub.jar'] do
+  ant.jar 'jarfile' => 'dist/mirahc-stub.jar' do
+    fileset 'dir' => 'stub'
+  end
+end
+task :clean_stub do
+  rm_f 'dist/mirahc-stub.jar'
+  rm_rf 'stub'
+end
 
 desc "Build all redistributable files"
 task :dist => [:gem, :zip]
