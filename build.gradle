@@ -46,7 +46,7 @@ project(':mirahc3') {
 				version theVersion
 
 				artifact '../dist/mirahc3.jar'
-				artifact source: '../dist/mirahc-stub.jar', classifier: 'source'
+				artifact source: '../dist/mirahc-stub.jar', classifier: 'sources'
 			}
 		}
 	}
