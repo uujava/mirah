@@ -113,4 +113,23 @@ class NumericOperatorsTest < Test::Unit::TestCase
       assert_run_output("-1.0\njava.lang.#{type}\n", cls)
     end
   end
+
+  def test_numeric_object_methods
+    cls, = compile("puts 1.hashCode === Integer.new(1).hashCode
+               puts 1.equals(Integer.new(1))
+               puts 1.equals(nil)
+               puts 1.equals('1')
+               puts false.equals(false)
+               puts 1.nil?
+
+    ")
+    assert_run_output("true\ntrue\nfalse\nfalse\ntrue\nfalse\n", cls)
+
+    begin
+      compile("1.kind_of? Integer")
+      fail "kind_of? for primitve not supported"
+    rescue
+      # ok
+    end
+  end
 end

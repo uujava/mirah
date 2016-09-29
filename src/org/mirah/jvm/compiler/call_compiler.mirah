@@ -30,6 +30,7 @@ import mirah.objectweb.asm.Opcodes
 import mirah.objectweb.asm.Type
 import mirah.objectweb.asm.commons.GeneratorAdapter
 import mirah.objectweb.asm.commons.Method
+import static org.mirah.jvm.types.JVMTypeUtils.*
 
 class CallCompiler < BaseCompiler implements MemberVisitor
   def self.initialize:void
@@ -274,10 +275,15 @@ class CallCompiler < BaseCompiler implements MemberVisitor
   def visitMethodCall(method:JVMMethod, expression:boolean)
     isVoid = method.returnType.getAsmType.getDescriptor.equals('V')
     compile(@target)
+    targetType = getInferredType(@target)
+    if isPrimitive(targetType)
+      # java.lang.Object method called on primitive - call on boxed instance
+      @method.box(targetType.getAsmType)
+    end
     returnType = method.returnType
     if expression && isVoid
       @method.dup
-      returnType = getInferredType(@target)
+      returnType = targetType
     end
     convertArgs(method.argumentTypes)
     recordPosition
@@ -384,6 +390,10 @@ class CallCompiler < BaseCompiler implements MemberVisitor
   
   def visitInstanceof(method, expression)
     compile(@target)
+    type = getInferredType(@target)
+    if isPrimitive(type)
+      raise VerifyError, "kind_of? operation not defined for #{@target} with type #{getInferredType(@target)} #{getInferredType(@target).getClass}"
+    end
     if expression
       @method.instanceOf(getInferredType(@args[0]).getAsmType)
     else
@@ -395,14 +405,21 @@ class CallCompiler < BaseCompiler implements MemberVisitor
     compile(@target)
     if expression
       recordPosition
-      nonNull = @method.newLabel
-      done = @method.newLabel
-      @method.ifNonNull(nonNull)
-      @method.push(1)
-      @method.goTo(done)
-      @method.mark(nonNull)
-      @method.push(0)
-      @method.mark(done)
+      type = getInferredType(@target)
+      if isPrimitive(type)
+        # always not null
+        @method.pop(type)
+        @method.push(0)
+      else
+        nonNull = @method.newLabel
+        done = @method.newLabel
+        @method.ifNonNull(nonNull)
+        @method.push(1)
+        @method.goTo(done)
+        @method.mark(nonNull)
+        @method.push(0)
+        @method.mark(done)
+      end
     else
       @method.pop
     end
