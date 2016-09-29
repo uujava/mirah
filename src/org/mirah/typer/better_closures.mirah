@@ -255,7 +255,7 @@ class BetterClosureBuilder < ClosureBuilderHelper
         constructor_params, nil)
       typer.workaroundASTBug new_node
 
-      
+
 
       if block.parent.kind_of?(CallSite)
         parent = block.parent:CallSite
