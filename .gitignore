@@ -19,19 +19,7 @@ stub
 tmp_test
 
 # ignore generated jar files
-
-javalib/mirah-bootstrap.jar
-javalib/mirah-builtins.jar
-javalib/mirah-newast-transitional.jar
-javalib/jruby-complete.jar
-javalib/mirah-util.jar
-javalib/mirah-compiler.jar
-javalib/mirah-mirrors.jar
-javalib/mirahc-prev.jar
-javalib/asm-5.jar
-javalib/mirah-parser.jar
-javalib/jarjar.jar
-javalib/*.jarjar
+javalib/*
 maven/mirah/lib/
 maven/mvn-repo/
 # git ignore netbeans files

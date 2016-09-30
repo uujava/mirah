@@ -284,7 +284,7 @@ end
 file_create 'javalib/mirahc-prev.jar' do
   require 'open-uri'
 
-  url = ENV['MIRAH_PREV_PATH'] || 'https://search.maven.org/remotecontent?filepath=org/mirah/mirah/0.1.3/mirah-0.1.3.jar'
+  url = ENV['MIRAH_PREV_PATH'] || 'https://github.com/uujava/mirah/releases/download/0.1.5.152/mirahc-0.1.5.152.jar'
 
   puts "Downloading mirahc-prev.jar from #{url}"
 
