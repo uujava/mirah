@@ -87,7 +87,7 @@ end
 
 class Regex < NodeImpl
   init_node do
-    child_list strings:StringPiece
+    child_list strings: StringPiece
     child options: Identifier
   end
 end

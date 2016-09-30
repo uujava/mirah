@@ -40,12 +40,12 @@ class MetaTool
   end
 
   def mirah:Compiler
-    Compiler(@mirah.get)
+    @mirah.get:Compiler
   end
 
   def enclosing_class(node:Node):ClassDefinition
     node = node.parent until node.nil? || node.kind_of?(ClassDefinition)
-    ClassDefinition(node)
+    node:ClassDefinition
   end
 end
 
@@ -67,7 +67,7 @@ class VisitorState < MetaTool
 
   def init_visitor(call:CallSite):Node
     enclosing_class(call).body.add(@ivisitor)
-    top = NodeList(enclosing_class(call).parent)
+    top:NodeList = enclosing_class(call).parent
     top.add(@simple_classdef)
     top.add(@scanner_classdef)
     @simple.add(mirah.quote do
@@ -154,8 +154,8 @@ class VisitorState < MetaTool
     childScanner = NodeList.new
     if children
       children.each do |c|
-        child_name = List(c).get(0)
-        child_type = String(List(c).get(1))
+        child_name = c:List.get(0)
+        child_type:String = c:List.get(1)
         childScanner.add(mirah.quote do
           scan(node.`child_name`, arg)
         end)
@@ -234,7 +234,7 @@ class ListNodeState < BaseNodeState
           startPosition = nil
           endPosition = nil
           children.each do |_node:Node|
-            node = Node(_node)
+            node:Node = _node
             if node
               @children.add(childAdded(node))
               startPosition ||= node.position
@@ -297,7 +297,7 @@ class ListNodeState < BaseNodeState
       def initCopy:void
         super
         new_children = java::util::ArrayList.new(@children.size)
-        @children.each {|child| new_children.add(child ? childAdded(Node(Node(child).clone)) : nil)}
+        @children.each {|child:Node| new_children.add(child ? childAdded(child.clone:Node) : nil)}
         @children = new_children
       end
 
@@ -310,7 +310,7 @@ class ListNodeState < BaseNodeState
       end
 
       def remove(i:int): `type_name`
-        node = Node(@children.remove(i))
+        node:Node = @children.remove(i)
         childRemoved(node)
         `mirah.cast(type_name, 'node')`
       end
@@ -631,21 +631,21 @@ class NodeMeta < MetaTool
   end
 
   def child(hash:Hash)
-    state = NodeState(@nodes[enclosing_class(hash).name.identifier])
+    state:NodeState = @nodes[enclosing_class(hash).name.identifier]
     NodeMeta.type_map_each(NodeList.new, hash) do |name, type|
       state.child(name, type, true)
     end
   end
 
   def child_list(hash:Hash)
-    state = NodeState(@nodes[enclosing_class(hash).name.identifier])
+    state:NodeState = @nodes[enclosing_class(hash).name.identifier]
     NodeMeta.type_map_each(NodeList.new, hash) do |name, type|
       state.child_list(name, type)
     end
   end
 
   def add_constructor(name:Identifier)
-    state = NodeState(@nodes[enclosing_class(name).name.identifier])
+    state:NodeState = @nodes[enclosing_class(name).name.identifier]
     state.addConstructor(name.identifier)
   end
 
@@ -666,8 +666,8 @@ class NodeMeta < MetaTool
     body = body
     hash.size.times do |i|
       entry = hash.get(i)
-      name = Identifier(entry.key).identifier
-      type = Identifier(entry.value).identifier
+      name = entry.key:Identifier.identifier
+      type = entry.value:Identifier.identifier
       body.add(mapper.entry(name, type))
     end
     body

@@ -249,6 +249,14 @@ class NodeImpl implements Node
     @clone_listeners = LinkedList.new
   end
 
+  def removeChild(node)
+    raise UnsupportedOperationException, "#{self.class} doesn't support removeChild"
+  end
+
+  def replaceChild(from,to)
+    raise UnsupportedOperationException, "#{self.class} doesn't support replaceChild"
+  end
+
   # return prev sibling if kind of JavaDoc
   # handle node replacement when parent.originalNode != nil
   def java_doc:JavaDoc
@@ -302,7 +310,7 @@ end
 class ErrorNode < NodeImpl
   init_node
 
-  attr_accessor message:String
+  attr_accessor message: String
 
   def initialize(position:Position, message:String)
     super(position)

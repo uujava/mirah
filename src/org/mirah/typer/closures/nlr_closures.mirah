@@ -211,7 +211,7 @@ class NlrClosureBuilder < ClosureBuilderHelper
     # from findDescendants
     # from commented out code in the parser
     # nh:TODO: put this back in the parser
-    finder = DescendentFinder2.new(false, false) { |c| c.kind_of? Return }
+    finder = DescendentFinder.new(false, false) { |c| c.kind_of? Return }
     finder.scan(block, nil)
     finder.results
   end
