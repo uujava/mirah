@@ -554,7 +554,7 @@ end
 bootstrap_mirah_from('javalib/mirahc-prev.jar', 'dist/mirahc.jar')
 bootstrap_mirah_from('dist/mirahc.jar', 'dist/mirahc2.jar')
 bootstrap_mirah_from('dist/mirahc2.jar', 'dist/mirahc3.jar')
-bootstrap_mirah_from('javalib/mirahc-prev.jar', 'dist/mirahc-stub.jar', {:optargs => ['-skip-compile','-plugins', 'stub:stub|+pl'], :use_old_jar => true})
+bootstrap_mirah_from('javalib/mirahc.jar', 'dist/mirahc-stub.jar', {:optargs => ['-skip-compile','-plugins', 'stub:stub|+pl'], :use_old_jar => true})
 
 
 def build_version
