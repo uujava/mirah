@@ -207,13 +207,7 @@ class NlrClosureBuilder < ClosureBuilderHelper
   end
 
   def return_nodes(block: Node): List
-    #block.findDescendants { |c| c.kind_of? Return }
-    # from findDescendants
-    # from commented out code in the parser
-    # nh:TODO: put this back in the parser
-    finder = DescendentFinder.new(false, false) { |c| c.kind_of? Return }
-    finder.scan(block, nil)
-    finder.results
+    block.findDescendants { |c| c.kind_of? Return }
   end
 
   # Returns true if any MethodDefinitions were found.

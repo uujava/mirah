@@ -124,7 +124,7 @@ class ClassCleanup < NodeScanner
   
   def declareFields:void
     return if @alreadyCleaned
-    type = JVMType(@typer.getInferredType(@klass).resolve)
+    type = @type
     type.getDeclaredFields.each do |f|
       @@log.finest "creating field declaration for #{f.name}"
       name = f.name

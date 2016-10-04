@@ -1833,6 +1833,17 @@ class JVMCompilerTest < Test::Unit::TestCase
     assert_equal(entry, cls.foo(entry))
   end
 
+  def test_colon2_constant_ref
+    cls, = compile(<<-EOF)
+      def foo
+        Character::UnicodeBlock::ARROWS
+      end
+    EOF
+
+    subset = cls.foo
+    assert_equal("java.lang.Character$UnicodeBlock", subset.java_class.name)
+  end
+
   def test_covariant_arrays
     cls, = compile(<<-EOF)
       puts java::util::Arrays.toString(String[5])

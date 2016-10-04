@@ -29,7 +29,13 @@ class ClosureBuilderHelper
   end
 
   def insert_into_body enclosing_body: NodeList, node: Node
-    enclosing_body.insert(0, node)
+    index = if enclosing_body.parent.kind_of?(ConstructorDefinition) &&
+               enclosing_body.get(0).kind_of?(Super)
+              1
+            else
+              0
+            end
+    enclosing_body.insert index, node
   end
 
 
@@ -194,34 +200,15 @@ class ClosureBuilderHelper
 
     enclosing_body  = find_enclosing_body block
 
-    block_scope = get_scope block.body
-    @@log.fine "block body scope #{block_scope.getClass} #{block_scope:MirrorScope.capturedLocals}"
-
-    outer_data = OuterData.new(block, typer)
     block_scope = outer_data.block_scope
-    @@log.fine "block scope #{block_scope} #{block_scope:MirrorScope.capturedLocals}"
-    @@log.fine "parent scope #{parent_scope} #{parent_scope:MirrorScope.capturedLocals}"
     enclosing_scope = get_scope(enclosing_body)
-    @@log.fine "enclosing scope #{enclosing_scope} #{enclosing_scope:MirrorScope.capturedLocals}"
+    block_body_scope = get_scope block.body
     parent_scope.binding_type ||= begin
                                     name = outer_data.temp_name("Binding")
-                                    captures = parent_scope:MirrorScope.capturedLocals
-                                    @@log.fine("building binding #{name} with captures #{captures}")
                                     binding_klass = build_class(klass.position,
                                                                 nil,
                                                                 name)
                                     insert_into_body enclosing_body, binding_klass
-
-              # add methods for captures
-              # typer doesn't understand unquoted return types yet, perhaps
-              # TODO write visitor to replace locals w/ calls to bound locals
-             # captures.each do |bound_var: String|
-             #   bound_type = parent_scope:MirrorScope.getLocalType(bound_var, block.position).resolve
-             #   attr_def = @macros.quote do
-             #     attr_accessor `bound_var` => `Constant.new(SimpleString.new(bound_type.name))`
-             #   end
-             #   binding_klass.body.insert(0, attr_def)
-             # end
 
                                     infer(binding_klass).resolve
                                   end
@@ -229,12 +216,11 @@ class ClosureBuilderHelper
 
     build_constructor(klass, binding_type_name)
 
-
     insert_into_body enclosing_body, klass
     klass
   end
 
-  # builds the method definitios for inserting into the closure class
+  # builds the method definitions for inserting into the closure class
   def build_methods_for(mtype: MethodType, block: Block, parent_scope: Scope): List #<MethodDefinition>
     methods = []
     name = SimpleString.new(block.position, mtype.name)
@@ -253,8 +239,6 @@ class ClosureBuilderHelper
     end
     return_type = makeSimpleTypeName(block.position, mtype.returnType)
     block_method = MethodDefinition.new(block.position, name, args, return_type, nil,[])
-
-    closure_scope = get_inner_scope(block):ClosureScope
 
     block_method.body = block.body
 
@@ -280,6 +264,7 @@ class ClosureBuilderHelper
       i+=1
     end
 
+    closure_scope = get_inner_scope(block):ClosureScope
     method_scope = MethodScope.new(closure_scope,block_method)
 #   @scoper.setScope(block_method,method_scope)
 

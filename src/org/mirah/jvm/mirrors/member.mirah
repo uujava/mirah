@@ -21,13 +21,14 @@ import java.util.List
 import org.mirah.util.Logger
 import mirah.objectweb.asm.Opcodes
 import org.mirah.jvm.types.JVMType
+import org.mirah.jvm.types.JVMField
 import org.mirah.jvm.types.GenericMethod
 import org.mirah.jvm.types.MemberKind
 import org.mirah.typer.BaseTypeFuture
 import org.mirah.typer.ResolvedType
 import org.mirah.typer.TypeFuture
 
-class Member implements GenericMethod
+class Member implements GenericMethod, JVMField
   def self.initialize:void
     @@log = Logger.getLogger(Member.class.getName)
   end
@@ -57,6 +58,18 @@ class Member implements GenericMethod
 
   def asyncReturnType:TypeFuture
     @returnFuture ||= BaseTypeFuture.new.resolved(@genericReturnType || @returnType)
+  end
+
+  def isStaticMethod
+    @kind.name.intern == 'STATIC_METHOD'
+  end
+
+  def isInstanceMethod
+    @kind.name.intern == 'METHOD'
+  end
+
+  def isStaticField
+    @kind.name.intern.startsWith 'STATIC_FIELD_'
   end
 
   def accept(visitor, expression):void
@@ -113,7 +126,15 @@ class Member implements GenericMethod
   def toString
     result = StringBuilder.new
     result.append(declaringClass)
-    result.append('.')
+    if isStaticMethod
+      result.append('.')
+    elsif isInstanceMethod
+      result.append '#'
+    elsif isStaticField
+      result.append '::'
+    else
+      result.append('.')
+    end
     result.append(name)
     result.append('(')
     first = true

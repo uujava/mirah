@@ -25,6 +25,7 @@ import mirah.objectweb.asm.Opcodes
 import mirah.objectweb.asm.Type
 import org.mirah.jvm.types.JVMType
 import org.mirah.jvm.types.JVMMethod
+import org.mirah.jvm.types.JVMField
 import org.mirah.util.Context
 
 class JvmErrorType < ErrorType implements MirrorType, ErrorTypeModel
@@ -66,9 +67,9 @@ class JvmErrorType < ErrorType implements MirrorType, ErrorTypeModel
 
   def getMethod(name:String, params:List):JVMMethod; nil; end
 
-  def getDeclaredFields:JVMMethod[]; JVMMethod[0]; end
+  def getDeclaredFields:JVMField[]; JVMField[0]; end
   def getAllDeclaredMethods; Collections.emptyList; end
-  def getDeclaredField(name:String):JVMMethod; nil; end
+  def getDeclaredField(name:String):JVMField; nil; end
   
   def notifyOfIncompatibleChange; end
   def onIncompatibleChange(listener:Runnable):void; end

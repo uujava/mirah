@@ -37,6 +37,7 @@ import org.mirah.jvm.model.IntersectionType
 import org.mirah.jvm.types.JVMType
 import org.mirah.jvm.types.JVMTypeUtils
 import org.mirah.jvm.types.JVMMethod
+import org.mirah.jvm.types.JVMField
 import org.mirah.jvm.types.MemberKind
 import org.mirah.typer.BaseTypeFuture
 import org.mirah.typer.ErrorType
@@ -60,7 +61,7 @@ interface MirrorType < JVMType, TypeMirror
   def invalidateMethod(name:String):void; end
   def add(member:JVMMethod):void; end
   def hasMember(name:String):boolean; end
-  def declareField(field:JVMMethod):void; end
+  def declareField(field:JVMField):void; end
   def unmeta:MirrorType; end
   def isSameType(other:MirrorType):boolean; end
   def isSupertypeOf(other:MirrorType):boolean; end
@@ -204,10 +205,10 @@ class BaseType implements MirrorType, DeclaredType, MethodListener
     TypeFuture[0]
   end
 
-  def getDeclaredFields:JVMMethod[]
-    return JVMMethod[0]
+  def getDeclaredFields:JVMField[]
+    return JVMField[0]
   end
-  def getDeclaredField(name:String):JVMMethod; nil; end
+  def getDeclaredField(name:String):JVMField; nil; end
 
   def add(member:JVMMethod):void
     members = (@members[member.name] ||= LinkedList.new):List
@@ -246,7 +247,7 @@ class BaseType implements MirrorType, DeclaredType, MethodListener
     invalidateMethod(name)
   end
 
-  def declareField(field:JVMMethod):void
+  def declareField(field:JVMField):void
     raise IllegalArgumentException, "Cannot add fields to #{self}"
   end
 

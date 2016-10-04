@@ -240,6 +240,8 @@ class TypePrinter2 < NodeScanner
     if node.block
       @out.print(" ")
       node.block.accept(self, arg)
+    else
+      #@out.print("\n")
     end
     false
   end
@@ -310,7 +312,7 @@ class TypePrinter2 < NodeScanner
     nil
   end
   def enterSimpleString(node, arg)
-    @out.print node.identifier
+    @out.print "\"#{node.identifier}\""
     false
   end
 
@@ -332,13 +334,16 @@ class TypePrinter2 < NodeScanner
       print_resolve type
     end
     @out.println
+    printIndent
+    @out.print "  "
     node.value.accept self, arg
     false
   end
 
   def printClass node: ClassDefinition
     printIndent
-    @out.print "$TODO Annotations\n"
+    @out.print "$TODO Annotations"
+    @out.println
     printIndent
     @out.print "class #{node.name.identifier}"
     @out.print "< #{node.superclass.typeref.name}" if node.superclass
@@ -391,11 +396,30 @@ class TypePrinter2 < NodeScanner
   def exitUnquote(node, arg)
     # don't dedent
   end
+
+  def enterFieldDeclaration(node, arg)
+    printIndent
+    @out.print "$TODO Annotations"
+    @out.println
+    printIndent
+    @out.print "!FieldDec(@#{'@' if node.isStatic}#{node.name.identifier}, type=#{node.type})!"
+    @out.println
+    false
+  end
   def enterNodeList(node, arg)
     #usually are already a body of something, so no need to indent
     #incIndent
-
-    true
+    # nodelists are often lists of statements, so print indents between their children
+    node.size.times do |i|
+      child = node.get(i)
+      if child.kind_of? Noop
+        next
+      end
+      @out.println
+      printIndent
+      res = child.accept(self, arg)
+    end
+    false
   end
   def exitNodeList(node, arg)
     #decIndent

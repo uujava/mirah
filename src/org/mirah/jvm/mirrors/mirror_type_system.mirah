@@ -251,11 +251,12 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def getMethodType(call)
-    future = DelegateFuture.new()
+    future = DelegateFuture.new
     if call.resolved_target
       if call.resolved_target.isError || call.resolved_target.kind_of?(UnreachableType)
-        return BaseTypeFuture.new().resolved(call.resolved_target)
+        return BaseTypeFuture.new.resolved(call.resolved_target)
       end
+
       target = call.resolved_target:MirrorType
       method_name = resolveMethodName(call.scope, target, call.name)
       if "<init>".equals(method_name)

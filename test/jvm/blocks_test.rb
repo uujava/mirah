@@ -795,7 +795,6 @@ class BlocksTest < Test::Unit::TestCase
 
 
   def test_lambda_with_parameters
-    # Note! there is an issue in lambda - it requires to use self for method resolution
     cls, = compile(<<-EOF)
       abstract class Parametrized
         attr_reader arg: String
@@ -812,7 +811,7 @@ class BlocksTest < Test::Unit::TestCase
       end
       x.foo
       y = lambda(Parametrized, 1) do
-        puts self.arg + " foo"
+        puts arg + " foo"
       end
       y.foo
     EOF

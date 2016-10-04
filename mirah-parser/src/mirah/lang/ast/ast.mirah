@@ -48,9 +48,13 @@ interface Node < Cloneable do
 
   def findAncestor(type:Class):Node; end
   def findAncestor(filter:NodeFilter):Node; end
-  def clone:Object; end
   # return prev sibling if kind of JavaDoc
   def java_doc:JavaDoc; end
+  def findChild(filter:NodeFilter):Node; end
+  def findChildren(filter:NodeFilter):List; end
+  def findDescendant(filter:NodeFilter):Node; end
+  def findDescendants(filter:NodeFilter):List; end
+  def clone:Object; end
 end
 
 interface Assignment < Node do
@@ -162,7 +166,7 @@ class NodeImpl implements Node
     name = if self.kind_of?(Named)
       # NB: typesystem can't assume that NodeImpl can be cast to Named right now.
       # So need to cast up to object before casting down. Not sure if it's absolutely necessary.
-      ":#{Named(Object(self)).name}"
+      ":#{self:Named.name}"
     else
       ""
     end
@@ -181,25 +185,25 @@ class NodeImpl implements Node
     @parent = parent
   end
 
-  def findChild(filter:NodeFilter):Node
+  def findChild(filter:NodeFilter)
     finder = DescendentFinder.new(true, true, filter)
     finder.scan(self, nil)
     finder.result
   end
 
-  def findChildren(filter:NodeFilter):List
+  def findChildren(filter:NodeFilter)
     finder = DescendentFinder.new(true, false, filter)
     finder.scan(self, nil)
     finder.results
   end
 
-  def findDescendant(filter:NodeFilter):Node
+  def findDescendant(filter:NodeFilter)
     finder = DescendentFinder.new(false, true, filter)
     finder.scan(self, nil)
     finder.result
   end
 
-  def findDescendants(filter:NodeFilter):List
+  def findDescendants(filter:NodeFilter)
     finder = DescendentFinder.new(false, false, filter)
     finder.scan(self, nil)
     finder.results

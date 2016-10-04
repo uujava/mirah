@@ -468,7 +468,7 @@ parser MirahParser {
   $Returns[RestArgument]
   f_rest_arg: anno=annotation_list opt_nl $Star n=f_norm_arg {
               name=n.name; type=n.type;
-              raise SyntaxError.new("annotation must be before star for rest argument annotation", nil, _string, _line, pos()) if n.annotations.size > 0
+              raise SyntaxError.new("annotation must be before star for rest argument annotation", nil, _string, _list, pos()) if n.annotations.size > 0
              } -> ^(RestArgument name type anno)
             | $Star -> ^(RestArgument nil nil);
 

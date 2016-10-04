@@ -49,6 +49,9 @@ class BlockFinder < NodeScanner
         unless parent_type_future
           puts "#{node.parent:CallSite.name} call with block has no type at #{node.parent.position}"
           puts "  block type: #{@typer.getInferredType(node)}"
+          # If parent_type_future is nil, then there's likely another type error somewhere.
+          # So just ignore this block and it'll bubble up.
+         # return nil
         end
         fs = parent_type_future:CallFuture.futures
         fs.get(fs.size-1):TypeFuture.resolve

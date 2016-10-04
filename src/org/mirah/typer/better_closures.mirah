@@ -15,9 +15,8 @@
 
 package org.mirah.typer
 
-import mirah.lang.ast.*
+
 import java.util.logging.Level
-import org.mirah.util.Logger
 import java.util.Collections
 import java.util.Collection
 import java.util.LinkedHashMap
@@ -31,6 +30,9 @@ import java.util.Map.Entry
 import java.util.ArrayList
 import java.io.File
 
+import mirah.lang.ast.*
+
+import org.mirah.util.Logger
 import org.mirah.jvm.compiler.ProxyCleanup
 import org.mirah.jvm.mirrors.MirrorScope
 import org.mirah.jvm.mirrors.BaseType
@@ -81,13 +83,21 @@ class BetterClosureBuilder < ClosureBuilderHelper
   attr_accessor blockCloneMapNewOld: IdentityHashMap
   attr_accessor parent_scope_to_binding_name: Map
 
-  def finish
+  def collect_closures scripts: List
+    # returns closures in the reverse order from the scripts
     closures = []
-    scripts = ArrayList.new(@scripts)
-    Collections.reverse(scripts)
     scripts.each do |s: Script|
       closures.addAll BlockFinder.new(typer, @todo_closures).find(s).entrySet
     end
+    Collections.reverse(closures) # from outside to inside
+    closures
+  end
+
+  def finish
+    scripts = ArrayList.new(@scripts)
+    Collections.reverse(scripts)
+
+    closures = collect_closures scripts
 
     closures_to_skip = []
 
@@ -95,15 +105,12 @@ class BetterClosureBuilder < ClosureBuilderHelper
     bindingLocalNamesToTypes = LinkedHashMap.new
 
     bindingForBlocks = LinkedHashMap.new # the specific binding for a given block
-    Collections.reverse(closures) # from outside to inside
-    
+
+
     self.blockCloneMapOldNew = IdentityHashMap.new
     self.blockCloneMapNewOld = IdentityHashMap.new
-    
-    selff = self
 
-    i = 0
-
+    selff = self # TODO rm this after the next release
     closures.each do |entry: Entry|
       block = entry.getKey:Block
       on_clone = BlockCloneListener.new self
@@ -113,6 +120,8 @@ class BetterClosureBuilder < ClosureBuilderHelper
     end
 
     self.parent_scope_to_binding_name = {}
+
+    i = 0
     closures.each do |entry: Entry|
       i += 1
       @@log.fine "adjust bindings for block #{entry.getKey} #{entry.getValue} #{i}"
@@ -121,18 +130,19 @@ class BetterClosureBuilder < ClosureBuilderHelper
       @@log.fine "#{typer.sourceContent block}"
       enclosing_node = find_enclosing_node(block)
       if enclosing_node.nil?
-        # this likely means a macro exists and made things confusing 
+        # this likely means a macro exists and made things confusing
         # by copying the tree
         @@log.fine "enclosing node was nil, removing  #{entry.getKey} #{entry.getValue} #{i}"
         closures_to_skip.add entry
         next
       end
+      @@log.fine "#{typer.sourceContent block}"
       @@log.fine "enclosing node #{enclosing_node}"
       @@log.fine "#{typer.sourceContent enclosing_node}"
 
       ProxyCleanup.new.scan enclosing_node
 
-      enclosing_b = get_body(enclosing_node)      
+      enclosing_b = get_body(enclosing_node)
       if enclosing_b.nil?
         closures_to_skip.add entry
         next
@@ -161,28 +171,16 @@ class BetterClosureBuilder < ClosureBuilderHelper
       end
       outer_data = OuterData.new(block, typer)
 
-      if outer_data.is_meta
-        @@log.fine "  adjust outer for meta scope:  #{outer_data}"
-        StaticOuterAdjuster.new(outer_data).adjust block
-      end
-
       closure_name = outer_data.temp_name("Closure")
       closure_klass = build_class(block.position, parent_type, closure_name)
 
       # build closure class
       constructor_args = []
       constructor_params = []
-      outer_scanner = OuterAccessScanner.new
-      block.body.accept outer_scanner, nil if block.body
-      if outer_scanner.accessed
-        # access outer scope - add $outer field assignment
-        outer_type = outer_data.outer_type
-        constructor_args.add RequiredArgument.new(SimpleString.new("$outer"), SimpleString.new(outer_type.name))
-        if outer_data.has_block_parent
-          constructor_params.add FieldAccess.new(SimpleString.new("$outer"))
-        else
-          constructor_params.add Self.new block.position
-        end
+
+      binding_list = Collection(blockToBindings.get(uncloned_block)) || Collections.emptyList
+      binding_args = binding_list.map do |name: String|
+        RequiredArgument.new(SimpleString.new(name), SimpleString.new(ResolvedType(bindingLocalNamesToTypes[name]).name))
       end
 
       binding_list:Collection = blockToBindings.get(uncloned_block) || Collections.emptyList
@@ -200,24 +198,20 @@ class BetterClosureBuilder < ClosureBuilderHelper
         FieldAssign.new(SimpleString.new(name), LocalAccess.new(SimpleString.new(name)), nil, [Modifier.new(closure_klass.position, 'PROTECTED')], nil)
       end
 
-      if outer_scanner.accessed
-        constructor_body.add FieldAssign.new(SimpleString.new("$outer"), LocalAccess.new(SimpleString.new("$outer")), nil, [Modifier.new(closure_klass.position, 'PROTECTED')], nil)
-      end
-
       # pass lambda parameters to constructor
       if block.parent.kind_of?(SyntheticLambdaDefinition)
         lambda_params =  (SyntheticLambdaDefinition block.parent).parameters
         super_params = []
 
         if lambda_params
-          i = 0
+          j = 0
           lambda_params.each do |param:Node|
             lambda_arg_type = typer.infer(param).resolve
-            lambda_arg = "$lambda_arg"+i
+            lambda_arg = "$lambda_arg"+j
             constructor_args.add RequiredArgument.new(SimpleString.new(lambda_arg), SimpleString.new(lambda_arg_type:ResolvedType.name))
             super_params.add LocalAccess.new(SimpleString.new(lambda_arg))
             constructor_params.add param
-            i+=1
+            j+=1
           end
           constructor_body.add Super.new(super_params, nil)
         end
@@ -269,8 +263,6 @@ class BetterClosureBuilder < ClosureBuilderHelper
       @@log.fine "inferring enclosing_b #{enclosing_b}"
       infer enclosing_b
 
-      # hack? we need to call resolve for proper binding locals in nesting scopes
-      ResolveScanner.new(typer).scan enclosing_b, nil
       @@log.fine "done with #{enclosing_b}"
       @@log.log(Level.FINE, "Inferred AST: #{enclosing_b.position}\n{0}", AstFormatter.new(enclosing_b))
       @@log.log(Level.FINE, "Inferred types: #{enclosing_b.position}\n{0}", LazyTypePrinter.new(typer, enclosing_b))
@@ -288,26 +280,22 @@ class BetterClosureBuilder < ClosureBuilderHelper
 
   def add_todo(block: Block, parent_type: ResolvedType)
     return if parent_type.isError || block.parent.nil?
-    
+
     rtype = BaseTypeFuture.new(block.position)
     rtype.resolved parent_type
-  
+
     new_scope = typer.addNestedScope block
-    new_scope.selfType = rtype
+    new_scope:ClosureScope.closureType = rtype
     if contains_methods block
       infer block.body
     else
       typer.inferClosureBlock block, method_for(parent_type)
     end
 
-    script = block.findAncestor{|n| n.kind_of? Script}
+    script = block.findAncestor { |n| n.kind_of? Script }
 
     @todo_closures[block] = parent_type
     @scripts.add script
-  end
-
-  def insert_closure(block: Block, parent_type: ResolvedType)
-    raise "BetterClosureBuilder doesn't support insert_closure"
   end
 
   def replace_block_with_closure_in_call(parent: CallSite, block: Block, new_node: Node): void
@@ -319,7 +307,7 @@ class BetterClosureBuilder < ClosureBuilderHelper
       parent.replaceChild(block, new_node)
     end
   end
-  
+
   def replace_synthetic_lambda_definiton_with_closure(parent: SyntheticLambdaDefinition, new_node: Node): void
     parentparent = parent.parent
     new_node.setParent(nil)
@@ -329,5 +317,4 @@ class BetterClosureBuilder < ClosureBuilderHelper
       parentparent.replaceChild(parent,new_node)
     end
   end
-
 end

@@ -18,7 +18,7 @@ package org.mirah.jvm.mirrors
 import java.util.Collections
 import mirah.objectweb.asm.Opcodes
 import mirah.objectweb.asm.Type
-import org.mirah.jvm.types.JVMMethod
+import org.mirah.jvm.types.JVMField
 import org.mirah.jvm.types.JVMType
 import org.mirah.jvm.types.MemberKind
 import org.mirah.typer.TypeFuture
@@ -40,17 +40,17 @@ class MirahMirror < AsyncMirror
     Collections.emptyMap
   end
 
-  def declareField(field:JVMMethod)
+  def declareField(field:JVMField)
     @fields[field.name] = field
   end
 
-  def getDeclaredFields:JVMMethod[]
-    fields = JVMMethod[@fields.size]
+  def getDeclaredFields:JVMField[]
+    fields = JVMField[@fields.size]
     @fields.values.toArray(fields)
     fields
   end
-  def getDeclaredField(name:String):JVMMethod
-    @fields[name]:JVMMethod
+  def getDeclaredField(name:String):JVMField
+    @fields[name]:JVMField
   end
 
   def getDeclaredMethods(name)
