@@ -178,6 +178,7 @@ end
 task :init do
   mkdir_p 'dist'
   mkdir_p 'build'
+  mkdir_p 'javalib'
 end
 
 desc "clean up build artifacts"
@@ -269,7 +270,7 @@ task :dist => [:gem, :zip]
 file_create 'javalib/mirah-asm-5.jar' => :jarjar do
   require 'open-uri'
   puts "Downloading asm-5.jar"
-  url = 'https://search.maven.org/remotecontent?filepath=org/ow2/asm/asm-all/5.0.4/asm-all-5.0.4.jar'
+  url = 'https://repo1.maven.org/maven2/org/ow2/asm/asm-all/5.0.4/asm-all-5.0.4.jar'
   open(url, 'rb') do |src|
     open('javalib/asm-5.jar', 'wb') do |dest|
       dest.write(src.read)
@@ -281,7 +282,7 @@ file_create 'javalib/mirah-asm-5.jar' => :jarjar do
   end
 end
 
-file_create 'javalib/mirahc-prev.jar' do
+file_create 'javalib/mirahc-prev.jar' => [:init] do
   require 'open-uri'
 
   url = ENV['MIRAH_PREV_PATH'] || 'https://github.com/uujava/mirah/releases/download/0.1.5.152/mirahc-0.1.5.152.jar'
@@ -295,10 +296,10 @@ file_create 'javalib/mirahc-prev.jar' do
   end
 end
 
-file_create 'javalib/jarjar.jar' do
+file_create 'javalib/jarjar.jar' => [:init] do
   require 'open-uri'
   puts "Downloading jarjar.jar"
-  url = 'https://search.maven.org/remotecontent?filepath=com/googlecode/jarjar/jarjar/1.1/jarjar-1.1.jar'
+  url = 'https://repo1.maven.org/maven2/com/googlecode/jarjar/jarjar/1.1/jarjar-1.1.jar'
   open(url, 'rb') do |src|
     open('javalib/jarjar.jar', 'wb') do |dest|
       dest.write(src.read)
