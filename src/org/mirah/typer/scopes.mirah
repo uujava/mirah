@@ -48,21 +48,6 @@ interface Scope do
   # type of the binding for exactly this scope
   def declared_binding_type: ResolvedType; end
   def declared_binding_type=(type: ResolvedType): void; end
-
-  def hasField(name: String, includeParent:boolean=true): boolean; end
-  def fieldUsed(name: String): void; end
-  def capturedFields(): List; end
-  def isCapturedField(name: String): boolean; end
-
-  def hasMethodCall(name: String, includeParent:boolean=true): boolean; end
-  def methodUsed(name: String): void; end
-  def capturedMethods(): List; end
-  def isCapturedMethod(name: String): boolean; end
-
-
-  def selfUsed(): void; end
-  def capturedSelf: boolean; end
-  def hasSelf: boolean; end
   def find_parent(filter:ScopeFilter):Scope;end
 end
 

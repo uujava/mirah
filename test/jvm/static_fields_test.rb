@@ -42,7 +42,6 @@ class StaticFieldsTest < Test::Unit::TestCase
   end
 
   def test_constant_public
-    pend "other classes constants are not immediately referenceable" do
     cls, = compile(<<-EOF)
       class Bar
         CONSTANT = 1
@@ -51,7 +50,6 @@ class StaticFieldsTest < Test::Unit::TestCase
       puts Bar::CONSTANT
     EOF
     assert_run_output("1\n", cls)
-    end
   end
   
   def test_static_final_constant

@@ -212,20 +212,12 @@ class CallFuture < BaseTypeFuture
           @method = new_method
           resolved_target = @resolved_target
           void_type = @types.getVoidType().resolve
-          scope = @scope
-          _log = log
           @method.onUpdate do |m, type|
             if m == call.currentMethodType
               if type.kind_of?(MethodType)
                 mtype = type:MethodType
                 call.resolveBlocks(mtype, nil)
                 is_void = void_type.equals(mtype.returnType)
-
-                if scope.selfType.resolve == resolved_target
-                  scope.methodUsed(call.name)
-                  _log.fine "got here for #{call} with scope #{scope}"
-                end
-
                 if is_void
                   call.resolved(resolved_target)
                 else

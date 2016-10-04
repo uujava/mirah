@@ -171,16 +171,28 @@ class BetterClosureBuilder < ClosureBuilderHelper
       end
       outer_data = OuterData.new(block, typer)
 
+      if outer_data.is_meta
+        @@log.fine "  adjust outer for meta scope:  #{outer_data}"
+        StaticOuterAdjuster.new(outer_data).adjust block
+      end
+
       closure_name = outer_data.temp_name("Closure")
       closure_klass = build_class(block.position, parent_type, closure_name)
 
       # build closure class
       constructor_args = []
       constructor_params = []
-
-      binding_list = Collection(blockToBindings.get(uncloned_block)) || Collections.emptyList
-      binding_args = binding_list.map do |name: String|
-        RequiredArgument.new(SimpleString.new(name), SimpleString.new(ResolvedType(bindingLocalNamesToTypes[name]).name))
+      outer_scanner = OuterAccessScanner.new
+      block.body.accept outer_scanner, nil if block.body
+      if outer_scanner.accessed
+        # access outer scope - add $outer field assignment
+        outer_type = outer_data.outer_type
+        constructor_args.add RequiredArgument.new(SimpleString.new("$outer"), SimpleString.new(outer_type.name))
+        if outer_data.has_block_parent
+          constructor_params.add FieldAccess.new(SimpleString.new("$outer"))
+        else
+          constructor_params.add Self.new block.position
+        end
       end
 
       binding_list:Collection = blockToBindings.get(uncloned_block) || Collections.emptyList
@@ -196,6 +208,10 @@ class BetterClosureBuilder < ClosureBuilderHelper
 
       constructor_body = binding_list.map do |name: String|
         FieldAssign.new(SimpleString.new(name), LocalAccess.new(SimpleString.new(name)), nil, [Modifier.new(closure_klass.position, 'PROTECTED')], nil)
+      end
+
+      if outer_scanner.accessed
+        constructor_body.add FieldAssign.new(SimpleString.new("$outer"), LocalAccess.new(SimpleString.new("$outer")), nil, [Modifier.new(closure_klass.position, 'PROTECTED')], nil)
       end
 
       # pass lambda parameters to constructor
@@ -263,6 +279,8 @@ class BetterClosureBuilder < ClosureBuilderHelper
       @@log.fine "inferring enclosing_b #{enclosing_b}"
       infer enclosing_b
 
+      # hack? we need to call resolve for proper binding locals in nesting scopes
+      #ResolveScanner.new(typer).scan enclosing_b, nil
       @@log.fine "done with #{enclosing_b}"
       @@log.log(Level.FINE, "Inferred AST: #{enclosing_b.position}\n{0}", AstFormatter.new(enclosing_b))
       @@log.log(Level.FINE, "Inferred types: #{enclosing_b.position}\n{0}", LazyTypePrinter.new(typer, enclosing_b))
@@ -285,7 +303,7 @@ class BetterClosureBuilder < ClosureBuilderHelper
     rtype.resolved parent_type
 
     new_scope = typer.addNestedScope block
-    new_scope:ClosureScope.closureType = rtype
+    new_scope.selfType = rtype
     if contains_methods block
       infer block.body
     else
