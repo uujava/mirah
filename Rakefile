@@ -516,8 +516,6 @@ def bootstrap_mirah_from(old_jar, new_jar, options={})
     # process all sources with old_jar
     build_class_path = options[:use_old_jar] ? [old_jar] : build_class_path
 
-    optargs += ['--jvm', build_version]
-
     report = Measure.measure do |x|
       x.report "Compile Mirah core" do
         args = task_args[:verbose] == 'true' ? ['-V'] : []
@@ -575,7 +573,7 @@ end
 def run_mirahc(step, mirahc_jar, dest_dir, compile_class_path, source_path, *args)
   file_name = step.gsub /[\/\\]/, '_'
   all_args =  compile_class_path.empty? ? [] : ['-classpath', compile_class_path.join(File::PATH_SEPARATOR)]
-  all_args +=  args + source_path
+  all_args +=  args + source_path + ['--jvm', build_version]
   run_java '-Xms712m', '-Xmx712m', '-XX:+PrintGC','-XX:+PrintGCDetails','-XX:+PrintGCDateStamps',"-Xloggc:build/#{file_name}_gc.log",
            '-cp', mirahc_jar.join(File::PATH_SEPARATOR), 'org.mirah.MirahCommand',
            '-d', dest_dir, *all_args
