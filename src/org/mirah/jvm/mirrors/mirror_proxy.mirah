@@ -113,7 +113,7 @@ class MirrorProxy implements MirrorType,
   def getComponentType:MirrorType
     if @target.getComponentType.kind_of? MirrorType
       # unchecked typecheck
-      @target.getComponentType:Object:MirrorType
+      @target.getComponentType:MirrorType
     else
       nil
     end
@@ -122,7 +122,7 @@ class MirrorProxy implements MirrorType,
   def getComponentType:TypeMirror
     if @target.getComponentType.kind_of? TypeMirror
       # unchecked typecheck
-      @target.getComponentType:Object:TypeMirror
+      @target.getComponentType:TypeMirror
     else
       nil
     end
@@ -218,7 +218,7 @@ class MirrorProxy implements MirrorType,
   def getTypeArguments
     if @target.kind_of? DeclaredType
       # unchecked typecheck
-      @target:Object:DeclaredType.getTypeArguments
+      @target:DeclaredType.getTypeArguments
     else
       nil
     end
@@ -226,7 +226,7 @@ class MirrorProxy implements MirrorType,
   def getLowerBound
     if @target.kind_of? TypeVariableModel
       # unchecked typecheck
-      @target:Object:TypeVariableModel.getLowerBound
+      @target:TypeVariableModel.getLowerBound
     else
       nil
     end
@@ -234,7 +234,7 @@ class MirrorProxy implements MirrorType,
   def getUpperBound
     if @target.kind_of? TypeVariableModel
       # unchecked typecheck
-      @target:Object:TypeVariableModel.getUpperBound
+      @target:TypeVariableModel.getUpperBound
     else
       nil
     end
@@ -242,7 +242,7 @@ class MirrorProxy implements MirrorType,
   def getExtendsBound
     if @target.kind_of? WildcardType
       # unchecked typecheck
-      @target:Object:WildcardType.getExtendsBound
+      @target:WildcardType.getExtendsBound
     else
       nil
     end
@@ -250,7 +250,7 @@ class MirrorProxy implements MirrorType,
   def getSuperBound
     if @target.kind_of? WildcardType
       # unchecked typecheck
-      @target:Object:WildcardType.getSuperBound
+      @target:WildcardType.getSuperBound
     else
       nil
     end

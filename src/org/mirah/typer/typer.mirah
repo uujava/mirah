@@ -492,7 +492,7 @@ class Typer < SimpleNodeVisitor
     if expression
       call = Call.new(colon2.position,
                       colon2.target,
-                      Identifier(colon2.name.clone),
+                      colon2.name.clone:Identifier,
                       nil, nil)
       call.setParent(colon2.parent)
 
@@ -1029,7 +1029,7 @@ class Typer < SimpleNodeVisitor
     replacement = nil:Node
     object = node.unquote.object
     if object.kind_of?(FieldAccess)
-      fa = node.name:Object:FieldAccess
+      fa = node.name:FieldAccess
       replacement = FieldAssign.new(fa.position, fa.name, node.value, nil, nil, nil)
     else
       replacement = LocalAssignment.new(node.position, node.name, node.value)

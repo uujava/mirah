@@ -254,7 +254,7 @@ class ListNodeState < BaseNodeState
         self.position = position
         if children
           common_init(children.size)
-          children.each {|node:Node| @children.add(childAdded(Node(node)))}
+          children.each {|node:Node| @children.add(childAdded(node:Node))}
         else
           common_init(-1)
         end
@@ -496,7 +496,7 @@ class NodeState < BaseNodeState
         clone = childAdded(newChild)
         `@replaceNodeList`
         raise IllegalArgumentException, "No child #{oldChild}"
-        return Node(nil)
+        return nil:Node
       end
       def removeChild(child:Node)
         `@removeNodeList`
@@ -552,7 +552,7 @@ class NodeState < BaseNodeState
         return
       end
     end)
-    clone_call = mirah.quote {childAdded(Node(self.`name`.clone))}
+    clone_call = mirah.quote {childAdded(self.`name`.clone:Node)}
     @cloneNodeList.add(mirah.quote do
       if self.`name`
         @`name` = `mirah.cast(type, clone_call)`
@@ -569,7 +569,7 @@ class NodeState < BaseNodeState
     end)
     size_name = "#{name}_size"
     @children.add([SimpleString.new(name), 'java.util.List'])
-    clone_call = mirah.quote {childAdded(Node(self.`name`.clone))}
+    clone_call = mirah.quote {childAdded(self.`name`.clone:Node)}
     @cloneNodeList.add(mirah.quote do
       if self.`name`
         @`name` = `mirah.cast(list_type, clone_call)`
@@ -626,7 +626,7 @@ class NodeMeta < MetaTool
 
   def init_subclass(parent:Identifier)
     node = NodeState.new(mirah, parent, @visitors)
-    parent_state = NodeState(@nodes.get(parent.identifier))
+    parent_state = @nodes.get(parent.identifier):NodeState
     node.init_subclass(parent_state)
   end
 
@@ -659,7 +659,7 @@ class NodeMeta < MetaTool
       instance = self.new(mirah)
       @@instances[mirah] = instance
     end
-    NodeMeta(instance)
+    instance:NodeMeta
   end
 
   def self.type_map_each(body:NodeList, hash:Hash, mapper:TypeMapper):NodeList

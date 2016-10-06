@@ -39,9 +39,8 @@ class JvmErrorType < ErrorType implements MirrorType, ErrorTypeModel
     initialize(
         error.message,
         Type.getType("Lmirah/lang/errors/UnknownType;"),
-        MirrorType(
-            context[MirrorTypeSystem].loadNamedType(
-                "java.lang.Object").resolve))
+        context[MirrorTypeSystem].loadNamedType("java.lang.Object").resolve:MirrorType
+    )
   end
 
   def superclass:JVMType; @supertype; end

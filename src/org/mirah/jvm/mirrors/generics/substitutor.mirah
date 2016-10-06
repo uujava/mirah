@@ -107,7 +107,7 @@ class Substitutor < SimpleTypeVisitor6
     begin
       @type_parameters = LinkedList.new
       if t.kind_of?(MirrorType)
-        erasure = t:Object:MirrorType.erasure:DeclaredMirrorType
+        erasure = t:MirrorType.erasure:DeclaredMirrorType
         @type_parameters.addAll(erasure.getTypeVariableMap.values)
       end
       @@log.fine("Type parameters for #{t} = #{@type_parameters}")
@@ -118,7 +118,7 @@ class Substitutor < SimpleTypeVisitor6
         future(t)
       else
         # If any type parameters were substituted, re-invoke the type
-        @types.parameterize(future(t:Object:MirrorType.erasure), newArgs)
+        @types.parameterize(future(t:MirrorType.erasure), newArgs)
       end
     ensure
       @type_parameters = saved_parameters

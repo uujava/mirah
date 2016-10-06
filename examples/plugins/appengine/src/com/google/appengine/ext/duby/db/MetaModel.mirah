@@ -134,9 +134,9 @@ class DubyDatastorePlugin
 
   def maybe_box(duby_type:String, value:Object):Object
     if @boxes.containsKey(duby_type)
-      Object(mirah.quote do
+      mirah.quote do
         `@boxes[duby_type]`.valueOf(`value`)
-      end)
+      end:Object
     else
       value
     end

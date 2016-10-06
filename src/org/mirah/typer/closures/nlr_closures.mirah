@@ -149,15 +149,15 @@ class NlrClosureBuilder < ClosureBuilderHelper
   end
 
   def wrap_with_rescue block: Node, nlr_klass: ClosureDefinition, call: Node, nlr_return_type: ResolvedType
-    return_value = unless void_type? nlr_return_type
-      Node(Call.new(block.position,
+    return_value:Node = unless void_type? nlr_return_type
+      Call.new(block.position,
                       LocalAccess.new(SimpleString.new 'ret_error'),
                       SimpleString.new("return_value"),
                       Collections.emptyList,
                       nil
-                      ))
+                      )
     else
-      ImplicitNil.new:Node
+      ImplicitNil.new
     end
     Rescue.new(block.position,
                [call],

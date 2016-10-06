@@ -752,7 +752,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     i = 0
     args.each do |arg|
       if arg.kind_of?(TypeFuture)
-        future = arg:Object:TypeFuture
+        future = arg:TypeFuture
         if future.isResolved
           arg = future.resolve
         end

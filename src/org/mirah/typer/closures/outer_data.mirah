@@ -108,7 +108,7 @@ class OuterData
   def outer_type:JVMType
     outer_type = JVMType @method_scope.selfType.resolve
     if outer_type.kind_of?(MirrorType)
-       outer_type = outer_type:MirrorType.erasure:Object:JVMType
+       outer_type = outer_type:MirrorType.erasure:JVMType
     end
     outer_type
   end

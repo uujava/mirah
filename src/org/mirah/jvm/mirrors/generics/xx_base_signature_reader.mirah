@@ -55,11 +55,11 @@ abstract class BaseSignatureReader < SignatureVisitor
       @interfaces.each do |i:AsyncTypeBuilder|
         types.add(i.future.resolve)
       end
-      bound = if types.size == 0
-        MirrorType(@context[MirrorTypeSystem].loadNamedType(
-            "java.lang.Object").resolve)
+      bound:MirrorType = if types.size == 0
+        @context[MirrorTypeSystem].loadNamedType(
+            "java.lang.Object").resolve
       elsif types.size == 1
-        types[0]:MirrorType
+        types[0]
       else
         IntersectionType.new(@context, types)
       end

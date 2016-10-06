@@ -203,11 +203,10 @@ class SimpleAsyncMirrorLoader implements AsyncMirrorLoader
   end
 
   def makeError(type:Type)
-    object =  if type.getDescriptor.equals("Ljava/lang/Object;")
+    object:MirrorType =  if type.getDescriptor.equals("Ljava/lang/Object;")
       nil
     else
-      MirrorType(loadMirrorAsync(
-        Type.getType("Ljava/lang/Object;")).resolve) rescue nil
+      loadMirrorAsync(Type.getType("Ljava/lang/Object;")).resolve rescue nil
     end
     JvmErrorType.new([["Cannot find class #{type.getClassName}"]], type, object)
   end

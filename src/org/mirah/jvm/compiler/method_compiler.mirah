@@ -309,9 +309,7 @@ class MethodCompiler < BaseCompiler
         getScope(local), name, local.position)
     raise VerifyError, "error type found by compiler #{future.resolve}" if future.resolve.kind_of? ErrorType
 
-    type = JVMType(
-      future.resolve
-      )
+    type:JVMType = future.resolve
     valueType = getInferredType(local.value)
     if local.value.kind_of?(NodeList)
       compileBody(local.value:NodeList, Boolean.TRUE, type)

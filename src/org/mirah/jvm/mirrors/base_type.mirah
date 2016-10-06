@@ -291,7 +291,7 @@ class BaseType implements MirrorType, DeclaredType, MethodListener
     return false if other.getKind != TypeKind.DECLARED
     return false unless other.kind_of?(DeclaredType) &&
                         getTypeArguments.equals(
-                          other:Object:DeclaredType.getTypeArguments)
+                          other:DeclaredType.getTypeArguments)
     getAsmType().equals(other.getAsmType)
   end
 
@@ -304,9 +304,8 @@ class BaseType implements MirrorType, DeclaredType, MethodListener
       elsif superclass
         supertypes.add superclass
       elsif @context
-        object_type = MirrorType(
-               @context[MirrorTypeSystem].loadNamedType(
-                  "java.lang.Object").resolve)
+        object_type:MirrorType =
+        @context[MirrorTypeSystem].loadNamedType("java.lang.Object").resolve
         unless self.isSameType object_type
           supertypes.add(object_type)
         end

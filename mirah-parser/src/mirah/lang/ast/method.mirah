@@ -52,11 +52,11 @@ class RequiredArgument < NodeImpl
   end
 
   def initialize(p:Position, name: Identifier, type: TypeName)
-    initialize(p, name, type, List(nil))
+    initialize(p, name, type, nil:List)
   end
 
   def initialize(name: Identifier, type: TypeName)
-    initialize(name, type, List(nil))
+    initialize(name, type, nil:List)
   end
 
 end
@@ -71,11 +71,11 @@ class OptionalArgument < NodeImpl
   end
 
   def initialize(p:Position, name: Identifier, type: TypeName, value:Node)
-    initialize(p, name, type, value, List(nil))
+    initialize(p, name, type, value, nil:List)
   end
 
   def initialize(name: Identifier, type: TypeName, value:Node)
-    initialize(name, type, value, List(nil))
+    initialize(name, type, value, nil:List)
   end
 
 end
@@ -88,11 +88,11 @@ class RestArgument < NodeImpl
     child_list annotations: Annotation
   end
   def initialize(p:Position, name: Identifier, type: TypeName)
-    initialize(p, name, type, List(nil))
+    initialize(p, name, type, nil:List)
   end
 
   def initialize(name: Identifier, type: TypeName)
-    initialize(name, type, List(nil))
+    initialize(name, type, nil:List)
   end
 
 end

@@ -360,7 +360,7 @@ class MacroBuilder; implements org.mirah.macros.Compiler
 
   def counter_for_name(macro_def_name_klass: String)
     # TODO, I think the .intValue / cast in put may be unnecessary
-    counter = Integer(@extension_counters.get(macro_def_name_klass))
+    counter = @extension_counters.get(macro_def_name_klass):Integer
     if counter.nil?
       id = 0
     else

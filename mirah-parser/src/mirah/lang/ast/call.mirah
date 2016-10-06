@@ -108,7 +108,7 @@ class Call < NodeImpl
     return nil if parameters.size > 1
     return nil if parameters.size == 1 && !maybeCast
     return nil unless target.kind_of?(TypeName)
-    target_typeref = TypeName(target).typeref
+    target_typeref = target:TypeName.typeref
     return nil if target_typeref.nil?
     position = PositionImpl.add(self.name.position, target_typeref.position)
     if '[]'.equals(self.name.identifier)
@@ -130,7 +130,7 @@ class Colon2 < NodeImpl
 
   def typeref: TypeRef
     if target.kind_of?(TypeName)
-      outerType = TypeName(target).typeref.name
+      outerType = target:TypeName.typeref.name
       if outerType
         return TypeRefImpl.new("#{outerType}.#{name.identifier}", false, false, position)
       end

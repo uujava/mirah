@@ -57,7 +57,7 @@ class SimpleString < NodeImpl
   end
 
   def typeref:TypeRef
-    TypeRef(TypeRefImpl.new(@value, false, false, position))
+    TypeRefImpl.new(@value, false, false, position)
   end
 end
 

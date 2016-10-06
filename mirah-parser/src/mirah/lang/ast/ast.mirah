@@ -151,13 +151,13 @@ class NodeImpl implements Node
   attr_reader originalNode: Node
 
   def findAncestor(type:Class):Node
-    node = Node(self)
+    node = self:Node
     node = node.parent until node.nil? || type.isInstance(node)
     node
   end
 
   def findAncestor(filter:NodeFilter):Node
-    node = Node(self)
+    node = self:Node
     node = node.parent until node.nil? || filter.matchesNode(node)
     node
   end
@@ -175,7 +175,7 @@ class NodeImpl implements Node
 
   # Override initCopy instead
   def clone:Object
-    cloned = NodeImpl(super)
+    cloned = super:NodeImpl
     cloned.initCopy
     fireWasCloned(cloned)
     cloned
@@ -229,7 +229,7 @@ class NodeImpl implements Node
   def childAdded(child:Node):Node
     return child if child.nil?
     if child.parent && child.parent != self
-      child = Node(child.clone)
+      child = child.clone:Node
     end
     child.setParent(self)
     child
@@ -243,7 +243,7 @@ class NodeImpl implements Node
 
   def fireWasCloned(clone:Node):void
     @clone_listeners.each do |listener|
-      CloneListener(listener).wasCloned(self, clone)
+      listener:CloneListener.wasCloned(self, clone)
     end
   end
 
@@ -267,7 +267,7 @@ class NodeImpl implements Node
     return nil unless parent
     return nil unless parent.kind_of?(Iterable)
     return parent.java_doc if parent.originalNode
-    p = Iterable(parent)
+    p = parent:Iterable
     prev = nil
     p.each do |child:Node|
       break if child == self
@@ -275,7 +275,7 @@ class NodeImpl implements Node
     end
     return nil unless prev
     return nil unless prev.kind_of? JavaDoc
-    return JavaDoc(prev)
+    return prev:JavaDoc
   end
 
 end
@@ -306,7 +306,7 @@ end
      if @results.size == 0
        nil
      else
-       Node(@results.get(0))
+       @results.get(0):Node
      end
    end
  end
@@ -334,7 +334,7 @@ class TypeRefImpl < NodeImpl implements TypeRef, TypeName
   end
 
   def typeref:TypeRef
-    TypeRef(self)
+    self:TypeRef
   end
 end
 
@@ -405,16 +405,16 @@ class PositionImpl implements Position
   def add(other:Position):Position
     return self unless other
     if @source.equals(other.source)
-      Position(PositionImpl.new(
+      PositionImpl.new(
           @source, Math.min(@startChar, other.startChar),
           Math.min(@startLine, other.startLine),
           Math.min(@startColumn, other.startColumn),
           Math.max(@endChar, other.endChar),
           Math.max(@endLine, other.endLine),
-          Math.max(@endColumn, other.endColumn)))
+          Math.max(@endColumn, other.endColumn))
     else
-      Position(self)
-    end
+      self
+    end:Position
   end
   def self.add(a:Position, b:Position):Position
     if a && b

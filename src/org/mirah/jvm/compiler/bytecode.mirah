@@ -54,9 +54,9 @@ class Bytecode < GeneratorAdapter
   
   def initialize(flags:int, method:Method, klass:ClassVisitor, codesource:CodeSource)
     super(Opcodes.ASM4,
-          MethodVisitor(@mv = LocalInitializerAdapter.new(klass.visitMethod(
+          (@mv = LocalInitializerAdapter.new(klass.visitMethod(
               flags, method.getName, method.getDescriptor, nil, nil),
-              flags, method.getDescriptor)),
+              flags, method.getDescriptor)):MethodVisitor,
           flags, method.getName, method.getDescriptor)
     @endLabel = newLabel
     @locals = LinkedHashMap.new
@@ -94,11 +94,11 @@ class Bytecode < GeneratorAdapter
   end
   
   def declareLocal(name:String, type:Type):LocalInfo
-    LocalInfo(@locals[name] ||= begin
+    (@locals[name] ||= begin
       index = @nextLocal
       @nextLocal += type.getSize
       LocalInfo.new(name, index, type, mark(), @endLabel)
-    end)
+    end):LocalInfo
   end
 
   def storeLocal(name:String, type:JVMType):void

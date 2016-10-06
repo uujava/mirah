@@ -193,7 +193,7 @@ class BindingAdjuster < NodeScanner
 #      end
 #    end
 
-    insert_index = if node.parent.kind_of?(ConstructorDefinition) && NodeList(node).get(0).kind_of?(Super)
+    insert_index = if node.parent.kind_of?(ConstructorDefinition) && node:NodeList.get(0).kind_of?(Super)
       3
     else
       2

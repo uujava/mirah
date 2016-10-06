@@ -51,7 +51,7 @@ class MethodCleanup < NodeScanner
       @scope.capturedLocals.each do |name|
         type:JVMType = @typer.type_system.getLocalType(@scope, name:String, node.position).resolve
         if type.kind_of?(MirrorType)
-          type = type:MirrorType.erasure:Object:JVMType
+          type = type:MirrorType.erasure:JVMType
         end
         typeref = TypeRefImpl.new(type.name, JVMTypeUtils.isArray(type), false, node.position)
         decl = FieldDeclaration.new(SimpleString.new(name:String), typeref, nil, [Modifier.new('PROTECTED')])

@@ -102,7 +102,7 @@ class FieldAssign < NodeImpl
   end
 
   def initialize(position:Position, name:Identifier, annotations:List, isStatic:boolean, modifiers:List, type_hint: TypeName)
-    initialize(position, name, Node(nil), annotations, modifiers, type_hint)
+    initialize(position, name, nil:Node, annotations, modifiers, type_hint)
     self.isStatic = isStatic
   end
 

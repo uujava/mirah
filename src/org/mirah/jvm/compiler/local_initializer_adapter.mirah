@@ -139,8 +139,8 @@ end
 class LocalInitializerAdapter < MethodVisitor
   def initialize(mv:MethodVisitor, flags:int, desc:String)
     super(Opcodes.ASM4,
-          MethodVisitor(@node = MethodNode.new(
-              Opcodes.ASM4, flags, nil, desc, nil, nil)))
+          (@node = MethodNode.new(
+              Opcodes.ASM4, flags, nil, desc, nil, nil)):MethodVisitor)
     @mv = mv
   end
 

@@ -191,8 +191,8 @@ class GenericMethodLookup
     if target.isMeta
       return result
     end
-    generic_target = DeclaredMirrorType(inference.findMatchingSupertype(
-        target, method.declaringClass:DeclaredMirrorType))
+    generic_target:DeclaredMirrorType = inference.findMatchingSupertype(
+        target, method.declaringClass:DeclaredMirrorType)
     if generic_target.nil?
       # This happens for static imports.
       return result
