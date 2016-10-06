@@ -177,17 +177,17 @@ class Typer < SimpleNodeVisitor
     # This might be a local, method call, or primitive access,
     # so try them all.
 
-    fcall = FunctionalCall.new(call.position,
-                               call.name.clone:Identifier,
-                               nil, nil)
-    fcall.setParent(call.parent)
+    #fcall = FunctionalCall.new(call.position,
+    #                           call.name.clone:Identifier,
+    #                           nil, nil)
+    #fcall.setParent(call.parent)
 
-    @futures[fcall] = callMethodType call, Collections.emptyList
-    @futures[fcall.target] = infer(call.target)
+    #@futures[fcall] = callMethodType call, Collections.emptyList
+    #@futures[fcall.target] = infer(call.target)
 
     proxy = ProxyNode.new(self, call)
     proxy.setChildren([LocalAccess.new(call.position, call.name),
-                       fcall,
+                       FunctionalCall.new(call.position, call.name.clone:Identifier, nil, nil),
                        Constant.new(call.position, call.name)], 0)
 
     @futures[proxy] = proxy.inferChildren(expression != nil)
@@ -490,17 +490,10 @@ class Typer < SimpleNodeVisitor
     # This works for external constants, but not internal ones currently.
     variants = [colon2]
     if expression
-      call = Call.new(colon2.position,
-                      colon2.target,
-                      colon2.name.clone:Identifier,
-                      nil, nil)
-      call.setParent(colon2.parent)
-
-      methodType = callMethodType call, Collections.emptyList
-      targetType = infer(call.target)
-      @futures[call] = methodType
-      @futures[call.target] = targetType
-      variants.add call
+      variants.add Call.new(colon2.position,
+                                         colon2.target,
+                                         colon2.name.clone:Identifier,
+                                         nil, nil)
     end
     proxy = ProxyNode.new self, colon2
     proxy.setChildren(variants, 0)
@@ -623,16 +616,9 @@ class Typer < SimpleNodeVisitor
     # If adding fcall without expression check - getting method duplicates in
     # macros_test.rb#test_macro_changes_body_of_class_last_element
     if expression
-      fcall = FunctionalCall.new(constant.position,
-                               constant.name.clone:Identifier,
-                               nil, nil)
-      fcall.setParent(constant.parent)
-
-      methodType = callMethodType fcall, Collections.emptyList
-      targetType = infer(fcall.target)
-      @futures[fcall] = methodType
-      @futures[fcall.target] = targetType
-      variants.add fcall
+      variants.add FunctionalCall.new(constant.position,
+                                                  constant.name.clone:Identifier,
+                                                  nil, nil)
     end
     proxy = ProxyNode.new self, constant
     proxy.setChildren(variants, 0)
