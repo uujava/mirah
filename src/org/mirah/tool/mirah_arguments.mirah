@@ -209,7 +209,10 @@ class MirahArguments
 
     parser.addFlag(
         ['tdb'], 'Start the interactive type debugger.'
-    ) { compiler_args.use_type_debugger = true }
+    ) {
+     System.err.puts 'WARN: Use of --tdb is not fully functional'
+     compiler_args.use_type_debugger = true
+    }
 
     parser.addFlag(
         ['new-closures'], 'DEPRECATED: Use new closure implementation. Has no effect. The "new closure" implementation is now always used.'

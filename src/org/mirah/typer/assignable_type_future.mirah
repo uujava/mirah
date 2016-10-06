@@ -29,7 +29,6 @@ class AssignableTypeFuture < BaseTypeFuture
     super(position)
     @assignments = LinkedHashMap.new
     @declarations = LinkedHashMap.new
-    @lock = ReentrantLock.new
   end
 
   def self.initialize:void
@@ -38,7 +37,6 @@ class AssignableTypeFuture < BaseTypeFuture
 
   # Set the declared type. Only one declaration is allowed.
   def declare(type: TypeFuture, position: Position): TypeFuture
-    @lock.lock
     if @declarations.containsKey(type)
       @@log.finest "already visited declaration for #{type}"
       @declarations[type]:TypeFuture
@@ -68,14 +66,11 @@ class AssignableTypeFuture < BaseTypeFuture
 
       declared_type_error
     end
-  ensure
-    @lock.unlock
   end
 
   # Adds an assigment. The returned future will resolve to 'value',
   # or an error if this assignment is incompatible.
   def assign(value: TypeFuture, position: Position): TypeFuture
-    @lock.lock
     if @assignments.containsKey(value)
       @assignments[value]:TypeFuture
     else
@@ -88,8 +83,6 @@ class AssignableTypeFuture < BaseTypeFuture
       end
       assignment:TypeFuture
     end
-  ensure
-    @lock.unlock
   end
 
   # Returns an error type for an incompatible assignment.
@@ -99,28 +92,19 @@ class AssignableTypeFuture < BaseTypeFuture
   end
 
   def hasDeclaration: boolean
-    @lock.lock
     !@declarations.isEmpty
-  ensure
-    @lock.unlock
   end
 
   def assignedValues(includeParent: boolean, includeChildren: boolean, forceIncludeChildren = false): Collection
-    @lock.lock
     @assignments.keySet:Collection
-  ensure
-    @lock.unlock
   end
 
   def declaredType: TypeFuture
-    @lock.lock
     if @declarations.isEmpty
       nil
     else
       @declarations.keySet.iterator.next:TypeFuture
     end
-  ensure
-    @lock.unlock
   end
 
   def dump(out: FuturePrinter)
@@ -209,23 +193,18 @@ class AssignableTypeFuture < BaseTypeFuture
 
   def resolve
     unless isResolved
-      @lock.lock
-      begin
-        unless @resolving
-          @resolving = true
-          if hasDeclaration
-            @@log.finer("#{self}: Resolving declarations")
-            @declarations.keySet.each {|t: TypeFuture| t.resolve }
-            @@log.finer("#{self}: done")
-          else
-            @@log.finer("#{self}: Resolving assignments")
-            assignedValues(true, true).each {|v: TypeFuture| v.resolve }
-            @@log.finer("#{self}: done")
-          end
-          @resolving = false
+      unless @resolving
+        @resolving = true
+        if hasDeclaration
+          @@log.finer("#{self}: Resolving declarations")
+          @declarations.keySet.each {|t: TypeFuture| t.resolve }
+          @@log.finer("#{self}: done")
+        else
+          @@log.finer("#{self}: Resolving assignments")
+          assignedValues(true, true).each {|v: TypeFuture| v.resolve }
+          @@log.finer("#{self}: done")
         end
-      ensure
-        @lock.unlock
+        @resolving = false
       end
     end
     super

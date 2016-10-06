@@ -24,12 +24,10 @@ import org.mirah.jvm.mirrors.MirrorProxy
 class Cycle < MirrorProxy
   def initialize
     super(nil)
-    @lock = ReentrantLock.new
     @depth = 0
   end
 
   def toString
-    @lock.lock
     begin
       @depth += 1
       if target.nil? || @depth > 2
@@ -39,7 +37,6 @@ class Cycle < MirrorProxy
       end
     ensure
       @depth -= 1
-      @lock.unlock
     end
   end
 end

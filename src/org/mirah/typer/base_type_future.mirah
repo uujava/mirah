@@ -37,11 +37,9 @@ class BaseTypeFuture; implements TypeFuture
     @listeners = ArrayList.new
     @new_listeners = nil:ArrayList
     @notify_depth = 0
-    @lock = ReentrantLock.new
   end
   def initialize
     @listeners = ArrayList.new
-    @lock = ReentrantLock.new
   end
 
   def self.initialize: void
@@ -91,38 +89,29 @@ class BaseTypeFuture; implements TypeFuture
   end
 
   def onUpdate(listener: TypeListener): TypeListener
-    begin
-      @lock.lock
-      if @notify_depth > 0
-        @new_listeners ||= ArrayList.new(@listeners)
-        @new_listeners.add(listener)
-      else
-        @listeners.add(listener)
-      end
-    ensure
-      @lock.unlock
+    if @notify_depth > 0
+      @new_listeners ||= ArrayList.new(@listeners)
+      @new_listeners.add(listener)
+    else
+      @listeners.add(listener)
     end
     listener.updated(self, inferredType) if isResolved
     listener
   end
 
   def removeListener(listener: TypeListener): void
-    @lock.lock
     if @notify_depth > 0
       @new_listeners ||= ArrayList.new(@listeners)
       @new_listeners.remove(listener)
     else
       @listeners.remove(listener)
     end
-  ensure
-    @lock.unlock
   end
 
   # Resolves this future to the specified type.
   # Notifies the listeners if the resolved type has changed.
   def resolved(type: ResolvedType): void
     @@log.fine "resolving as #{type} from #{resolved_str}"
-    @lock.lock
     if @watcher
       @watcher.resolved(self, @resolved, type)
     end
@@ -137,8 +126,6 @@ class BaseTypeFuture; implements TypeFuture
       @resolved = type
       notifyListeners
     end
-  ensure
-    @lock.unlock
   end
 
   def forgetType
@@ -147,7 +134,6 @@ class BaseTypeFuture; implements TypeFuture
   end
 
   def notifyListeners: void
-    @lock.lock
     @notify_depth += 1
     if @notify_depth > 100
       raise IllegalStateException, "Type inference loop"
@@ -166,7 +152,6 @@ class BaseTypeFuture; implements TypeFuture
         @new_listeners = nil
       end
     end
-    @lock.unlock
   end
 
   def toString
