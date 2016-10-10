@@ -163,4 +163,63 @@ class ConstructorsTest < Test::Unit::TestCase
 
     assert_run_output("foo", script)
   end
+
+  def test_class_level_field_assign
+    script, cls = compile(<<-EOF)
+      class ClassLevelFieldAssign1
+        @foo = 1
+        def foo
+          @foo
+        end
+      end
+
+      puts ClassLevelFieldAssign1.new.foo
+    EOF
+    assert_run_output("1\n", script)
+  end
+
+  def test_class_level_field_and_initializer
+    script, cls = compile(<<-EOF)
+      class ClassLevelFieldAssign2
+        @foo = 2
+        def initialize
+          @foo = 3
+        end
+        attr_reader foo: int
+      end
+
+      puts ClassLevelFieldAssign2.new.foo
+    EOF
+    assert_run_output("3\n", script)
+  end
+
+  def test_class_level_field_and_chained_initializer
+    script, cls = compile(<<-EOF)
+      class ClassLevelFieldAssign3
+
+        @foo = begin
+           puts "a\#{@foo}"
+           1
+        end
+
+        def initialize
+          initialize(5)
+          @foo = 2
+          puts "b\#{@foo}"
+        end
+
+        def initialize x:int
+          puts "c\#{@foo}"
+          @foo = x
+          puts "d\#{@foo}"
+        end
+
+        attr_reader foo: int
+      end
+
+      puts ClassLevelFieldAssign3.new.foo
+    EOF
+
+    assert_run_output("a0\nc1\nd5\nb2\n2\n", script)
+  end
 end

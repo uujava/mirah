@@ -80,6 +80,11 @@ class ClassCleanup < NodeScanner
       add_default_constructor unless @klass.kind_of?(InterfaceDeclaration)
     end
 
+    @init_nodes.each do |node:Node|
+      node.parent.removeChild(node)
+      node.setParent(nil)  # TODO: not sure do we still need this?
+    end
+
     init = if @init_nodes.nil?
       nil
     else
@@ -255,7 +260,6 @@ class ClassCleanup < NodeScanner
       @static_init_nodes.add(node)
     else
       @init_nodes.add(node)
-      node.parent.removeChild(node)
     end
     false
   end
