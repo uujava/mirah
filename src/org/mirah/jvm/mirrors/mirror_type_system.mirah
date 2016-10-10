@@ -329,8 +329,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
 
     @@log.finest "creating undeclared field's future target: #{target} name: #{name}"
     future = AssignableTypeFuture.new(position)
-    field_name = (target.kind_of? MirrorType and target:MirrorType.isMeta) ? "@@#{name}" : "@name"
-    future:AssignableTypeFuture.error_message = "Unable to determine type for the field: #{field_name} at: #{position}"
+    future:AssignableTypeFuture.error_message = "Unable to determine type for the field: #{name} at: #{position}"
     @unpinned_field_futures[unpinned_key(klass, name)] = future
     future:AssignableTypeFuture
   end
