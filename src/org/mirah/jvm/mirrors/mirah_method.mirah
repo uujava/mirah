@@ -75,7 +75,7 @@ class MirahMethod < AsyncMember implements MethodListener
     @declared_return_type = returnType
     @return_type.declare(wrap(@super_return_type), position)
 #   @return_type.resolved(nil)
-    @return_type.error_message = "Cannot determine return type."
+    @return_type.error_message = "Unable to determine return type for method: #{name} at #{position}"
     @arity = argumentTypes.size
     setupOverrides(argumentTypes)
   end
