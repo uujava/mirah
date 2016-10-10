@@ -948,11 +948,11 @@ class JVMCompilerTest < Test::Unit::TestCase
   def test_set
     cls, = compile(<<-EOF)
       def foo
-        @foo
+        @@foo
       end
 
       def foo=(foo:int)
-        @foo = foo
+        @@foo = foo
       end
     EOF
 
@@ -1069,30 +1069,30 @@ class JVMCompilerTest < Test::Unit::TestCase
     assert_output("a\n") { assert_equal(nil, cls.bar(nil, "B")) }
     assert_output("a\nb\n") { assert_equal(nil, cls.bar("A", nil)) }
     assert_output("a\nb\n") { assert_equal("B", cls.bar("A", "B")) }
-
+    # Note! Script methods are implicitly static
     cls, = compile(<<-EOF)
       def s
-        @s
+        @@s
       end
 
       def s=(s:String)
-        @s = s
+        @@s = s
       end
 
       def b
-        @b
+        @@b
       end
 
       def b=(b:boolean)
-        @b = b
+        @@b = b
       end
 
       def foo(x:boolean)
-        @b &&= x
+        @@b &&= x
       end
 
       def bar(x:String)
-        @s &&= x
+        @@s &&= x
       end
     EOF
 
@@ -1188,30 +1188,30 @@ class JVMCompilerTest < Test::Unit::TestCase
     assert_output("a\n") { assert_equal("A", cls.bar("A", nil)) }
     assert_output("a\nb\n") { assert_equal(nil, cls.bar(nil, nil)) }
     assert_output("a\nb\n") { assert_equal("B", cls.bar(nil, "B")) }
-
+    # Note! Script methods are implicitly static
     cls, = compile(<<-EOF)
       def s
-        @s
+        @@s
       end
 
       def s=(s:String)
-        @s = s
+        @@s = s
       end
 
       def b
-        @b
+        @@b
       end
 
       def b=(b:boolean)
-        @b = b
+        @@b = b
       end
 
       def foo(x:boolean)
-        @b ||= x
+        @@b ||= x
       end
 
       def bar(x:String)
-        @s ||= x
+        @@s ||= x
       end
     EOF
 

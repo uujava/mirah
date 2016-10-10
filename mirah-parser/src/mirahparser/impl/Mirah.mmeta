@@ -1307,7 +1307,7 @@ parser MirahParser {
     if e.kind_of?(ConstantAssign)
       Node(Constant.new(e.position, name))
     elsif e.kind_of?(FieldAssign)
-      Node(FieldAccess.new(e.position, name))
+      Node(FieldAccess.new(e.position, name, e:FieldAssign.isStatic))
     elsif e.kind_of?(LocalAssignment)
       Node(LocalAccess.new(e.position, name))
     else

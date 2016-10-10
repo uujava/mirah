@@ -716,7 +716,16 @@ assert_parse("[Script, [[LocalAssignment, [SimpleString, a], [Rescue, [[VCall, [
 
     assert_fails("::A ||= 1")
     assert_fails("A::B ||= 1")
-   end
+    assert_parse('[Script, [[If, [FieldAccess, [SimpleString, a]], [[FieldAssign, [SimpleString, a], [VCall, [SimpleString, b]], [ModifierList], null]], [[FieldAccess, [SimpleString, a]]]]]]',
+                 '@a &&= b')
+    assert_parse('[Script, [[If, [FieldAccess, [SimpleString, a]], [[FieldAccess, [SimpleString, a]]], [[FieldAssign, [SimpleString, a], [VCall, [SimpleString, b]], [ModifierList], null]]]]]',
+                 '@a ||= b')
+    assert_parse('[Script, [[If, [FieldAccess, [SimpleString, a], static], [[FieldAssign, [SimpleString, a], [VCall, [SimpleString, b]], [ModifierList], null, static]], [[FieldAccess, [SimpleString, a], static]]]]]',
+                 '@@a &&= b')
+    assert_parse('[Script, [[If, [FieldAccess, [SimpleString, a], static], [[FieldAccess, [SimpleString, a], static]], [[FieldAssign, [SimpleString, a], [VCall, [SimpleString, b]], [ModifierList], null, static]]]]]',
+                 '@@a ||= b')
+
+  end
 
    def test_expr
      assert_parse("[Script, [[If, [LocalAssignment, [SimpleString, a], [Fixnum, 1], null], [[LocalAssignment, [SimpleString, b], [Fixnum, 2], null]], []]]]",

@@ -470,6 +470,7 @@ class MethodCompiler < BaseCompiler
   def visitFieldAccess(node, expression)
     klass = @selfType.getAsmType
     name = node.name.identifier
+    raise VerifyError, "instance field #{name} accessed in static context"  if isStatic() and  !node.isStatic
     type = getInferredType(node)
     isStatic = node.isStatic || self.isStatic
     if isStatic
@@ -488,7 +489,8 @@ class MethodCompiler < BaseCompiler
   def visitFieldAssign(node, expression)
     klass = @selfType.getAsmType
     name = node.name.identifier
-    raise VerifyError, "field name #{name} ends with ="  if name.endsWith("=")
+    raise VerifyError, "field name #{name} #{node.position} ends with ="  if name.endsWith("=")
+    raise VerifyError, "instance field #{name} assigned in static context"  if isStatic() and  !node.isStatic
     isStatic = node.isStatic || self.isStatic
     type = @klass.getDeclaredField(node.name.identifier).returnType
     @builder.loadThis unless isStatic
