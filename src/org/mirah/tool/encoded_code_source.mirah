@@ -51,6 +51,7 @@ class EncodedCodeSource < StringCodeSource
     while (read = reader.read(buffer, 0, buffer.length)) > 0
       builder.append(buffer, 0, read);
     end
+    reader.close rescue nil
     return builder.toString
   end
 
