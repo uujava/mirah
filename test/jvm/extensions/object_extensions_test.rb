@@ -131,4 +131,15 @@ class ObjectExtensionsTest < Test::Unit::TestCase
     assert_run_output("wait\ndone\n", cls)
   end
 
+  def test_enum_equals
+    # it's hard to test that equals not actually called for enum.
+    # just test == works as expected
+    cls, = compile %q[
+      import java.nio.file.AccessMode
+      a = AccessMode.WRITE
+      puts a == AccessMode::WRITE
+      puts a == AccessMode::READ
+    ]
+    assert_run_output("true\nfalse\n",cls)
+  end
 end

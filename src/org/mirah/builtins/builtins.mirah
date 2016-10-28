@@ -42,5 +42,6 @@ class Builtins implements ExtensionsProvider
     type_system.macro_registration(LongOperators.class)
     type_system.macro_registration(DoubleOperators.class)
     type_system.macro_registration(FloatOperators.class)
+    type_system.macro_registration(EnumExtensions.class)
   end
 end
