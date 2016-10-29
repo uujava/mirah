@@ -21,6 +21,7 @@ interface JVMMethod < JVMMember
 end
 
 interface JVMField < JVMMember
+  def constantValue:Object;end
 end
 
 interface GenericMethod < JVMMethod

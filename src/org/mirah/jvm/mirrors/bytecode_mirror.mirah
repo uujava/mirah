@@ -171,7 +171,7 @@ class BytecodeMirror < AsyncMirror implements DeclaredMirrorType
                else
                  MemberKind.FIELD_ACCESS
                end
-        member = Member.new(field.access, self, field.name, [], type, kind)
+        member = Member.new(field.access, self, field.name, [], type, kind, field.value)
         member.signature = field.signature
         mirrors[i] = member
       end

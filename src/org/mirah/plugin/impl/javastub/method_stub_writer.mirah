@@ -61,7 +61,7 @@ class MethodStubWriter < StubWriter
       if atype == ModifierVisitor.ACCESS
         modifier = value.toLowerCase
       else
-        if value == 'SYNTHETIC' or value == 'BRIDGE'
+        if value == 'SYNTHETIC' || value == 'BRIDGE'
             this.writeln StubWriter.TAB, '// ', value unless preserve_lines
             this.synthetic = true
         else
@@ -72,7 +72,7 @@ class MethodStubWriter < StubWriter
 
     @@log.finest "access: #{modifier} modifier: #{flags}"
 
-    return if type.name.endsWith 'init>' and static
+    return if type.name.endsWith('init>') && static
 
     writeln @node.java_doc.value if @node.java_doc
     writeln(start_position) if @preserve_lines
@@ -132,7 +132,7 @@ class MethodStubWriter < StubWriter
   end
 
   def write_src:void
-     return unless plugin.copy_src or plugin.preserve_lines
+     return unless plugin.copy_src || plugin.preserve_lines
      return unless @node.body
      return if @synthetic
      # hack???: parser produce body position wrapping whole method definition?

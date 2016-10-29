@@ -17,6 +17,7 @@ package org.mirah.typer
 
 import java.util.*
 import org.mirah.util.Logger
+import mirah.lang.ast.Float as AstFloat
 import mirah.lang.ast.*
 import mirah.impl.MirahParser
 import org.mirah.macros.JvmBackend
@@ -1613,14 +1614,14 @@ class Typer < SimpleNodeVisitor
 
 
   def getFieldTypeOrDeclare(field: FieldAssign)
-    getFieldTypeOrDeclare(field, fieldTargetType(field, field.isStatic), field.isStatic)
+    getFieldTypeOrDeclare(field, fieldTargetType(field, field.isStatic), field.isStatic, readConstValue(field.value))
   end
 
   def getFieldTypeOrDeclare(field: FieldDeclaration)
-    getFieldTypeOrDeclare(field, fieldTargetType(field, field.isStatic), field.isStatic)
+    getFieldTypeOrDeclare(field, fieldTargetType(field, field.isStatic), field.isStatic, nil)
   end
 
-  def getFieldTypeOrDeclare field: Named, targetType: TypeFuture, isStatic: boolean
+  def getFieldTypeOrDeclare(field: Named, targetType: TypeFuture, isStatic: boolean, constantValue: Object)
     # private by default, static if needed
     flags = calculateFlags(Opcodes.ACC_PRIVATE, field:Node)
     flags |= Opcodes.ACC_STATIC if isStatic
@@ -1628,7 +1629,8 @@ class Typer < SimpleNodeVisitor
     @types.getFieldTypeOrDeclare(targetType,
                         flags,
                         field.name.identifier,
-                        field.position)
+                        field.position,
+                        constantValue)
   end
 
   def expandMacro node: Node, inline_type: ResolvedType
@@ -1717,4 +1719,68 @@ class Typer < SimpleNodeVisitor
       @futures[call.parameters(0)] = infer(call.parameters(0))
     end
   end
+
+  def visitCase(stmt, expression)
+    infer(stmt.condition, true)
+    a = infer(stmt.elseBody, expression != nil) if stmt.elseBody
+    # Can there just be an else? Maybe we could simplify below.
+    type = AssignableTypeFuture.new(stmt.position)
+    if stmt.elseBody
+      elseType = infer(stmt.elseBody, expression != nil)
+      type.assign(elseType, stmt.elseBody.position)
+    end
+    stmt.clauses.each do |clause:WhenClause|
+      clauseType = infer(clause, true)
+      type.assign(clauseType, clause.body.position)
+    end
+    type:TypeFuture
+  end
+
+  def visitWhenClause(stmt, expression)
+    inferAll(stmt.candidates)
+    infer(stmt.body, expression != nil)
+  end
+
+  def readConstValue(value:Node):Object
+    if value.kind_of? SimpleString
+      value:SimpleString.value
+    elsif value.kind_of? Fixnum
+      readFixnumValue(value:Fixnum)
+    elsif value.kind_of? CharLiteral
+      Character.valueOf(value:CharLiteral.value:char)
+    elsif value.kind_of? AstFloat
+      readFloatValue(value:AstFloat)
+    elsif value.kind_of? Symbol
+      value:Symbol.value
+    else
+      nil
+    end
+  end
+
+  # this partly duplicates logic from MirrorTypeSystem#getFixnumType
+  def readFixnumValue(node:Fixnum)
+    value = node.value
+    box = value:Long
+    if box.intValue != value
+      return box
+    elsif box.shortValue != value
+      return box.intValue:Integer
+    elsif box.byteValue != value
+      return box.shortValue:Short
+    else
+      return box.byteValue:Byte
+    end
+  end
+
+  # this partly duplicates logic from MirrorTypeSystem#getFloatType
+  def readFloatValue(node:AstFloat)
+    value = node.value
+    box = value:Double
+    if box.floatValue != value
+      return box
+    else
+      return box.floatValue:Float
+    end
+  end
+
 end

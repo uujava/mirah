@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Mirah project authors. All Rights Reserved.
+# Copyright (c) 2012-2016 The Mirah project authors. All Rights Reserved.
 # All contributing project authors may be found in the NOTICE file.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -98,20 +98,24 @@ class ClassCompiler < BaseCompiler implements InnerClassCompiler
   
   def compileInnerClass(node:ClassDefinition, method:Method):void
     compiler = ClassCompiler.new(context, node, @type, method)
-    @innerClasses.add(compiler)
     # TODO only supporting anonymous inner classes for now.
     @classwriter.visitInnerClass(compiler.internal_name, nil, nil, 0)
     compiler.compile
+    addInnerClass(compiler)
   end
-  
+
   def compileInnerInterface(node:InterfaceDeclaration, method:Method):void
     compiler = InterfaceCompiler.new(context, node, @type, method)
-    @innerClasses.add(compiler)
     # TODO only supporting anonymous inner classes for now.
     @classwriter.visitInnerClass(compiler.internal_name, nil, nil, 0)
     compiler.compile
+    addInnerClass(compiler)
   end
-  
+
+  def addInnerClass(compiler)
+    @innerClasses.add(compiler)
+  end
+
   def getBytes:byte[]
     # TODO CheckClassAdapter
     @classwriter.toByteArray

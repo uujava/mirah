@@ -210,7 +210,7 @@ class ClassStubWriter < StubWriter
       end
     end
     @methods.each do |stub_writer:MethodStubWriter|
-      stub_writer.preserve_lines = plugin.preserve_lines and outer.same_source stub_writer
+      stub_writer.preserve_lines = plugin.preserve_lines && outer.same_source(stub_writer)
       stub_writer.generate
     end
   end

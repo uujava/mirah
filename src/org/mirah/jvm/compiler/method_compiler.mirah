@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 The Mirah project authors. All Rights Reserved.
+# Copyright (c) 2012-2016 The Mirah project authors. All Rights Reserved.
 # All contributing project authors may be found in the NOTICE file.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 package org.mirah.jvm.compiler
 
 import java.util.LinkedList
+import java.util.Collection
 import org.mirah.util.Logger
 import mirah.lang.ast.*
 import org.mirah.jvm.types.CallType
@@ -31,13 +32,29 @@ import org.mirah.jvm.mirrors.MirrorType
 import org.mirah.jvm.mirrors.BytecodeMirror
 import org.mirah.jvm.mirrors.Member
 import org.mirah.jvm.types.JVMMethod
+import org.mirah.jvm.types.JVMField
+import org.mirah.jvm.types.JVMTypeUtils
 import static org.mirah.jvm.types.JVMTypeUtils.*
-
+import org.mirah.jvm.mirrors.ResolvedCall
+import org.mirah.jvm.mirrors.Member
+import org.mirah.jvm.types.JVMField
+import org.mirah.jvm.types.MemberKind
+import org.mirah.jvm.compiler.casesupport.SwitchCompiler
+import org.mirah.jvm.compiler.casesupport.EnumValue
 import java.util.List
 
 interface InnerClassCompiler
   def context:Context; end
+  # compile inner class from AST and add it to inner classes
   def compileInnerClass(node:ClassDefinition, method:AsmMethod):void; end
+  # add inner compiler
+  def addInnerClass(compiler:InnerClassCompiler):void; end
+  # Class FQDN this instance provide bytes
+  def internal_name:String;end
+  # Class data byte array
+  def getBytes:byte[];end
+  # Collection of InnerClassesCompilers generated implicitly by this class compiler
+  def innerClasses:Collection;end
 end
 
 class MethodCompiler < BaseCompiler
@@ -52,6 +69,8 @@ class MethodCompiler < BaseCompiler
     @args = {}
     @klass = klass
     @classCompiler = compiler
+    # used to generate switch locals
+    @caseLevel = 0
   end
   
   def isVoid
@@ -128,14 +147,23 @@ class MethodCompiler < BaseCompiler
     end
 
     @descriptor = methodDescriptor(@name, @returnType, type.parameterTypes)
-    @selfType = getScope(mdef).selfType.resolve:JVMType
+    @selfScope = getScope(mdef)
+    @selfType = @selfScope.selfType.resolve:JVMType
     superclass = @selfType.superclass
     @superclass = superclass || findType("java.lang.Object")
     builder = Bytecode.new(@flags, @descriptor, cv, mdef.findAncestor(Script.class).position.source)
     collectArgNames(mdef, builder)
     builder
   end
-  
+
+  def selfType:JVMType
+    @selfType
+  end
+
+  def selfScope:Scope
+    @selfScope
+  end
+
   def prepareBinding(mdef:MethodDefinition):void
     scope = getIntroducedScope(mdef)
     type = scope.binding_type:JVMType
@@ -271,7 +299,7 @@ class MethodCompiler < BaseCompiler
     end
 
     if method == nil or target == nil
-     raise VerifyError, "No method #{@name} params: #{paramTypes} found for super call in #{node.position}"
+     reportError("No method #{@name} params: #{paramTypes} found for super call", node.position)
     end
 
     @builder.invokeSpecial(target.getAsmType, methodDescriptor(method))
@@ -307,7 +335,7 @@ class MethodCompiler < BaseCompiler
     end
     future = typer.type_system.getLocalType(
         getScope(local), name, local.position)
-    raise VerifyError, "error type found by compiler #{future.resolve}" if future.resolve.kind_of? ErrorType
+    reportError("error type found by compiler #{future.resolve}", local.position) if future.resolve.kind_of? ErrorType
 
     type:JVMType = future.resolve
     valueType = getInferredType(local.value)
@@ -369,7 +397,7 @@ class MethodCompiler < BaseCompiler
   end
 
   def visitFunctionalCall(call, expression)
-    raise VerifyError, "call to #{call.name.identifier}'s block has not been converted to a closure at #{call.position}" if call.block
+    reportError("call to #{call.name.identifier}'s block has not been converted to a closure",  call.position) if call.block
 
     name = call.name.identifier
 
@@ -385,13 +413,21 @@ class MethodCompiler < BaseCompiler
   end
   
   def visitCall(call, expression)
-    raise VerifyError, "call to #{call.name.identifier}'s block has not been converted to a closure at #{call.position}" if call.block
+    reportError("call to #{call.name.identifier}'s block has not been converted to a closure", call.position) if call.block
 
     compiler = CallCompiler.new(self, @builder, call.position, call.target, call.name.identifier, call.parameters, getInferredType(call))
     compiler.compile(expression != nil)
   end
-  
-  def compileBody(node:NodeList, expression:Object, type:JVMType)
+
+  def compileIfBody(body:NodeList, expression:Object, type:JVMType):void
+    compileBody(body, expression, type)
+    bodyType = getInferredType(body)
+    if needConversion(bodyType, type) || needConversion(type, bodyType)
+      @builder.convertValue(bodyType, type)
+    end
+  end
+
+  def compileBody(node:NodeList, expression:Object, type:JVMType):void
     if node.size == 0
       if expression
         defaultValue(type)
@@ -415,11 +451,7 @@ class MethodCompiler < BaseCompiler
     if need_then
       compiler.negate
       compiler.compile(node.condition, elseLabel)
-      compileBody(node.body, expression, type)
-      bodyType = getInferredType(node.body)
-      if needConversion(bodyType, type)
-        @builder.convertValue(bodyType, type)
-      end
+      compileIfBody(node.body, expression, type)
       @builder.goTo(endifLabel)
     else
       compiler.compile(node.condition, endifLabel)
@@ -427,16 +459,12 @@ class MethodCompiler < BaseCompiler
     
     @builder.mark(elseLabel)
     if need_else
-      compileBody(node.elseBody, expression, type)
-      bodyType = getInferredType(node.elseBody)
-      if needConversion(bodyType, type)
-        @builder.convertValue(bodyType, type)
-      end
+      compileIfBody(node.elseBody, expression, type)
     end
     recordPosition(node.position, true)
     @builder.mark(endifLabel)
   end
-  
+
   def visitImplicitNil(node, expression)
     if expression
       defaultValue(getInferredType(node))
@@ -470,7 +498,7 @@ class MethodCompiler < BaseCompiler
   def visitFieldAccess(node, expression)
     klass = @selfType.getAsmType
     name = node.name.identifier
-    raise VerifyError, "instance field #{name} accessed in static context"  if isStatic() and  !node.isStatic
+    reportError("instance field #{name} accessed in static context", node.position)  if isStatic() and  !node.isStatic
     type = getInferredType(node)
     isStatic = node.isStatic || self.isStatic
     if isStatic
@@ -489,8 +517,8 @@ class MethodCompiler < BaseCompiler
   def visitFieldAssign(node, expression)
     klass = @selfType.getAsmType
     name = node.name.identifier
-    raise VerifyError, "field name #{name} #{node.position} ends with ="  if name.endsWith("=")
-    raise VerifyError, "instance field #{name} assigned in static context"  if isStatic() and  !node.isStatic
+    reportError("field name #{name} ends with =", node.position)  if name.endsWith("=")
+    reportError("instance field #{name} assigned in static context", node.position)  if isStatic() &&  !node.isStatic
     isStatic = node.isStatic || self.isStatic
     type = @klass.getDeclaredField(node.name.identifier).returnType
     @builder.loadThis unless isStatic
@@ -776,6 +804,17 @@ class MethodCompiler < BaseCompiler
     @builder.loadLocal(@binding) if expression
   end
 
+  def visitCase(node, expression)
+    # note! verification on when, else and conditions are induced by parser
+    type = getInferredType(node)
+    # TODO boxing/unboxing?
+    # TODO implement for numerics, string and Class(TypeRef?) condition as java switch statement!
+    # TODO support multiple WhenClasure.candidates
+    condType = getInferredType(node.condition)
+    SwitchCompiler.new(self, condType, type, @builder, @caseLevel+=1).compile(node, expression)
+    @caseLevel-=1
+  end
+
   def self.findSameMethod(type:MirrorType, name: String, params: List, flags:int):Member
     if type.kind_of? BytecodeMirror
       method = type.getMethod(name, params):Member
@@ -813,6 +852,36 @@ class MethodCompiler < BaseCompiler
     return false if from.equals(to)
     return false if from.getAsmType.getSort == AsmType.VOID
     return false if to.getAsmType.getSort == AsmType.VOID
+    # TODO handle IntersectionType
+    # x =  false ? 1 : 2:Long
+    # x is IntersectionType java.lang.Number & java.lang.Comparable<? ...>>>
     isPrimitive(from) && !isPrimitive(to) && supportBoxing(to)
+  end
+
+  def readConstValue(node:Node):Object
+    nodeValue = typer.readConstValue node
+    return nodeValue if nodeValue
+
+    type = getInferredType(node)
+    member = if type.kind_of? ResolvedCall
+      type:ResolvedCall.member
+    elsif node.kind_of?(FieldAccess) && node:FieldAccess.isStatic
+      # static field access in the same class
+      @selfType.getDeclaredField(node:FieldAccess.name.identifier)
+    end
+
+    if member && member.kind == MemberKind.STATIC_FIELD_ACCESS
+      if isEnum(member.declaringClass) && member.declaringClass == member.returnType
+        return EnumValue.new member.name, member.declaringClass
+      else
+        return  member:JVMField.constantValue
+      end
+    end
+
+    return nil
+  end
+
+  def addInnerClass(compiler:InnerClassCompiler):void
+    @classCompiler.addInnerClass(compiler)
   end
 end

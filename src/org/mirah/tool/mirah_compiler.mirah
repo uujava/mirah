@@ -254,6 +254,7 @@ class MirahCompiler implements JvmBackend
   end
 
   def compile(generator: BytecodeConsumer)
+    context[BytecodeConsumer] = generator
     @macro_consumer = MacroConsumer.new context[ClassLoader], generator
     infer
     clean

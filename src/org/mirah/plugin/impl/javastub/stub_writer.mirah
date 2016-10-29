@@ -48,7 +48,7 @@ abstract class StubWriter
 
   def same_source(*children:StubWriter):boolean
     children.each do |child|
-      if child.node and child.node.position
+      if child.node && child.node.position
         return false unless node.position.source == child.node.position.source
       else
         return false

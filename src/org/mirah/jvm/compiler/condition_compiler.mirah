@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Mirah project authors. All Rights Reserved.
+# Copyright (c) 2012-2016 The Mirah project authors. All Rights Reserved.
 # All contributing project authors may be found in the NOTICE file.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -100,7 +100,7 @@ class ConditionCompiler < BaseCompiler
   end
   
   def visitCall(node, expression)
-    raise VerifyError.new "call to #{node.name.identifier}'s block has not been converted to a closure at #{node.position}" if node.block
+    reportError("call to #{node.name.identifier}'s block has not been converted to a closure", node.position) if node.block
 
     call = CallCompiler.new(@method, @bytecode, node.position, node.target, node.name.identifier, node.parameters, getInferredType(node))
     member = call.getMethod

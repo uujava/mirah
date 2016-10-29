@@ -1,4 +1,4 @@
-# Copyright (c) 2012 The Mirah project authors. All Rights Reserved.
+# Copyright (c) 2012-2016 The Mirah project authors. All Rights Reserved.
 # All contributing project authors may be found in the NOTICE file.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,7 +58,7 @@ class ScriptCompiler < BaseCompiler
   
   def generate(consumer:BytecodeConsumer)
     until @classes.isEmpty
-      compiler = @classes.removeFirst:ClassCompiler
+      compiler = @classes.removeFirst:InnerClassCompiler
       consumer.consumeClass(compiler.internal_name, compiler.getBytes)
       @classes.addAll(compiler.innerClasses)
     end

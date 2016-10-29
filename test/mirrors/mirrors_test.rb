@@ -389,23 +389,23 @@ class MirrorsTest < BaseMirrorsTest
   PRIVATE_STATIC =
 
   def test_separate_fields_with_declare_return_separate_futures
-    a = @types.getFieldTypeOrDeclare(main_type, 1, 'a', nil)
-    b = @types.getFieldTypeOrDeclare(main_type, 1, 'b', nil)
+    a = @types.getFieldTypeOrDeclare(main_type, 1, 'a', nil, nil)
+    b = @types.getFieldTypeOrDeclare(main_type, 1, 'b', nil, nil)
     assert_not_same(a, b)
   end
 
   def test_declared_field_is_same_as_get_field_when_declared_first
-    a = @types.getFieldTypeOrDeclare(main_type, 1, 'a', nil)
+    a = @types.getFieldTypeOrDeclare(main_type, 1, 'a', nil, nil)
     assert_same(a, @types.getFieldType(main_type, 'a', nil))
   end
 
   def test_declared_field_is_same_as_get_field_when_declared_second
     a = @types.getFieldType(main_type, 'a', nil)
-    assert_same(a, @types.getFieldTypeOrDeclare(main_type, 1, 'a', nil))
+    assert_same(a, @types.getFieldTypeOrDeclare(main_type, 1, 'a', nil, nil))
   end
 
   def test_field_attrs_of_declared_field
-    a = @types.getFieldTypeOrDeclare(main_type, 1, 'a', nil)
+    a = @types.getFieldTypeOrDeclare(main_type, 1, 'a', nil, nil)
 
     field = main_type.resolve.getDeclaredField('a')
 

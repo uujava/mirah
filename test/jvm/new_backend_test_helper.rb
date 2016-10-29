@@ -59,7 +59,7 @@ module JVMCompiler
     cmd.compiler.getParsedNodes[0]
   end
 
-  def compile(code, options = {})
+  def compile(code, options = {}, &diagnostics)
     name = options.fetch :name, tmp_script_name
 
     args = ["-d", TEST_DEST,
@@ -76,7 +76,7 @@ module JVMCompiler
     end
 
     cmd = build_command name, code
-    compile_or_raise cmd, args
+    compile_or_raise cmd, args, &diagnostics
 
     dump_class_files cmd.classMap
 
@@ -95,8 +95,9 @@ module JVMCompiler
     cmd
   end
 
-  def compile_or_raise cmd, args
-    diag = TestDiagnostics.new()
+  def compile_or_raise cmd, args, &diagnostics
+    diag = block_given? ? lambda(&diagnostics) : TestDiagnostics.new
+
     cmd.setDiagnostics(diag)
     catch_err = nil
     begin
@@ -104,7 +105,9 @@ module JVMCompiler
     rescue Exception => ex
       catch_err = ex
     end
-    raise diag.errors[0] unless diag.errors.empty?
+    unless block_given?
+      raise diag.errors[0] unless diag.errors.empty?
+    end
     raise catch_err if catch_err
     raise Mirah::MirahError, "Compilation failed" if error_code.nil? or error_code != 0
   end

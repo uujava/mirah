@@ -334,7 +334,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     future:AssignableTypeFuture
   end
 
-  def getFieldTypeOrDeclare(target, flags, name, position)
+  def getFieldTypeOrDeclare(target, flags, name, position, constantValue: Object)
     resolved = target.peekInferredType:MirrorType
     klass = resolved.unmeta:MirrorType
     member = klass.getDeclaredField(name)
@@ -345,7 +345,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
         @@log.warning "implicitly enable static flag for meta field #{name} #{target}"
         flags |= Opcodes.ACC_STATIC
       end
-      createField(klass, name, flags, position)
+      createField(klass, name, flags, position, constantValue)
     end
     future:AssignableTypeFuture
   end
@@ -699,7 +699,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     MethodFuture.new(name, member.argumentTypes, returnFuture, false, position)
   end
 
-  def createField(target:MirrorType, name:String, flags:int, position:Position):TypeFuture
+  def createField(target:MirrorType, name:String, flags:int, position:Position, constantValue: Object):TypeFuture
 
     if (flags & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC
       kind = MemberKind.STATIC_FIELD_ACCESS
@@ -720,7 +720,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     future.onUpdate do |x, resolved|
       log.fine("Learned #{access} field #{target}.#{name} = #{resolved}")
     end
-    member = AsyncMember.new(flags, target, name, [], future, kind)
+    member = AsyncMember.new(flags, target, name, [], future, kind, constantValue)
     @@log.fine "declare field #{member} #{target}"
     target.declareField(member)
     future
@@ -870,4 +870,6 @@ class FakeMember < Member
   def toString
     @description
   end
+
+  def constantValue; nil;end
 end

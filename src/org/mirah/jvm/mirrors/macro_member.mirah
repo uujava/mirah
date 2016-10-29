@@ -83,4 +83,6 @@ class MacroMember < Member
     MacroMember.new(flags, declaringClass, macrodef.name, argumentTypes,
                     makeReturnType(klass), kind, macrodef.priority)
   end
+
+  def constantValue; nil;end
 end

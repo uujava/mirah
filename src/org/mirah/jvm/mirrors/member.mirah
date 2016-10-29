@@ -34,16 +34,17 @@ class Member implements GenericMethod, JVMField
   end
 
   def initialize(flags:int, klass:JVMType, name:String, argumentTypes:List,
-                 returnType:JVMType, kind:MemberKind)
+                 returnType:JVMType, kind:MemberKind, constantValue:Object = nil)
     @flags = flags
     @declaringClass = klass
     @name = name
     @argumentTypes = Collections.unmodifiableList(ArrayList.new(argumentTypes))
     @returnType = returnType
     @kind = kind
+    @constantValue = constantValue
   end
 
-  attr_reader declaringClass: JVMType, name: String, argumentTypes: List
+  attr_reader declaringClass: JVMType, name: String, argumentTypes: List, constantValue: Object
   attr_reader returnType: JVMType, kind: MemberKind, flags: int
   attr_accessor signature: String
   attr_writer genericReturnType: JVMType
@@ -155,8 +156,8 @@ class AsyncMember < Member
 
   def initialize(flags:int, klass:MirrorType, name:String,
                  argumentTypes:List /* of TypeFuture */,
-                 returnType:TypeFuture, kind:MemberKind)
-    super(flags, klass, name, Collections.emptyList, nil, kind)
+                 returnType:TypeFuture, kind:MemberKind, constantValue: Object = nil)
+    super(flags, klass, name, Collections.emptyList, nil, kind, constantValue)
     @futures = argumentTypes
     @resolvedArguments = ArrayList.new(argumentTypes.size)
     @returnType = returnType
