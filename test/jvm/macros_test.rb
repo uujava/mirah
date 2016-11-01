@@ -669,11 +669,18 @@ class MacrosTest < Test::Unit::TestCase
     cls, = compile(<<-EOF)
         interface TestAcc
           attr_accessor a: int
+          # test inner attr_accessor generated proper getter and setter
+          class InnerAcc implements TestAcc
+            attr_accessor a: int
+          end
         end
         puts TestAcc.class.getMethod('a') rescue puts false
-        puts TestAcc.class.getMethod('a_set', [Integer.TYPE].toArray(Class[1])) rescue puts false
+        puts TestAcc.class.getMethod('a_set', [Integer.TYPE].to_array(Class)) rescue puts false
+        x:TestAcc = InnerAcc.new
+        x.a = 1
+        puts x.a
     EOF
-    assert_run_output("public abstract int TestAcc.a()\npublic abstract void TestAcc.a_set(int)\n", cls)
+    assert_run_output("public abstract int TestAcc.a()\npublic abstract void TestAcc.a_set(int)\n1\n", cls)
   end
 
   def test_macro_varargs

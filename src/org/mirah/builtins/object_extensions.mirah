@@ -160,20 +160,13 @@ class ObjectExtensions
   macro def self.attr_reader(hash:Hash)
     methods = NodeList.new
     i = 0
+    parent = @call.findAncestor ClassDefinition.class
+    isInterface = parent && parent.kind_of?(InterfaceDeclaration)
     size = hash.size
     while i < size
       e = hash.get(i)
       i += 1
-      isClass = true
-      parent = hash.parent
-      while parent
-        if parent.kind_of? InterfaceDeclaration
-          isClass = false
-          break
-        end
-        parent = parent.parent
-      end
-      method = if isClass
+      method = unless isInterface
         quote do
           def `e.key`:`e.value`  #`
             @`e.key`
@@ -193,20 +186,13 @@ class ObjectExtensions
     methods = NodeList.new
     i = 0
     size = hash.size
+    parent = @call.findAncestor ClassDefinition.class
+    isInterface = parent && parent.kind_of?(InterfaceDeclaration)
     while i < size
       e = hash.get(i)
       i += 1
       name = "#{e.key:Identifier.identifier}_set"
-      isClass = true
-      parent = hash.parent
-      while parent
-        if parent.kind_of? InterfaceDeclaration
-          isClass = false
-          break
-        end
-        parent = parent.parent
-      end
-      method =  if isClass
+      method =  unless isInterface
         method = quote do
           def `name`(value:`e.value`):void
             @`e.key` = value
