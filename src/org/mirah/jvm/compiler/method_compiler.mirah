@@ -42,6 +42,7 @@ import org.mirah.jvm.types.MemberKind
 import org.mirah.jvm.compiler.casesupport.SwitchCompiler
 import org.mirah.jvm.compiler.casesupport.EnumValue
 import java.util.List
+import java.util.regex.Pattern
 
 interface InnerClassCompiler
   def context:Context; end
@@ -58,6 +59,17 @@ interface InnerClassCompiler
 end
 
 class MethodCompiler < BaseCompiler
+
+  REGEXP_FLAGS = {
+      'i' => Pattern.CASE_INSENSITIVE,
+      'd' => Pattern.UNIX_LINES,
+      'm' => Pattern.MULTILINE,
+      's' => Pattern.DOTALL,
+      'u' => Pattern.UNICODE_CASE,
+      'x' => Pattern.COMMENTS,
+      'U' => Pattern.UNICODE_CHARACTER_CLASS
+  }
+
   def self.initialize:void
     @@log = Logger.getLogger(MethodCompiler.class.getName)
   end
@@ -575,11 +587,24 @@ class MethodCompiler < BaseCompiler
   end
   
   def visitRegex(node, expression)
-    # TODO regex flags
     compile(node.strings)
+    flag = 0
+    if node.options
+      options = node.options.identifier ? node.options.identifier : ''
+      options.length.times do |i|
+        f = "#{options.charAt(i)}"
+        option = REGEXP_FLAGS[f]
+        unless option
+          reportError "Unsupported regexp Pattern flag #{f}. Valid flags are: #{REGEXP_FLAGS.keySet}", node.position
+        else
+          flag = flag | option:int
+        end
+      end
+    end
+    @builder.push(flag)
     recordPosition(node.position)
     pattern = findType("java.util.regex.Pattern")
-    @builder.invokeStatic(pattern.getAsmType, methodDescriptor("compile", pattern, [findType("java.lang.String")]))
+    @builder.invokeStatic(pattern.getAsmType, methodDescriptor("compile", pattern, [findType('java.lang.String'), findType('int')]))
     @builder.pop unless expression
   end
   
@@ -884,4 +909,5 @@ class MethodCompiler < BaseCompiler
   def addInnerClass(compiler:InnerClassCompiler):void
     @classCompiler.addInnerClass(compiler)
   end
+
 end

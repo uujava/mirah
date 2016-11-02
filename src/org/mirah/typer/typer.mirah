@@ -853,9 +853,22 @@ class Typer < SimpleNodeVisitor
     @types.getVoidType
   end
 
+  # Regexp are thread safe - assign it to static field
   def visitRegex(regex, expression)
     regex.strings.each {|r| infer(r)}
-    @types.getRegexType()
+    regexType = @types.getRegexType()
+    @futures[regex] = regexType
+    parent = regex.findAncestor(ClassDefinition.class)
+    if parent
+      pattern = scopeOf(parent).temp("$PATTERN");
+      _value = replaceSelf(regex, FieldAccess.new(regex.position, SimpleString.new(regex.position, pattern), true))
+      patternInit = FieldAssign.new(regex.position, SimpleString.new(regex.position, pattern), [], true, [Modifier.new('FINAL'), Modifier.new('PRIVATE')], nil)
+      patternInit.value = regex
+      parent:ClassDefinition.body.add(patternInit)
+      infer(patternInit, false)
+      infer(_value, true)
+    end
+    regexType
   end
 
   def visitSimpleString(string, expression)

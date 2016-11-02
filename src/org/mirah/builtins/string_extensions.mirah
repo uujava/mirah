@@ -66,4 +66,44 @@ class StringExtensions
       end
     end
   end
+
+  macro def size()
+    quote do
+      `@call.target`.length
+    end
+  end
+
+  macro def gsub(regex, repl)
+    quote do
+      `regex`.matcher(`@call.target`).replaceAll(`repl`)
+    end
+  end
+
+  # "abc def".gsub /\b(.)(.)(.)/ { |all, one, two, three| "#{one},#{two},#{three}"} => a,b,c d,e,f
+  macro def gsub(regex, block: Block)
+    len = block.arguments ? block.arguments.required.size : 0
+    groups = NodeList.new
+    matcher = gensym
+    i = 0
+    while i < len
+      x = block.arguments.required.get(i).name
+      node = LocalAssignment.new(x, Call.new(LocalAccess.new(SimpleString.new(matcher)), SimpleString.new('group'), [Fixnum.new(i)], nil))
+      groups.add(node)
+      i += 1
+    end
+    replacement = gensym
+    result = gensym
+    body_assign = LocalAssignment.new(SimpleString.new(replacement), block.body)
+    quote do
+      `matcher` = `regex`.matcher `@call.target`
+      `result` = java::lang::StringBuffer.new
+      while `matcher`.find do
+        `groups`
+        `matcher`.appendReplacement `result`, `body_assign`
+      end
+      `matcher`.appendTail `result`
+      `result`.toString
+    end
+  end
+  
 end

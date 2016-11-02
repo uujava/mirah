@@ -121,5 +121,40 @@ class StringExtensionsTest < Test::Unit::TestCase
     })
     assert_run_output("10\n", cls)
   end
+
+  def test_string_size
+    cls, = compile(%q{
+      puts "abc".length == "abc".size
+    })
+    assert_run_output("true\n", cls)
+  end
+
+  def test_string_gsub
+    cls, = compile(%q{
+      pattern = /\b(?=\w)(\w)(\w)/
+
+      puts '++ abc hgd ert ++'.gsub(pattern, "@@")
+
+      puts '++ abc hgd ert ++'.gsub(pattern, "$1@$2")
+
+      puts  '++ abc hgd ert ++'.gsub(pattern) {'!!'}
+
+      puts '++ abc hgd ert ++'.gsub(pattern) { |all| all.toUpperCase }
+
+      puts '++ abc hgd ert ++'.gsub(pattern) { |all, first, mid| "-#{mid.toUpperCase}#{first}" }
+
+    })
+    assert_run_output("++ @@c @@d @@t ++\n++ a@bc h@gd e@rt ++\n++ !!c !!d !!t ++\n++ ABc HGd ERt ++\n++ -Bac -Ghd -Ret ++\n", cls)
+  end
+
+  def test_gub_options
+    cls, = compile(%q{
+      puts 'Ab'.gsub(/a/, "b")
+      puts 'ab'.gsub(/a/, "b")
+      puts 'Ab'.gsub(/a/i, "b")
+      puts "ab\nAb".gsub(/a/mi, "b")
+    })
+    assert_run_output("Ab\nbb\nbb\nbb\nbb\n", cls)
+  end
 end
 
