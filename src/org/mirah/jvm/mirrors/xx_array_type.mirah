@@ -48,12 +48,11 @@ class ArrayType < BaseType implements ArrayModel
     end
   end
 
-  def initialize(context:Context, component:MirrorType)
+  # array type must be created by type system
+  protected def initialize(context:Context, component:MirrorType)
     super(context, Type.getType("[#{component.getAsmType.getDescriptor}"),
           Opcodes.ACC_PUBLIC, nil)
-    @context = context
-    @types = @context[MirrorTypeSystem]
-    @types.extendArray(self)
+    @types = context[MirrorTypeSystem]
     @int_type:MirrorType = @types.wrap(Type.getType('I')).resolve
     @componentType = component
   end
@@ -70,7 +69,8 @@ class ArrayType < BaseType implements ArrayModel
       supertypes = @componentType.directSupertypes
       interfaces = TypeFuture[supertypes.size]
       supertypes.map do |x|
-         BaseTypeFuture.new.resolved(ArrayType.new(@context, x:MirrorType))
+         array_type = @types.getResolvedArrayType(x:MirrorType)
+         BaseTypeFuture.new.resolved(array_type)
       end.toArray(interfaces)
       interfaces
     end
@@ -143,7 +143,7 @@ class ArrayType < BaseType implements ArrayModel
       if @componentType == component
         self
       else
-        ArrayType.new(@context, component:MirrorType)
+        @types.getResolvedArrayType(component:MirrorType):TypeMirror
       end
     end
   end

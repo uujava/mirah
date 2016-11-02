@@ -83,7 +83,8 @@ class Substitutor < SimpleTypeVisitor6
     array = if saved == @substitutions
       t
     else
-      ArrayType.new(@context, c2.resolve:MirrorType)
+      types = @context[MirrorTypeSystem]
+      types.getResolvedArrayType(c2.resolve:MirrorType)
     end
     future(array)
   end

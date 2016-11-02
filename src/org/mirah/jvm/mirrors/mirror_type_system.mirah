@@ -556,7 +556,13 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
   end
 
   def getResolvedArrayType(componentType:ResolvedType):ResolvedType
-    (@cached_array_types[componentType] ||= ArrayType.new(@context, cast(componentType))):ResolvedType
+    array_type = @cached_array_types[componentType]:ArrayType
+    unless array_type
+      array_type = ArrayType.new(@context, cast(componentType))
+      @cached_array_types[componentType] = array_type
+      extendArray(array_type)
+    end
+    array_type
   end
 
   def getArrayType(componentType:ResolvedType):ResolvedType
@@ -590,7 +596,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     @array_extensions.add clazz
   end
 
-  def extendArray(type:BaseType)
+  def extendArray(type:ArrayType)
     @array_extensions.each do |klass: Class|
       BytecodeMirrorLoader.extendClass(type, klass)
     end

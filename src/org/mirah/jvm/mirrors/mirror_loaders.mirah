@@ -212,9 +212,9 @@ class SimpleAsyncMirrorLoader implements AsyncMirrorLoader
   end
 
   def findArrayMirrorAsync(type:Type):TypeFuture
-    context = @context
+    types = @context[MirrorTypeSystem]
     DerivedFuture.new(loadMirrorAsync(type)) do |resolved|
-      ArrayType.new(context, resolved:MirrorType)
+      types.getResolvedArrayType(resolved:MirrorType)
     end
   end
 
@@ -319,8 +319,9 @@ class BytecodeMirrorLoader < SimpleMirrorLoader
 
   def findArrayMirror(type:Type):MirrorType
     component = loadMirror(type)
+    types = @context[MirrorTypeSystem]
     if component
-      ArrayType.new(@context, component)
+      types.getResolvedArrayType(component):MirrorType
     end
   end
 
