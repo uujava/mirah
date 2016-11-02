@@ -88,30 +88,48 @@ class ArrayExtensions
     end
   end
   
-  #
   # int[].new(5) do |i|
   #   i+3
   # end
-  #
-  macro def self.new(size,block:Block)
-    if block.arguments && block.arguments.required_size() > 0
-      counter = block.arguments.required(0)
-      i = counter.name.identifier
-    else
-      i = gensym
-    end
+  # => int array [3,4,5,6,7,8]
+  ## or
+  # int[].new(1,2,3,4)
+  # => int array [1,2,3,4]
+
+  macro def self.new(first:Node, *list:Node):NodeList
     res           = gensym
     arraytype     = @call.target
     # basetype    = arraytype:TypeName.typeref.array_basetype
     array_typeref = arraytype:TypeName.typeref
     basetype      = TypeRefImpl.new(array_typeref.name,false,array_typeref.isStatic,array_typeref.position)
-    quote do
-      `res` = `basetype`[`size`]
-      `size`.times do |`i`|
-#       `res`[`i`] = `block.body`
-        `Call.new(quote{`res`},SimpleString.new('[]='),[quote{`i`},quote{`block.body`}],nil)`
+    opt_size = list.length
+    if opt_size == 1 && list[0].kind_of?(Block)
+      block = list[0]:Block
+      if block.arguments && block.arguments.required_size() > 0
+        counter = block.arguments.required(0)
+        i = counter.name.identifier
+      else
+        i = gensym
       end
-      `res`
+      return quote do
+        `res` = `basetype`[`first`]
+        `first`.times do |`i`|
+#         `res`[`i`] = `block.body`
+          `Call.new(quote{`res`},SimpleString.new('[]='),[quote{`i`},quote{`block.body`}],nil)`
+        end
+        `res`
+      end
+    else
+      result = NodeList.new
+      result.add LocalAssignment.new(SimpleString.new(res), EmptyArray.new(basetype, Fixnum.new(list.length + 1)))
+      result.add Call.new( LocalAccess.new(SimpleString.new(res)),SimpleString.new('[]='),[Fixnum.new(0), first],nil)
+      j = 0
+      while j < opt_size
+        result.add Call.new( LocalAccess.new(SimpleString.new(res)),SimpleString.new('[]='),[Fixnum.new(j+1), list[j]],nil)
+        j = j + 1
+      end
+      result.add LocalAccess.new(SimpleString.new(res))
+      return result
     end
   end
   
