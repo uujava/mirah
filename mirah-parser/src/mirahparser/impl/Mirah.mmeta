@@ -219,12 +219,13 @@ parser MirahParser {
           | ($Until)=> primary2_until
           | ($For)=> primary2_for
           | ($Class)=> primary2_class
+          | ($Enum)=> primary2_enum
           | ($Interface)=> primary2_interface
           | ($Import)=> primary2_import
           | ($Package)=> primary2_package
           | ($Def)=> primary2_def
           | ($Macro|$Defmacro)=> primary2_macro
-          | ($Dollar)=> (primary2_class | primary2_interface | primary2_def | primary2_macro)
+          | ($Dollar)=> (primary2_class | primary2_enum | primary2_interface | primary2_def | primary2_macro)
           | (acc_modifier)=> (primary2_class | primary2_interface | primary2_def | primary2_macro)
           | ($Break)=> primary2_break
           | ($Next)=> primary2_next
@@ -326,6 +327,15 @@ parser MirahParser {
              verify_end(sp)! $End
              -> ^(ClassDefinition n s b ifaces annotations m)
            );
+  primary2_enum # does not support superclass and modifiers - always public final and inherits java.lang.Enum
+           : annotations=annotation_list
+             t=$Enum sp=block_start(t)!
+             ( n=cname! ifaces=opt_implements
+               const_array=args!
+               b=compstmt!  # see above
+               verify_end(sp)! $End
+               -> ^(EnumDefinition n b ifaces annotations [] const_array)
+             );
   $Scope[@cond]
   $Returns[Node]
   primary2_interface

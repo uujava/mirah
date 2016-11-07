@@ -17,14 +17,14 @@ require 'test_helper'
 module JVMCompiler
   java_import 'org.mirah.tool.RunCommand'
   java_import 'javax.tools.DiagnosticListener'
-  
+  java_import 'java.util.Locale'
+
   System = java.lang.System
   JVM_VERSION = ENV['MIRAH_TEST_JVM_VERSION'] || '1.7'
 
   class TestDiagnostics
     include DiagnosticListener
 
-    java_import 'java.util.Locale'
     attr_reader :errors
 
     def initialize
@@ -110,6 +110,41 @@ module JVMCompiler
     end
     raise catch_err if catch_err
     raise Mirah::MirahError, "Compilation failed" if error_code.nil? or error_code != 0
+  end
+
+  def compile_with_warnings(code, warnings = nil)
+    diag_hash = {}
+    classes = compile(code) { |diag| add_diag(diag_hash, diag) }
+    raise "Found errors #{diag_hash[:error]}" if diag_hash[:error]
+    raise "No warinings" unless diag_hash[:warn]
+    if warnings
+      contains = []
+      warnings.each do |message|
+        diag_hash[:warn].each do |warn|
+          contains += warn.scan(message)
+        end
+      end
+      diff = warnings - contains
+      raise "Missing warnings: #{diff}" unless diff.empty?
+    end
+    classes
+  end
+
+  def compile_no_warnings(code)
+    diag_hash = {}
+    classes = compile(code) { |diag| add_diag(diag_hash, diag) }
+    raise "Found errors #{diag_hash[:error]}" if diag_hash[:error]
+    raise "Warnings found #{diag_hash[:warn]}" if diag_hash[:warn]
+    classes
+  end
+
+  def add_diag(hash, diagnostic)
+    if diagnostic.kind.name == "ERROR"
+      (hash[:error] ||=[]) << diagnostic.getMessage(Locale.getDefault)
+    end
+    if diagnostic.kind.name == "WARNING"
+      (hash[:warn] ||=[]) << diagnostic.getMessage(Locale.getDefault)
+    end
   end
 
   def compiler_name

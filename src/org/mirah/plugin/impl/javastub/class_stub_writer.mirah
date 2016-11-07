@@ -139,6 +139,8 @@ class ClassStubWriter < StubWriter
     flags.each { |f| this.write ' ', f }
     if @node.kind_of? InterfaceDeclaration
       write ' interface '
+    elsif @node.kind_of? EnumDefinition
+          write ' enum '
     else
       write ' class '
     end

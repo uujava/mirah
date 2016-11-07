@@ -55,7 +55,11 @@ class ScriptCompiler < BaseCompiler
     @classes.add(compiler)
     compiler.compile
   end
-  
+
+  def visitEnumDefinition(class_def, expression)
+    visitClassDefinition(class_def, expression)
+  end
+
   def generate(consumer:BytecodeConsumer)
     until @classes.isEmpty
       compiler = @classes.removeFirst:InnerClassCompiler

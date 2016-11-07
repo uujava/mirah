@@ -820,9 +820,13 @@ class MethodCompiler < BaseCompiler
   def visitClassDefinition(node, expression)
     @classCompiler.compileInnerClass(node, @descriptor)
   end
-  
-  def visitClosureDefinition(node, exporession)
-    @classCompiler.compileInnerClass(node, @descriptor)
+
+  def visitEnumDefinition(node, expression)
+    visitClassDefinition(node, expression)
+  end
+
+  def visitClosureDefinition(node, expression)
+    visitClassDefinition(node, expression)
   end
   
   def visitBindingReference(node, expression)

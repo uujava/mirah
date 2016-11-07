@@ -29,6 +29,7 @@ public enum Tokens {
   tBreak,
   tCase,
   tClass,
+  tEnum,
   tDef,
   tDefined,
   tDefmacro,

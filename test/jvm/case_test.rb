@@ -14,7 +14,6 @@
 # limitations under the License.
 
 class CaseTest < Test::Unit::TestCase
-  java_import 'java.util.Locale'
 
   def test_simple_case_when_first
     cls, = compile_no_warnings(<<-EOF)
@@ -378,6 +377,7 @@ class CaseTest < Test::Unit::TestCase
     cls, = compile_no_warnings(code)
     assert_run_output("2\n", cls)
   end
+
   def test_return_case
     code = <<-EOF
       import java.nio.file.AccessMode
@@ -396,38 +396,4 @@ class CaseTest < Test::Unit::TestCase
     assert_run_output("3\n", cls)
   end
 
-  def compile_with_warnings(code, warnings = nil)
-    diag_hash = {}
-    classes = compile(code) { |diag| add_diag(diag_hash, diag) }
-    raise "Found errors #{diag_hash[:error]}" if diag_hash[:error]
-    raise "No warinings" unless diag_hash[:warn]
-    if warnings
-      contains = []
-      warnings.each do |message|
-        diag_hash[:warn].each do |warn|
-          contains += warn.scan(message)
-        end
-      end
-      diff = warnings - contains
-      raise "Missing warnings: #{diff}" unless diff.empty?
-    end
-    classes
-  end
-
-  def compile_no_warnings(code)
-    diag_hash = {}
-    classes = compile(code) { |diag| add_diag(diag_hash, diag) }
-    raise "Found errors #{diag_hash[:error]}" if diag_hash[:error]
-    raise "Warnings found #{diag_hash[:warn]}" if diag_hash[:warn]
-    classes
-  end
-
-  def add_diag(hash, diagnostic)
-    if diagnostic.kind.name == "ERROR"
-      (hash[:error] ||=[]) << diagnostic.getMessage(Locale.getDefault)
-    end
-    if diagnostic.kind.name == "WARNING"
-      (hash[:warn] ||=[]) << diagnostic.getMessage(Locale.getDefault)
-    end
-  end
 end

@@ -539,7 +539,11 @@ class Typer < SimpleNodeVisitor
     classdef.annotations.each {|a| infer(a)}
     scope = scopeOf(classdef)
     interfaces = inferAll(scope, classdef.interfaces)
-    superclass = @types.get(scope, classdef.superclass.typeref) if classdef.superclass
+    superclass = if classdef.superclass
+      @types.get(scope, classdef.superclass.typeref)
+    elsif classdef.kind_of? EnumDefinition
+       @types.get(scope, TypeRefImpl.new('java.lang.Enum', false, false, classdef.position))
+    end
     name = if classdef.name
       classdef.name.identifier
     end
@@ -556,6 +560,10 @@ class Typer < SimpleNodeVisitor
 
   def visitInterfaceDeclaration(idef, expression)
     visitClassDefinition(idef, expression)
+  end
+
+  def visitEnumDefinition(enum_def, expression)
+    visitClassDefinition(EnumRewriter.new(self).rewrite(enum_def), expression)
   end
 
   def visitFieldAnnotationRequest(decl, expression)

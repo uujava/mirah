@@ -588,6 +588,8 @@ public class MirahLexer {
           type = Tokens.tEnd;
         } else if (i.consume("nsure")) {
           type = Tokens.tEnsure;
+        } else if (i.consume("num")) {
+          type = Tokens.tEnum;
         } else {
           type = Tokens.tIDENTIFIER;
         }
@@ -1256,7 +1258,7 @@ public class MirahLexer {
         Tokens.tRParen, Tokens.tRBrace, Tokens.tRBrack, Tokens.tRegexEnd,
         Tokens.tInteger, Tokens.tFloat, Tokens.tInstVar, Tokens.tClassVar,
         Tokens.tEnd, Tokens.tSelf, Tokens.tFalse, Tokens.tTrue, Tokens.tRetry,
-        Tokens.tBreak, Tokens.tNil, Tokens.tNext, Tokens.tRedo, Tokens.tClass,
+        Tokens.tBreak, Tokens.tNil, Tokens.tNext, Tokens.tRedo, Tokens.tClass, Tokens.tEnum,
         Tokens.tDef);
   }
 

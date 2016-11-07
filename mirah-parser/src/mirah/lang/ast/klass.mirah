@@ -49,6 +49,23 @@ class ClosureDefinition < ClassDefinition
   end
 end
 
+# Note! init_subclass does not support adding children
+# So have to use init_node and override something
+class EnumDefinition < ClassDefinition
+  implements Annotated, Named
+  init_node do
+    child name: Identifier
+    child_list body: Node
+    child_list interfaces: TypeName
+    child_list annotations: Annotation
+    child_list modifiers: Modifier
+    child_list constants: Node
+  end
+
+  def superclass; nil; end
+  def superclass_set(s); raise "superclass unsupported for enum"; end
+end
+
 #
 # A wish by the source code author that a field
 #   should have a certain value (e.g. if it is static final)

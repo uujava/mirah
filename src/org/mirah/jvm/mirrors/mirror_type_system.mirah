@@ -33,6 +33,7 @@ import mirah.objectweb.asm.Type
 
 import mirah.lang.ast.ClassDefinition
 import mirah.lang.ast.ConstructorDefinition
+import mirah.lang.ast.EnumDefinition
 import mirah.lang.ast.InterfaceDeclaration
 import mirah.lang.ast.Node
 import mirah.lang.ast.Position
@@ -462,7 +463,10 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
     if node.kind_of?(InterfaceDeclaration)
       flags |= Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT
     end
-       
+
+    if node.kind_of?(EnumDefinition)
+      flags |= Opcodes.ACC_ENUM | Opcodes.ACC_PUBLIC
+    end
     # Ugh. So typically we might define a type for the main type,
     # then later we find the ClassDefinition that declares
     # the supertypes. We can't create a new type, or we'll lose
