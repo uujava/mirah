@@ -64,7 +64,11 @@ class ConstructorCleanup < SimpleNodeVisitor
   def visitClassDefinition(node, arg)
     nil
   end
-  
+
+  def visitEnumDefinition(node, arg)
+    visitClassDefinition(node, arg)
+  end
+
   # If we find a ClosureDefinition in a constructor (which may happen if the constructor contains closures), then we should ignore it.
   def visitClosureDefinition(node, arg)
     nil

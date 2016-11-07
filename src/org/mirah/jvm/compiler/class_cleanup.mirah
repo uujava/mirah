@@ -229,6 +229,11 @@ class ClassCleanup < NodeScanner
     false
   end
 
+  def enterEnumDefinition(node, arg)
+    enterClassDefinition(node, arg)
+    false
+  end
+
   def enterImport(node, arg)
     # ignore
     false

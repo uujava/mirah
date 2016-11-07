@@ -68,6 +68,11 @@ class MethodCleanup < NodeScanner
     false
   end
 
+  def enterEnumDefinition(node, arg)
+    enterClassDefinition(node, arg)
+    false
+  end
+
   def enterNodeList(node, arg)
     # Scan the children
     true

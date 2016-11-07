@@ -95,7 +95,11 @@ class ClassCompiler < BaseCompiler implements InnerClassCompiler
   def visitInterfaceDeclaration(node, expression)
     compileInnerInterface(node, nil)
   end
-  
+
+  def visitEnumDefinition(node, expression)
+    compileInnerClass(node, nil)
+  end
+
   def compileInnerClass(node:ClassDefinition, method:Method):void
     compiler = ClassCompiler.new(context, node, @type, method)
     # TODO only supporting anonymous inner classes for now.

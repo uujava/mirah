@@ -1288,4 +1288,21 @@ assert_parse("[Script, [[LocalAssignment, [SimpleString, a], [Rescue, [[VCall, [
     assert_parse('[Script, [[Call, [VCall, [SimpleString, a]], [SimpleString, call], [[Call, [VCall, [SimpleString, arg1]], [SimpleString, call1], [], null]], [Block, null, []]]]]',
                  'a.call arg1.call1 do;end')
   end
+
+  def test_enum
+    assert_parse('[Script, [[EnumDefinition, [Constant, [SimpleString, A]], [], [TypeNameList], [ModifierList], [[VCall, [SimpleString, a]]]]]]',
+                 'enum A; a;end')
+    assert_parse('[Script, [[EnumDefinition, [Constant, [SimpleString, A]], [], [TypeNameList], [ModifierList], [[VCall, [SimpleString, a]], [VCall, [SimpleString, b]]]]]]',
+                 'enum A; a,b;end')
+    assert_parse('[Script, [[EnumDefinition, [Constant, [SimpleString, A]], [], [TypeNameList], [ModifierList], [[FunctionalCall, [SimpleString, a], [[Fixnum, 1]], null], [FunctionalCall, [SimpleString, b], [[SimpleString, c]], null]]]]]',
+                 "enum A\n a(1), \n b('c') \n end")
+    assert_parse('[Script, [[EnumDefinition, [Constant, [SimpleString, A]], [[MethodDefinition, [SimpleString, foo], [Arguments, [RequiredArgumentList], [OptionalArgumentList], null, [RequiredArgumentList], null], [Constant, [SimpleString, void]], [], [ModifierList, [Modifier:ABSTRACT]]]], [TypeNameList], [ModifierList], [[FunctionalCall, [SimpleString, B], [[Fixnum, 1]], [Block, null, [[MethodDefinition, [SimpleString, foo], [Arguments, [RequiredArgumentList], [OptionalArgumentList], null, [RequiredArgumentList], null], null, [], [ModifierList]]]]], [FunctionalCall, [SimpleString, C], [[SimpleString, c]], null]]]]]',
+                 "enum A
+                    B(1) do
+                      def foo;end
+                    end,
+                    C('c')
+                    abstract def foo():void;end
+                  end")
+  end
 end

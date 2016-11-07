@@ -92,5 +92,13 @@ class ExtensionCleanup < NodeScanner
     @macro_backend.generate(@macro_consumer)
     true
   end
+
+  def enterEnumDefinition(classdef, map)
+    enterClassDefinition(classdef, map)
+  end
+
+  def enterInterfaceDeclaration(classdef, map)
+    enterClassDefinition(classdef, map)
+  end
 end
 

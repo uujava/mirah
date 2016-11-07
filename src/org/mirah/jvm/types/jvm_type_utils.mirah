@@ -8,6 +8,7 @@ import mirah.lang.ast.Annotation
 import mirah.lang.ast.HashEntry
 import mirah.lang.ast.Array
 import mirah.lang.ast.Node
+import mirah.lang.ast.EnumDefinition
 import mirah.lang.ast.MethodDefinition
 import mirah.lang.ast.MacroDefinition
 import mirah.lang.ast.Annotated
@@ -132,6 +133,10 @@ class JVMTypeUtils
           end 
           end
         end 
+
+        if node.kind_of? EnumDefinition
+          flags |= Opcodes.ACC_ENUM
+        end
 
         if node.kind_of? MethodDefinition
           if node:MethodDefinition.arguments.rest

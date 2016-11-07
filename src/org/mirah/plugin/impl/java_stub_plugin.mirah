@@ -158,6 +158,16 @@ class JavaStubPlugin < CompilerPluginAdapter
     nil
   end
 
+  def enterEnumDefinition(node, ctx)
+    new_writer node
+    true
+  end
+
+  def exitEnumDefinition(node, ctx)
+    @defs.pop
+    nil
+  end
+
   def enterNodeList(node, ctx)
     # Scan the children
     true
