@@ -130,6 +130,7 @@ class EnumRewriter < NodeScanner
 
   private def rewrite_initializer(values: LinkedHashMap):void
     order = 0
+    init_body = NodeList.new(@initializer_body.position)
     values_assign = FieldAssign.new(@enum_position,
                          SimpleString.new(@enum_position, '$VALUES'),
                          EmptyArray.new(@enum_position, @enum_type_name, Fixnum.new(values.size)),
@@ -137,10 +138,10 @@ class EnumRewriter < NodeScanner
                          [Modifier.new('PRIVATE'), Modifier.new('FINAL'), Modifier.new('SYNTHETIC')],
                          nil)
     values_assign.isStatic = true
-    @initializer_body.add values_assign
+    init_body.add values_assign
     values.each do | name:String, node:Node|
-      @initializer_body.add node
-      @initializer_body.add Call.new(@enum_position,
+      init_body.add node
+      init_body.add Call.new(@enum_position,
                FieldAccess.new(@enum_position, SimpleString.new('$VALUES'), true),
                SimpleString.new(@enum_position, '[]='),
                [Fixnum.new(@enum_position, order), FieldAccess.new(@enum_position, SimpleString.new(name), true)],
@@ -148,6 +149,7 @@ class EnumRewriter < NodeScanner
                )
       order += 1
     end
+    @initializer_body.insert 0, init_body
   end
 
   private def rewrite_constructor(mdef:ConstructorDefinition):void

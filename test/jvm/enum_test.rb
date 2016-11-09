@@ -95,4 +95,25 @@ class EnumTest < Test::Unit::TestCase
     ')
     assert_run_output("A\n", cls)
   end
+
+  def test_enum_self_initialize
+    cls, = compile_no_warnings('
+      import java.util.LinkedHashMap
+      TestEnumF.foo
+      enum TestEnumF
+        A, B, C
+        @@map = LinkedHashMap.new
+        def self.initialize
+          values.each do |v|
+            @@map[v.name] = v
+          end
+        end
+
+        def self.foo:void
+          puts "map: #{@@map}"
+        end
+      end
+    ')
+    assert_run_output("map: {A=A, B=B, C=C}\n", cls)
+  end
 end
