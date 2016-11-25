@@ -211,4 +211,15 @@ class ArrayExtensionsTest < Test::Unit::TestCase
     EOF
     assert_run_output("5,4,3,2,1\n5\n", cls)
   end
+
+  def test_array_initializer_single_param
+    cls, = compile(<<-EOF)
+      x = int[].new(5)
+      puts x.join(",")
+      y = String[].new('5')
+      puts y[0]
+    EOF
+    assert_run_output("5\n5\n", cls)
+  end
+
 end

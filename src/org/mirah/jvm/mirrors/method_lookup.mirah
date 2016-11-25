@@ -227,11 +227,12 @@ class MethodLookup
       last_b = b.argumentTypes.size - 1
       raise IllegalArgumentException if (last_a != last_b && !(a.isVararg && b.isVararg) )
       comparison = 0.0
-      Math.max(a.argumentTypes.size, b.argumentTypes.size).times do |i|
+      max_params = Math.max(a.argumentTypes.size, b.argumentTypes.size)
+      max_params.times do |i|
         a_arg = getMethodArgument(a.argumentTypes, i, a.isVararg)
         b_arg = getMethodArgument(b.argumentTypes, i, b.isVararg)
         arg_comparison = subtypeComparison(a_arg, b_arg)
-        if params[i].kind_of?(NullType)
+        if i < params.size && params[i].kind_of?(NullType)
           arg_comparison *= -1
         end
         return arg_comparison if Double.isNaN(arg_comparison)
