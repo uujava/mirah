@@ -56,6 +56,17 @@ class GenericsTest < Test::Unit::TestCase
     assert_run_output("5\n8\n10\n", cls)
   end
 
+  def test_generics_with_varargs
+    cls, = compile(<<-EOF)
+      import java.util.Collections
+      values = ['a']
+      Collections.addAll(values)
+      Collections.addAll(values, 'b')
+      Collections.addAll(values, 'c', 'd')
+      puts values
+    EOF
+    assert_run_output("[a, b, c, d]\n", cls)
+  end
 
 end
 

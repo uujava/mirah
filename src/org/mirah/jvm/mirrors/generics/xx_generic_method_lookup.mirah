@@ -181,6 +181,7 @@ class GenericMethodLookup
         end
       end
       inference.processArgument(argument, ?<, param, constraint_map)
+      i+= 1
     end
     constraint_map
   end
@@ -311,6 +312,7 @@ class GenericMethodLookup
           end
         end
       end
+      i+=1
     end
     true
   end
