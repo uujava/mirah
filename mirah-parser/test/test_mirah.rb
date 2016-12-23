@@ -1296,6 +1296,10 @@ assert_parse("[Script, [[LocalAssignment, [SimpleString, a], [Rescue, [[VCall, [
                  'enum A; a,b;end')
     assert_parse('[Script, [[EnumDefinition, [Constant, [SimpleString, A]], [], [TypeNameList], [ModifierList], [[FunctionalCall, [SimpleString, a], [[Fixnum, 1]], null], [FunctionalCall, [SimpleString, b], [[SimpleString, c]], null]]]]]',
                  "enum A\n a(1), \n b('c') \n end")
+    assert_parse('[Script, [[EnumDefinition, [Constant, [SimpleString, A]], [], [TypeNameList], [ModifierList], []]]]',
+                 "enum A; end")
+    assert_parse('[Script, [[EnumDefinition, [Constant, [SimpleString, A]], [], [TypeNameList], [ModifierList], []]]]',
+                 "enum A\n end")
     assert_parse('[Script, [[EnumDefinition, [Constant, [SimpleString, A]], [[MethodDefinition, [SimpleString, foo], [Arguments, [RequiredArgumentList], [OptionalArgumentList], null, [RequiredArgumentList], null], [Constant, [SimpleString, void]], [], [ModifierList, [Modifier:ABSTRACT]]]], [TypeNameList], [ModifierList], [[FunctionalCall, [SimpleString, B], [[Fixnum, 1]], [Block, null, [[MethodDefinition, [SimpleString, foo], [Arguments, [RequiredArgumentList], [OptionalArgumentList], null, [RequiredArgumentList], null], null, [], [ModifierList]]]]], [FunctionalCall, [SimpleString, C], [[SimpleString, c]], null]]]]]',
                  "enum A
                     B(1) do
@@ -1304,5 +1308,44 @@ assert_parse("[Script, [[LocalAssignment, [SimpleString, a], [Rescue, [[VCall, [
                     C('c')
                     abstract def foo():void;end
                   end")
+    assert_parse('[Script, [[EnumDefinition, [Constant, [SimpleString, A]], [], [TypeNameList], [ModifierList], [[Constant, [SimpleString, B]], [Constant, [SimpleString, C]]]]]]',
+                 "enum A
+                    /** B const */
+                    B,
+                    C
+                  end")
+    assert_parse('[Script, [[EnumDefinition, [Constant, [SimpleString, A]], [], [TypeNameList], [ModifierList], [[Constant, [SimpleString, B]], [Constant, [SimpleString, C]]]]]]',
+                 "enum A
+                    B,
+                    /** C const */ C
+                  end")
+    assert_parse('[Script, [[EnumDefinition, [Constant, [SimpleString, A]], [], [TypeNameList], [ModifierList], [[Constant, [SimpleString, B]], [Constant, [SimpleString, C]]]]]]',
+                 "enum A
+                   /** B const */ B, /** C const */ C
+                  end")
+
+    with_options do
+      parser_options do
+        skip_java_doc false
+      end
+      assert_parse('[Script, [[EnumDefinition, [Constant, [SimpleString, A]], [], [TypeNameList], [ModifierList], [[JavaDoc], [Constant, [SimpleString, B]], [Constant, [SimpleString, C]]]]]]',
+                   "enum A
+                    /** B const */
+                    B,
+                    C
+                  end")
+      assert_parse('[Script, [[EnumDefinition, [Constant, [SimpleString, A]], [], [TypeNameList], [ModifierList], [[Constant, [SimpleString, B]], [JavaDoc], [Constant, [SimpleString, C]]]]]]',
+                   "enum A
+                    B,
+                    /** C const */ C
+                  end")
+      assert_parse('[Script, [[EnumDefinition, [Constant, [SimpleString, A]], [], [TypeNameList], [ModifierList], [[JavaDoc], [Constant, [SimpleString, B]], [JavaDoc], [Constant, [SimpleString, C]]]]]]',
+                   "enum A
+                   /** B const */ B, /** C const */ C
+                  end")
+    end
+
   end
+
+
 end

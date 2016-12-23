@@ -67,6 +67,8 @@ parser MirahParser {
   rlistOf(r:String): h=apply(r) t=(comma apply(r))* { [h] + t };
   listOf(e:String): rlistOf(e)
                   | empty { ArrayList.new };
+  jdoc_apply(r:String):  (jd=java_doc opt_nl)? h=apply(r) { jd ? [jd, h] : [h]};
+  jdoc_rlistOf(r:String): h=jdoc_apply(r) t=(comma jdoc_apply(r))* { t.each{|x:List| h.addAll(x) } if t; h};
   peektoken: &{_lex};
   nosp: t=peektoken ?{Token(t).startpos == _start};
   colon: t=peektoken ?{Token(t).type ==  Tokens.tColon};
@@ -331,7 +333,8 @@ parser MirahParser {
            : annotations=annotation_list
              t=$Enum sp=block_start(t)!
              ( n=cname! ifaces=opt_implements
-               const_array=args!
+               opt_nl
+               const_array=args_with_jdoc!
                b=compstmt!  # see above
                verify_end(sp)! $End
                -> ^(EnumDefinition n b ifaces annotations [] const_array)
@@ -649,6 +652,7 @@ parser MirahParser {
 
   one_arg: v=arg_value ~$Rocket {v};
   args: l=rlistOf(:one_arg);
+  args_with_jdoc: jdoc_rlistOf(:one_arg) | empty { ArrayList.new };
 
   $Scope[@BEG]
   call_assocs: l=rlistOf(:assoc) -> ^(Hash l+);
