@@ -18,6 +18,8 @@ import mirah.lang.ast.Identifier
 import java.util.logging.Logger
 import java.util.logging.Level
 import org.mirah.jvm.mirrors.Member
+import javax.lang.model.type.TypeKind
+import javax.lang.model.type.TypeMirror
 
 class JVMTypeUtils
     # defining initialize in class << self does not work
@@ -68,6 +70,10 @@ class JVMTypeUtils
 
     def isEnum(type:JVMType):boolean
       0 != (type.flags & Opcodes.ACC_ENUM)
+    end
+
+    def isDeclared(type:JVMType):boolean
+      type.kind_of?(TypeMirror) && type:TypeMirror.getKind == TypeKind.DECLARED
     end
 
     def isInterface(type:JVMType):boolean

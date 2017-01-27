@@ -434,7 +434,7 @@ class MethodCompiler < BaseCompiler
   def compileIfBody(body:NodeList, expression:Object, type:JVMType):void
     compileBody(body, expression, type)
     bodyType = getInferredType(body)
-    if needConversion(bodyType, type) || needConversion(type, bodyType)
+    if needConversion(bodyType, type)
       @builder.convertValue(bodyType, type)
     end
   end
@@ -495,10 +495,10 @@ class MethodCompiler < BaseCompiler
     compile(node.value)
     from = getInferredType(node.value)
     to = getInferredType(node)
-    if needConversion(from, to)
+    if needConversionOnCast(from, to)
       @builder.cast(from.getAsmType, to.unbox.getAsmType)
       @builder.box(to.unbox.getAsmType)
-    elsif needConversion(to, from)
+    elsif needConversionOnCast(to, from)
       @builder.unbox(from.unbox.getAsmType)
       @builder.cast(from.unbox.getAsmType, to.getAsmType)
     else
@@ -876,15 +876,34 @@ class MethodCompiler < BaseCompiler
      _flags & Opcodes.ACC_ABSTRACT == 0 and  (flags & Opcodes.ACC_STATIC == _flags & Opcodes.ACC_STATIC)
   end
 
+  def needConversionOnCast(from: JVMType, to: JVMType)
+    return false unless from and to
+    return false if from.equals(to)
+    return false if from.getAsmType.getSort == AsmType.VOID
+    return false if to.getAsmType.getSort == AsmType.VOID
+    isPrimitive(from) && !isPrimitive(to) && supportBoxing(to)
+  end
+
   def needConversion(from: JVMType, to: JVMType)
     return false unless from and to
     return false if from.equals(to)
     return false if from.getAsmType.getSort == AsmType.VOID
     return false if to.getAsmType.getSort == AsmType.VOID
-    # TODO handle IntersectionType
-    # x =  false ? 1 : 2:Long
-    # x is IntersectionType java.lang.Number & java.lang.Comparable<? ...>>>
-    isPrimitive(from) && !isPrimitive(to) && supportBoxing(to)
+    if isPrimitive(from) && !isPrimitive(to)
+      # to - could be intersection type as in:
+      # x = true ? 1 : 2:Long  -> x is inferred as an IntersectionType
+      return true if(to.unbox != nil)
+      if isDeclared(to) && to.assignableFrom(from.box)
+        puts "new true: #{to} #{to.getClass} #{from}"
+        return true
+      else
+        return false
+      end
+    elsif isPrimitive(to) && !isPrimitive(from)
+      from.unbox != nil
+    else
+      false
+    end
   end
 
   def readConstValue(node:Node):Object

@@ -3,6 +3,7 @@ package org.mirah.util
 import java.lang.reflect.Modifier
 import java.lang.reflect.InvocationTargetException
 import java.util.List
+import org.mirah.jvm.mirrors.MirrorTypeSystem
 
 class Test
   macro def assertEquals(expected:Node, block:Block):Node
@@ -60,43 +61,68 @@ class Test
       errors = []
       ok = 0
       failed = 0
-      clazz = Class.forName class_name
+      script = false
+      clazz = begin
+        Class.forName class_name
+      rescue ClassNotFoundException => ex
+        # handle scripts
+        puts "class not found: #{ex}. Check script exists"
+        script = true
+        begin
+          name_index = class_name.lastIndexOf('.') + 1
+          package_name = class_name.substring(0, name_index)
+          Class.forName package_name + MirrorTypeSystem.classnameFromFilename(class_name.substring(name_index)+".mirah")
+        rescue ClassNotFoundException => exx
+          puts "not a script: #{exx}"
+          raise ex
+        end
+      end
 
-      methods = clazz.getDeclaredMethods
-      puts "test suite: #{clazz}"
-      methods.each do |method|
-        test = clazz.newInstance
-        name = method.getName
-        flag = method.getModifiers
-        if name.startsWith 'test' and Modifier.isPublic(flag) and !Modifier.isStatic(flag)
-          begin
-            method.invoke test
-            ok+=1
-            print "."
-          rescue AssertionError => ax
-            failed +=1
-            ax.method = name
-            ax.clazz = clazz
-            errors.add ax
-            print "E"
-          rescue InvocationTargetException => ex
-            failed +=1
-            ax = if ex.getTargetException.kind_of? AssertionError
-              AssertionError ex.getTargetException
-            else
-              AssertionError.new ex, ""
+      puts "found main class: #{clazz}"
+      if script
+        classes = Class[1]
+        classes[0] = String[].class
+        main = clazz.getMethod("main", classes)
+        main_args = Object[1]
+        main_args[0] = String[0]
+        main.invoke(nil, main_args)
+      else
+        methods = clazz.getDeclaredMethods
+        puts "test suite: #{clazz}"
+        methods.each do |method|
+          test = clazz.newInstance
+          name = method.getName
+          flag = method.getModifiers
+          if name.startsWith 'test' and Modifier.isPublic(flag) and !Modifier.isStatic(flag)
+            begin
+              method.invoke test
+              ok+=1
+              print "."
+            rescue AssertionError => ax
+              failed +=1
+              ax.method = name
+              ax.clazz = clazz
+              errors.add ax
+              print "E"
+            rescue InvocationTargetException => ex
+              failed +=1
+              ax = if ex.getTargetException.kind_of? AssertionError
+                AssertionError ex.getTargetException
+              else
+                AssertionError.new ex, ""
+              end
+              ax.method = name
+              ax.clazz = clazz
+              errors.add ax
+              print "F"
+            rescue Throwable => ex
+              failed +=1
+              ax = AssertionError.new ex, ""
+              ax.method = name
+              ax.clazz = clazz
+              errors.add ax
+              print "F"
             end
-            ax.method = name
-            ax.clazz = clazz
-            errors.add ax
-            print "F"
-          rescue Throwable => ex
-            failed +=1
-            ax = AssertionError.new ex, ""
-            ax.method = name
-            ax.clazz = clazz
-            errors.add ax
-            print "F"
           end
         end
       end

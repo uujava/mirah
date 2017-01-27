@@ -284,4 +284,16 @@ class CastTest < Test::Unit::TestCase
     assert_equal(6, cls.foo())
   end
 
+  def test_intersection_type_primitive_conversion
+    cls, = compile(<<-EOF)
+      def foo1:Number
+        x = true ? 1:int : 2:Long
+      end
+      def foo2:Number
+        y = false ? 1 : 2:Long
+      end
+    EOF
+    assert_equal(1, cls.foo1())
+    assert_equal(2, cls.foo2())
+  end
 end
