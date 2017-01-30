@@ -982,6 +982,12 @@ StaticOuterTest1.new.test
 ])
     assert_run_output("n1: 1\nn11: 2\nn12: 2\nn121: 2\nn2: 1\nn21: 2\nn21: 2\n", cls)
   end
+
+  def test_explicit_nil_in
+    cls, = compile(' [nil].each { |v| puts "#{v} => OK" }')
+    assert_run_output("null => OK\n", cls)
+  end
+
   # nested nlr scopes
 
 # works with script as end

@@ -232,7 +232,8 @@ class MethodLookup
         a_arg = getMethodArgument(a.argumentTypes, i, a.isVararg)
         b_arg = getMethodArgument(b.argumentTypes, i, b.isVararg)
         arg_comparison = subtypeComparison(a_arg, b_arg)
-        if i < params.size && params[i].kind_of?(NullType)
+        # TODO performance??
+        if i < params.size &&  params[i].kind_of?(JVMType) &&  "null".equals(params[i]:JVMType.name)
           arg_comparison *= -1
         end
         return arg_comparison if Double.isNaN(arg_comparison)
