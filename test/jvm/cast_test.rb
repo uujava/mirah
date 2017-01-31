@@ -296,4 +296,17 @@ class CastTest < Test::Unit::TestCase
     assert_equal(1, cls.foo1())
     assert_equal(2, cls.foo2())
   end
+
+  def test_int_to_double_conversion_in_conditional_statements
+    cls, = compile(<<-EOF)
+     def foo1
+       true ? 1.0 : 0
+     end
+     def foo2
+       false ? 1.0 : 0
+     end
+    EOF
+    assert_equal(1.0, cls.foo1())
+    assert_equal(0.0, cls.foo2())
+  end
 end

@@ -38,6 +38,7 @@ class AssignmentFuture < BaseTypeFuture
   def checkCompatibility:void
     resolved_value = @value.isResolved ? @value.resolve : nil
     resolved_variable = @variable.isResolved ? @variable.resolve : nil
+    return if resolved_value === resolved_variable && resolved_value === peekInferredType
     if resolved_value
       if resolved_value.isError
         resolved(resolved_value)

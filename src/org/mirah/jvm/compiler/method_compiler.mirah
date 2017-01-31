@@ -889,7 +889,9 @@ class MethodCompiler < BaseCompiler
     return false if from.equals(to)
     return false if from.getAsmType.getSort == AsmType.VOID
     return false if to.getAsmType.getSort == AsmType.VOID
-    if isPrimitive(from) && !isPrimitive(to)
+    if isPrimitive(to) && isPrimitive(from)
+      return !to.equals(from)
+    elsif isPrimitive(from) && !isPrimitive(to)
       # to - could be intersection type as in:
       # x = true ? 1 : 2:Long  -> x is inferred as an IntersectionType
       return true if(to.unbox != nil)
