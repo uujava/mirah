@@ -66,7 +66,7 @@ class Test
         Class.forName class_name
       rescue ClassNotFoundException => ex
         # handle scripts
-        puts "class not found: #{ex}. Check script exists"
+        puts "class not found: #{ex.getMessage}. Check script exists"
         script = true
         begin
           name_index = class_name.lastIndexOf('.') + 1
