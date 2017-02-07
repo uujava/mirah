@@ -154,4 +154,12 @@ class InterfaceTest < Test::Unit::TestCase
     compile_with_errors('package tsre; class Bar < Foo; end', ['Cannot find class tsre.Foo'])
     compile_with_errors('package tsre; interface Foobar < Bar; end', ['Cannot find class tsre.Bar'])
   end
+
+  def test_extends_implements_error
+    compile_with_errors('class Bar < Comparable; end', ['extends wrong type java.lang.Comparable'])
+    compile_with_errors('class Bar implements Comparable, Number; end', ['implements wrong type java.lang.Number'])
+    compile_with_errors('interface Foobar < Object; end', ['implements wrong type java.lang.Object'])
+    compile_with_errors('interface Foo < Comparable, Object; end', ['implements wrong type java.lang.Object'])
+  end
+
 end

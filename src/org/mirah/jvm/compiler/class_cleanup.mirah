@@ -55,6 +55,8 @@ class ClassCleanup < NodeScanner
   end
 
   def clean:void
+    verifyExtends
+    verifyImplements
     if !addCleanedAnnotation()
       return
     end
@@ -340,5 +342,19 @@ class ClassCleanup < NodeScanner
     mdef.arguments = args.clone:Arguments
     mdef.body = NodeList.new([FunctionalCall.new(mdef.position, mdef.name, params, nil)])
     mdef.modifiers = ModifierList.new([Modifier.new(mdef.position, 'PUBLIC'), Modifier.new(mdef.position, 'SYNTHETIC'), Modifier.new(mdef.position, 'BRIDGE')])
+  end
+
+  protected def verifyImplements
+    collect = []
+    @klass.interfaces.each do |node: Node|
+      if_type = @typer.getResolvedType(node)
+      error "#{@type} implements wrong type #{if_type}", node.position  if !if_type.isInterface
+    end
+  end
+
+  protected def verifyExtends
+    return unless @klass.superclass
+    super_type = @typer.getResolvedType(@klass.superclass)
+    error "#{@type} extends wrong type #{super_type}", @klass.superclass.position  if super_type.isInterface
   end
 end
