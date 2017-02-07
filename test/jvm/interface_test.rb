@@ -149,4 +149,9 @@ class InterfaceTest < Test::Unit::TestCase
     ', :java_version=>'1.8')
       assert_run_output("3\n", cls)
   end
+
+  def test_superclass_resolved_error
+    compile_with_errors('package tsre; class Bar < Foo; end', ['Cannot find class tsre.Foo'])
+    compile_with_errors('package tsre; interface Foobar < Bar; end', ['Cannot find class tsre.Bar'])
+  end
 end

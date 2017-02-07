@@ -130,6 +130,28 @@ module JVMCompiler
     classes
   end
 
+  def compile_with_errors(code, errors = nil)
+    diag_hash = {}
+    succeed = true
+    begin
+      compile(code) { |diag| add_diag(diag_hash, diag) }
+    rescue Exception => ex
+      succeed = false
+    end
+    raise "errors #{errors} expected, but compilation succeed" if succeed
+    raise "errors #{errors} not found in #{diag_hash[:error]}" unless diag_hash[:error]
+    if errors
+      contains = []
+      errors.each do |message|
+        diag_hash[:error].each do |error|
+          contains += error.scan(message)
+        end
+      end
+      diff = errors - contains
+      raise "Missing errors: #{diff}. All errors #{diag_hash}" unless diff.empty?
+    end
+  end
+
   def compile_no_warnings(code)
     diag_hash = {}
     classes = compile(code) { |diag| add_diag(diag_hash, diag) }

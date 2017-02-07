@@ -540,6 +540,7 @@ class Typer < SimpleNodeVisitor
     scope = scopeOf(classdef)
     interfaces = inferAll(scope, classdef.interfaces)
     superclass = if classdef.superclass
+      infer(classdef.superclass, expression != nil)
       @types.get(scope, classdef.superclass.typeref)
     elsif classdef.kind_of? EnumDefinition
        @types.get(scope, TypeRefImpl.new('java.lang.Enum', false, false, classdef.position))
