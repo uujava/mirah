@@ -85,9 +85,9 @@ class AsyncTypeBuilder < SignatureVisitor
           if kind == ?=
             type
           elsif kind == ?-
-            utils.getWildcardType(type, nil):Wildcard
-          else
             utils.getWildcardType(nil, type):Wildcard
+          else
+            utils.getWildcardType(type, nil):Wildcard
           end
         end
       else

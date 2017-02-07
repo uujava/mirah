@@ -101,6 +101,7 @@ class TypeInvoker < BaseSignatureReader
 
   def self.invoke(context:Context, type:MirrorType, args:List,
                   outerTypeArgs:Map, processed_signatures:Map):MirrorType
+    return type unless type.kind_of? DeclaredMirrorType
     dtype = type:DeclaredMirrorType
     if dtype.signature.nil? || args.any? {|a| a.nil?}
       type

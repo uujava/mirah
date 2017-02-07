@@ -99,10 +99,10 @@ class ObjectExtensions
   macro def self.protected_methods(methods_proxy:NodeList)
     import org.mirah.typer.ProxyNode
     import java.util.LinkedList
-    work = LinkedList.new([methods_proxy])
+    work:LinkedList = LinkedList.new([methods_proxy])
 
     while !work.isEmpty
-      node = work.poll
+      node = work.poll:Node
       if node.kind_of?(MethodDefinition)
         anno = Modifier.new(node.position, 'PROTECTED')
         node:MethodDefinition.modifiers ||= ModifierList.new
@@ -126,10 +126,10 @@ class ObjectExtensions
   macro def self.private_methods(methods_proxy:NodeList)
     import org.mirah.typer.ProxyNode
     import java.util.LinkedList
-    work = LinkedList.new([methods_proxy])
+    work:LinkedList = LinkedList.new([methods_proxy])
 
     while !work.isEmpty
-      node = work.poll
+      node = work.poll:Node
       if node.kind_of?(MethodDefinition)
         anno = Modifier.new(node.position, 'PRIVATE')
         node:MethodDefinition.modifiers ||= ModifierList.new

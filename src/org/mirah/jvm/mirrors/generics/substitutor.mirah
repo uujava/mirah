@@ -108,8 +108,10 @@ class Substitutor < SimpleTypeVisitor6
     begin
       @type_parameters = LinkedList.new
       if t.kind_of?(MirrorType)
-        erasure = t:MirrorType.erasure:DeclaredMirrorType
-        @type_parameters.addAll(erasure.getTypeVariableMap.values)
+        erasure = t:MirrorType.erasure
+        if erasure.kind_of? DeclaredMirrorType
+          @type_parameters.addAll(erasure:DeclaredMirrorType.getTypeVariableMap.values)
+        end
       end
       @@log.fine("Type parameters for #{t} = #{@type_parameters}")
       newArgs = t.getTypeArguments.map do |x:TypeMirror|
@@ -129,17 +131,20 @@ class Substitutor < SimpleTypeVisitor6
   def visitWildcard(t, p)
     # Apply capture conversion.
     param = popTypeParam:TypeVariable
-    upper = param.getUpperBound:MirrorType
+    upper = param.getUpperBound
     lower = param.getLowerBound
     if t.getSuperBound
       lower = t.getSuperBound
     end
-    if t.getExtendsBound && !upper.isSameType(t.getExtendsBound:MirrorType)
+    if t.getExtendsBound && !upper:MirrorType.isSameType(t.getExtendsBound:MirrorType)
       lub = LubFinder.new(@context)
-      upper:MirrorType = lub.leastUpperBound([upper, t.getExtendsBound]):Object
+      # seems correctly works only for real types like <? extends Comparable>
+      upper = lub.leastUpperBound([upper, t.getExtendsBound])
+      # TODO need real fix for wildcards with type parameter like <? extends E>
+      upper = upper == nil ?  param.getUpperBound : upper
     end
     @substitutions += 1
-    future(CapturedWildcard.new(@context, upper, lower:MirrorType))
+    future(CapturedWildcard.new(@context, upper:MirrorType, lower:MirrorType))
   end
 
   def future(t:Object)
