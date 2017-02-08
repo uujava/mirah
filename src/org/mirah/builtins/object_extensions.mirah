@@ -194,13 +194,13 @@ class ObjectExtensions
       name = "#{e.key:Identifier.identifier}_set"
       method =  unless isInterface
         method = quote do
-          def `name`(value:`e.value`):void
+          def `name`(value:`e.value`):`e.value`
             @`e.key` = value
           end
         end
       else
         method = quote do
-          def `name`(value:`e.value`):void;end
+          def `name`(value:`e.value`):`e.value`;end
         end
       end
       methods.add(method)

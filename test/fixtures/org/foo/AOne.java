@@ -12,7 +12,7 @@ public abstract class AOne implements org.foo.AOneX{
   /** getter and setter for field @x */
     public int x(){ return 0; }
   /** getter and setter for field @x */
-    public void x_set(int value){}
+    public int x_set(int value){ return 0; }
     public void call(){}
     public int call(int a,java.lang.String b){ return 0; }
     public java.lang.Integer call(int[] a,java.lang.String b){ return null; }

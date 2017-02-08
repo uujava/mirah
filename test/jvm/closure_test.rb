@@ -458,4 +458,17 @@ class ClosureTest < Test::Unit::TestCase
     # when trying to run it from rake, while it's run under plain java without errors
     # assert_output("bar\nbar\n") { cls.newInstance }
   end
+
+  def test_bindings_in_expressions
+    cls, = compile(%q{
+      str:String = nil
+      t = Thread.new do
+        puts str = 'asd'
+      end
+
+      t.start
+      t.join    })
+    assert_run_output("asd\n", cls)
+  end
+
 end

@@ -142,4 +142,28 @@ class ObjectExtensionsTest < Test::Unit::TestCase
     ]
     assert_run_output("true\nfalse\n",cls)
   end
+
+  def test_attr_writer_behaviour
+    # it's hard to test that equals not actually called for enum.
+    # just test == works as expected
+    cls, = compile %q[
+      class Foo
+        attr_accessor x: String
+        def test
+          y = self.x = '456'
+          puts y
+          puts self.x
+        end
+      end
+      foo = Foo.new
+      foo.test
+      y = foo.x = '123'
+      puts foo.x
+      puts y
+      puts foo.x = '789'
+      puts foo.x
+    ]
+    assert_run_output("456\n456\n123\n123\n789\n789\n",cls)
+  end
+
 end

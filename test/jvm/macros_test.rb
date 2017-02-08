@@ -680,7 +680,7 @@ class MacrosTest < Test::Unit::TestCase
         x.a = 1
         puts x.a
     EOF
-    assert_run_output("public abstract int TestAcc.a()\npublic abstract void TestAcc.a_set(int)\n1\n", cls)
+    assert_run_output("public abstract int TestAcc.a()\npublic abstract int TestAcc.a_set(int)\n1\n", cls)
   end
 
   def test_macro_varargs
