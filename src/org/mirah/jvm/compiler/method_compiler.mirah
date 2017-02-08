@@ -360,14 +360,14 @@ class MethodCompiler < BaseCompiler
 
     if expression
       if isCaptured
-        @builder.dupX1
+        @builder.dupX1(valueType)
       else
-        @builder.dup
+        @builder.dup(valueType)
       end
     end
-    
-    recordPosition(local.position)
+
     @builder.convertValue(valueType, type)
+    recordPosition(local.position)
 
     proper_name = scoped_name(containing_scope(local), name)
     if isCaptured
@@ -375,6 +375,7 @@ class MethodCompiler < BaseCompiler
     else
       @builder.storeLocal(proper_name, type)
     end
+
   end
   
   def containing_scope(node: Named): Scope
@@ -434,7 +435,7 @@ class MethodCompiler < BaseCompiler
   def compileIfBody(body:NodeList, expression:Object, type:JVMType):void
     compileBody(body, expression, type)
     bodyType = getInferredType(body)
-    if needConversion(bodyType, type)
+    if needConversion(bodyType, type) && expression
       @builder.convertValue(bodyType, type)
     end
   end

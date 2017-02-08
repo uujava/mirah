@@ -309,4 +309,27 @@ class CastTest < Test::Unit::TestCase
     assert_equal(1.0, cls.foo1())
     assert_equal(0.0, cls.foo2())
   end
+
+  def test_conversion_in_conditional_with_locals
+    cls, = compile(<<-EOF)
+     def foo1:int
+       if true
+        x = 5
+       elsif false
+        x = 10 / 1:long
+      end
+      x:int
+     end
+
+     def foo2
+       if false
+        x = 5
+       elsif true
+        x = 10 / 1:long
+       end
+     end
+    EOF
+    assert_equal(5, cls.foo1())
+    assert_equal(10, cls.foo2())
+  end
 end
