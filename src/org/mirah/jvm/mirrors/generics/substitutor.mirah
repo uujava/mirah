@@ -57,7 +57,7 @@ class CapturedWildcard < TypeVariable
      @lowerBound.erasure
     else
       # ? extends T
-      erasure
+      super
     end
   end
 end
@@ -144,10 +144,8 @@ class Substitutor < SimpleTypeVisitor6
     # Apply capture conversion.
     param = popTypeParam:TypeVariable
     upper = param.getUpperBound
-    lower = param.getLowerBound
-    if t.getSuperBound
-      lower = t.getSuperBound
-    end
+    lower = t.getSuperBound ? t.getSuperBound : nil
+
     if t.getExtendsBound && !upper:MirrorType.isSameType(t.getExtendsBound:MirrorType)
       lub = LubFinder.new(@context)
       # seems correctly works only for real types like <? extends Comparable>
