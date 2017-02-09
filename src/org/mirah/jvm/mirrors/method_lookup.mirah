@@ -34,6 +34,8 @@ import org.mirah.jvm.types.JVMType
 import org.mirah.jvm.types.JVMTypeUtils
 import org.mirah.jvm.types.MemberKind
 import org.mirah.jvm.mirrors.debug.DebuggerInterface
+import org.mirah.jvm.mirrors.Member
+import org.mirah.jvm.mirrors.DeclaredMirrorType
 import org.mirah.typer.DerivedFuture
 import org.mirah.typer.ErrorType
 import org.mirah.typer.InlineCode
@@ -76,6 +78,7 @@ class MethodLookup
 
   def initialize(context:Context)
     @context = context
+    @generics = GenericMethodLookup.new(@context)
   end
 
   class << self
@@ -341,7 +344,7 @@ class MethodLookup
       else
         ResolvedCall.create(target, method)
       end
-      MethodType.new(method.name, method.argumentTypes, type, method.isVararg)
+      MethodType.new(method.name, method.argumentTypes, type, method.isVararg, method.genericArgumentTypes)
     end
   end
 
@@ -394,27 +397,30 @@ class MethodLookup
     defined_methods = HashSet.new
     abstract_methods = { }
     visited = HashSet.new
-    gatherAbstractMethodsInternal(target, defined_methods, abstract_methods, visited)
+    gatherAbstractMethodsInternal(target, target, defined_methods, abstract_methods, visited)
     abstract_methods.keySet.removeAll(defined_methods)
     ArrayList.new(abstract_methods.values)
   end
 
-  def gatherAbstractMethodsInternal(target:MirrorType, defined_methods:Set, abstract_methods:Map, visited:Set):void
+  def gatherAbstractMethodsInternal(orig:MirrorType, target:MirrorType, defined_methods:Set, abstract_methods:Map, visited:Set):void
     if target
       target = target.unmeta
     end
     unless target.nil? || target.isError || visited.contains(target)
       visited.add(target)
-      target.getAllDeclaredMethods.each do |member: JVMMethod|
+      target.getAllDeclaredMethods.each do |member: Member|
         if member.isAbstract
-          type = MethodType.new(member.name, member.argumentTypes, member.returnType, member.isVararg)
+          if orig.kind_of? DeclaredMirrorType
+            member = @generics.processMethod(member, orig:DeclaredMirrorType)
+          end
+          type = MethodType.new(member.name, member.argumentTypes, member.returnType, member.isVararg, member.genericArgumentTypes)
           abstract_methods[[member.name, member.argumentTypes]] = type
         else
           defined_methods.add([member.name, member.argumentTypes])
         end
       end
       target.directSupertypes.each do |t|
-        gatherAbstractMethodsInternal(t:MirrorType, defined_methods, abstract_methods, visited)
+        gatherAbstractMethodsInternal(orig, t:MirrorType, defined_methods, abstract_methods, visited)
       end
     end
   end

@@ -243,22 +243,37 @@ class ClosureBuilderHelper
     block_method.body = block.body
 
     m_types= mtype.parameterTypes
+    g_types= mtype.genericParameterTypes
 
     # Add check casts in if the argument has a type
     # create a bridge method if necessary
     requires_bridge = false
     i=0
     args.required.each do |a: RequiredArgument|
-      if a.type and i < m_types.size
-        m_type = m_types[i]:MirrorType
-        a_type = types.get(parent_scope, a.type.typeref).resolve
-        if !a_type.equals(m_type) # && m_type:BaseType.assignableFrom(a_type) # could do this, then it'd only add the checkcast if it will fail...
-          @@log.fine("#{name} requires bridge method because declared type: #{a_type} != iface type: #{m_type}")
-          block_method.body.insert(0,
-            Cast.new(a.position,
-              Constant.new(SimpleString.new(m_type.name)), LocalAccess.new(a.position, a.name))
-            )
-          requires_bridge = true
+      if i < m_types.size
+        if a.type
+           m_type = m_types[i]:MirrorType
+           a_type = types.get(parent_scope, a.type.typeref).resolve
+           if !a_type.equals(m_type) # && m_type:BaseType.assignableFrom(a_type) # could do this, then it'd only add the checkcast if it will fail...
+             @@log.fine("#{name} requires bridge method because declared type: #{a_type} != iface type: #{m_type}")
+             block_method.body.insert(0,
+               Cast.new(a.position,
+                 Constant.new(SimpleString.new(m_type.name)), LocalAccess.new(a.position, a.name))
+               )
+             requires_bridge = true
+           end
+        else
+          # type not defined in ast for block parameter
+          # use type from method
+          m_type = m_types[i]:MirrorType
+          g_type = g_types[i]:MirrorType.erasure:MirrorType
+          if m_type != g_type
+            @@log.fine "use generic type name: #{g_type} for #{a}"
+            a_type_ref = TypeRefImpl.new(a.position)
+            a_type_ref.name = g_type.name
+            a.type = a_type_ref
+            requires_bridge = true
+          end
         end
       end
       i+=1

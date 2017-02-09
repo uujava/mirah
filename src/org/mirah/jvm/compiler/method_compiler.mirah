@@ -897,7 +897,6 @@ class MethodCompiler < BaseCompiler
       # x = true ? 1 : 2:Long  -> x is inferred as an IntersectionType
       return true if(to.unbox != nil)
       if isDeclared(to) && to.assignableFrom(from.box)
-        puts "new true: #{to} #{to.getClass} #{from}"
         return true
       else
         return false

@@ -23,10 +23,10 @@ import mirah.impl.MirahParser
 import org.mirah.macros.JvmBackend
 import org.mirah.macros.MacroBuilder
 import mirah.objectweb.asm.Opcodes
-
 import static org.mirah.jvm.types.JVMTypeUtils.*
 import org.mirah.jvm.types.JVMType
 import org.mirah.jvm.mirrors.*
+import org.mirah.jvm.mirrors.generics.CapturedWildcard
 
 # Type inference engine.
 # Makes a single pass over the AST nodes building a graph of the type
@@ -1190,7 +1190,7 @@ class Typer < SimpleNodeVisitor
         []
       end
 
-    if parameters.size != method_type.parameterTypes.size
+    if parameters.size != method_type.genericParameterTypes.size
       position = block.arguments.position if block.arguments
       position ||= block.position
       return @futures[block] = ErrorType.new([
@@ -1201,13 +1201,15 @@ class Typer < SimpleNodeVisitor
     i = 0
     parameters.each do |param_type: AssignableTypeFuture|
       if !param_type.hasDeclaration
-        future = @types.get(
-          scopeOf(block),
-          TypeRefImpl.new(
-            method_type.parameterTypes.get(i):ResolvedType.name))
-        param_type.declare(
-                future,
-                block.arguments.position)
+        genericType = method_type.genericParameterTypes.get(i)
+        paramType:ResolvedType = if genericType.kind_of? CapturedWildcard
+          # TODO test case ? extends T, ? super T
+          genericType:CapturedWildcard.getUpperBound
+        else
+          genericType
+        end
+        future = @types.get scopeOf(block), TypeRefImpl.new(paramType.name)
+        param_type.declare future, block.arguments.position
       end
       i += 1
     end
@@ -1222,7 +1224,7 @@ class Typer < SimpleNodeVisitor
 
     type = MethodFuture.new(
       method_type.name,
-      method_type.parameterTypes,
+      method_type.genericParameterTypes,
       ret_future,
       method_type.isVararg,
       block.position)

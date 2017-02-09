@@ -25,9 +25,10 @@ import mirah.lang.ast.*
 class MethodType
   implements ResolvedType
   # TODO should this include the defining class?
-  def initialize(name:String, parameterTypes:List, returnType:ResolvedType, isVararg:boolean)
+  def initialize(name:String, parameterTypes:List, returnType:ResolvedType, isVararg:boolean, genericParameterTypes:List = parameterTypes)
     @name = name
     @parameterTypes = parameterTypes
+    @genericParameterTypes = genericParameterTypes || parameterTypes
     @returnType = returnType
     @isVararg = isVararg
     # parameterTypes.each do |p|
@@ -44,6 +45,10 @@ class MethodType
 
   def parameterTypes:List
     @parameterTypes
+  end
+
+  def genericParameterTypes:List
+    @genericParameterTypes
   end
 
   def returnType:ResolvedType

@@ -182,7 +182,7 @@ class CallFuture < BaseTypeFuture
     @paramTypes.size.times do |i|
       param = @paramTypes.get(i)
       if param.kind_of?(BlockFuture)
-        block_type = error || type.parameterTypes.get(i):ResolvedType
+        block_type = error || type.genericParameterTypes.get(i):ResolvedType
         param:BlockFuture.resolved(block_type)
       end
     end

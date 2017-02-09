@@ -988,6 +988,22 @@ StaticOuterTest1.new.test
     assert_run_output("null => OK\n", cls)
   end
 
+  def test_block_params_from_generics
+    cls, = compile('["a", "ab", "abc"].forEach { |v| puts v.length }')
+    assert_run_output("1\n2\n3\n", cls)
+  end
+
+  def test_block_params_from_generics_on_mirah_type
+    cls, = compile('
+    class X
+      def initialize(name:String); @name = name; end
+      attr_reader name: String
+    end
+    [X.new("a"), X.new("ab"), X.new("abc")].forEach { |v| puts v.name }'
+    )
+    assert_run_output("a\nab\nabc\n", cls)
+  end
+
   # nested nlr scopes
 
 # works with script as end

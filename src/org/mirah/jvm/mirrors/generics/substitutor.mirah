@@ -33,6 +33,7 @@ import org.mirah.typer.TypeFuture
 class CapturedWildcard < TypeVariable
   def initialize(context:Context, upper:MirrorType, lower:MirrorType)
     super(context, "?", upper)
+    @@nullType = context[MirrorTypeSystem].getNullType unless @@nullType
     @lowerBound = lower
   end
 
@@ -45,6 +46,18 @@ class CapturedWildcard < TypeVariable
       "[? extends #{getUpperBound}, super #{@lowerBound}]"
     else
       "[? extends #{getUpperBound}]"
+    end
+  end
+
+  # TODO fix hack
+  # ClosureBuilder uses erasure to suggest type for block parameters
+  def erasure:TypeMirror
+    if @lowerBound
+    # ? super T
+     @lowerBound.erasure
+    else
+      # ? extends T
+      erasure
     end
   end
 end
@@ -83,8 +96,7 @@ class Substitutor < SimpleTypeVisitor6
     array = if saved == @substitutions
       t
     else
-      types = @context[MirrorTypeSystem]
-      types.getResolvedArrayType(c2.resolve:MirrorType)
+      @types.getResolvedArrayType(c2.resolve:MirrorType)
     end
     future(array)
   end

@@ -48,6 +48,7 @@ class Member implements GenericMethod, JVMField
   attr_reader returnType: JVMType, kind: MemberKind, flags: int
   attr_accessor signature: String
   attr_writer genericReturnType: JVMType
+  attr_accessor genericArgumentTypes: List
 
   def genericReturnType
     @genericReturnType || returnType

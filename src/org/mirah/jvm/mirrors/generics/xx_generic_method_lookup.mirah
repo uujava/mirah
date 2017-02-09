@@ -94,10 +94,27 @@ class GenericMethodLookup
     solved_vars = solveConstraints(constraint_map, initial_vars)
     lockSolutions(solved_vars, type_params.keySet)
     if methodIsApplicable(generic_params, params, solved_vars, method.isVararg)
-      return substituteReturnType(method, methodReader.genericReturnType:TypeMirror, solved_vars)
+      return substituteSolved(method, methodReader.genericReturnType:TypeMirror, solved_vars, generic_params)
     else
       return nil
     end
+  end
+
+  # Calculates specific method signature based typeVariableMap from fully resolved type
+  # Provides generic resolved arguments types for blocks parameters
+  def processMethod(member: Member, resolved:DeclaredMirrorType):Member
+    solved_vars = resolved.getTypeVariableMap();
+    return member if(solved_vars.isEmpty)
+    inference = TypeParameterInference.new(@context[Types])
+    initial_vars = calculateInitialVars(inference, member, resolved)
+    methodReader = readMethodSignature(member, initial_vars)
+    type_params = getTypeParams(
+            resolved,
+            methodReader.getFormalTypeParameters,
+            "<init>".equals(member.name))
+    initial_vars.putAll(type_params);
+    generic_params = methodReader.getFormalParameterTypes
+    return substituteSolved(member, methodReader.genericReturnType:TypeMirror, solved_vars, generic_params)
   end
 
   def readMethodSignature(method:Member, typevar_futures:Map)
@@ -266,19 +283,34 @@ class GenericMethodLookup
     future.resolve:MirrorType
   end
 
-  def substituteReturnType(method:Member, returnType:TypeMirror, typevars:Map):Member
+  def substituteSolved(method:Member, returnType:TypeMirror, typevars:Map, generic_params:List):Member
     newReturnType = if "<init>".equals(method.name)
       newInvocation(method.declaringClass, typevars)
     else
       substituteTypeVariables(returnType, typevars)
     end
-    if newReturnType == method.genericReturnType
+
+    unchanged = newReturnType == method.genericReturnType
+    replacedParams = []
+    argTypes = method.argumentTypes
+    generic_params.each_with_index do |param:TypeMirror, index|
+      new_param = substituteTypeVariables(param,typevars)
+      if new_param != argTypes[index]
+        @@log.fine "need replace #{new_param} != #{argTypes[index]}"
+        unchanged = false
+      end
+      replacedParams.add new_param
+    end
+    if unchanged
       method
     else
+      @@log.fine "need replace new member #{newReturnType} != #{method.genericReturnType}"
+      @@log.fine "need replace params #{replacedParams} != #{method.argumentTypes}"
       newMember = Member.new(
           method.flags, method.declaringClass, method.name,
           method.argumentTypes, method.returnType, method.kind)
       newMember.genericReturnType = newReturnType:MirrorType
+      newMember.genericArgumentTypes = replacedParams
       newMember
     end
   end

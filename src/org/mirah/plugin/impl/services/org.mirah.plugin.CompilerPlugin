@@ -1,1 +1,2 @@
 org.mirah.plugin.impl.JavaStubPlugin
+org.mirah.plugin.impl.OptimizeEntryPlugin

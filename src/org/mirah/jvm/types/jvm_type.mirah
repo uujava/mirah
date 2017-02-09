@@ -26,6 +26,7 @@ end
 
 interface GenericMethod < JVMMethod
   def genericReturnType:JVMType; end
+  def genericArgumentTypes:List;end
 end
 
 interface JVMType < ResolvedType
