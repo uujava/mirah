@@ -140,21 +140,27 @@ class Substitutor < SimpleTypeVisitor6
     end
   end
 
+  # TODO does it not work properly for all cases??
   def visitWildcard(t, p)
     # Apply capture conversion.
     param = popTypeParam:TypeVariable
-    upper = param.getUpperBound
-    lower = t.getSuperBound ? t.getSuperBound : nil
-
-    if t.getExtendsBound && !upper:MirrorType.isSameType(t.getExtendsBound:MirrorType)
-      lub = LubFinder.new(@context)
-      # seems correctly works only for real types like <? extends Comparable>
-      upper = lub.leastUpperBound([upper, t.getExtendsBound])
-      # TODO need real fix for wildcards with type parameter like <? extends E>
-      upper = upper == nil ?  param.getUpperBound : upper
+    u_bound = param.getUpperBound:MirrorType
+    l_bound = param.getLowerBound:MirrorType # when do we need it??
+    s_bound = t.getSuperBound:MirrorType
+    e_bound = t.getExtendsBound:MirrorType
+    lower = s_bound # <? super T>
+    upper = u_bound
+    unless lower
+      # <? extends T>
+      if e_bound.kind_of?(TypeVariable) && !u_bound.isSameType(e_bound)
+        lub = LubFinder.new(@context)
+        upper:MirrorType = lub.leastUpperBound [u_bound, e_bound]
+      else
+        upper = e_bound
+      end
     end
     @substitutions += 1
-    future(CapturedWildcard.new(@context, upper:MirrorType, lower:MirrorType))
+    future CapturedWildcard.new(@context, upper, lower)
   end
 
   def future(t:Object)

@@ -989,19 +989,55 @@ StaticOuterTest1.new.test
   end
 
   def test_block_params_from_generics
-    cls, = compile('["a", "ab", "abc"].forEach { |v| puts v.length }')
-    assert_run_output("1\n2\n3\n", cls)
+    omit_if JVMCompiler::JVM_VERSION.to_f < 1.8 do
+      cls, = compile('["a", "ab", "abc"].forEach { |v| puts v.length }')
+      assert_run_output("1\n2\n3\n", cls)
+    end
   end
 
   def test_block_params_from_generics_on_mirah_type
-    cls, = compile('
-    class X
-      def initialize(name:String); @name = name; end
-      attr_reader name: String
+    omit_if JVMCompiler::JVM_VERSION.to_f < 1.8 do
+      cls, = compile('
+      class X
+        def initialize(name:String); @name = name; end
+        attr_reader name: String
+      end
+      [X.new("a"), X.new("ab"), X.new("abc")].forEach { |v| puts v.name }'
+      )
+      assert_run_output("a\nab\nabc\n", cls)
     end
-    [X.new("a"), X.new("ab"), X.new("abc")].forEach { |v| puts v.name }'
-    )
-    assert_run_output("a\nab\nabc\n", cls)
+  end
+
+  def test_block_params_from_generics_on_stream_api
+    omit_if JVMCompiler::JVM_VERSION.to_f < 1.8 do
+      cls, = compile('puts ["a","b", "cc", "dd"].stream.filter { |s| s.length > 1 }.count')
+      assert_run_output("2\n", cls)
+    end
+  end
+
+  def test_block_params_infered_from_method_params
+
+    cls, = compile('import java.util.List
+        # from fixtures
+        import org.infer.*
+
+        class MyModel implements Model
+          def initialize; @values = [1,2,3,4]; end
+          # Model method
+          def valueAt(row: int); @values[row]; end
+          # custom method
+          def values(list:List); @values = list; end
+        end
+
+        model = ModelFactory.model MyModel.class do |m|
+          m.values [3,4,5,6]
+        end
+
+        puts model.valueAt(0)
+        puts model.valueAt(1)
+        puts model.valueAt(2)
+    ')
+    assert_run_output("3\n4\n5\n", cls)
   end
 
   # nested nlr scopes
