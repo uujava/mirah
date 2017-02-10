@@ -1040,6 +1040,18 @@ StaticOuterTest1.new.test
     assert_run_output("3\n4\n5\n", cls)
   end
 
+
+  def test_infer_to_common_interface_without_warnings
+    cls, = compile_no_warnings('x = []
+       ints = [1:Integer]
+       longs = ["123"]
+       x.addAll ints
+       x.addAll longs
+       x.forEach do |v|
+         puts v.class
+       end')
+    assert_run_output("interface java.lang.Comparable\ninterface java.lang.Comparable\n", cls)
+  end
   # nested nlr scopes
 
 # works with script as end
