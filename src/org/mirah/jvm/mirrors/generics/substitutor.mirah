@@ -160,7 +160,7 @@ class Substitutor < SimpleTypeVisitor6
       end
     end
     @substitutions += 1
-    future CapturedWildcard.new(@context, upper, lower)
+    future CapturedWildcard.new(@context, upper || u_bound, lower)
   end
 
   def future(t:Object)
