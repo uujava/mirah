@@ -318,7 +318,7 @@ class MirrorTypeSystem implements TypeSystem, ExtensionsService
          @@log.finest "found declared field future for target: #{target} name: #{name}"
          return member:Member.asyncReturnType:AssignableTypeFuture
       else
-         @@log.warning "name: #{name} member #{member} return type is not an AssignableTypeFuture: #{future}"
+         @@log.warning "name: #{name} member #{member} return type is not an AssignableTypeFuture: #{future} at: #{position} for node: #{target}"
       end
     end
 
