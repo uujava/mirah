@@ -1042,6 +1042,7 @@ StaticOuterTest1.new.test
 
 
   def test_infer_to_common_interface_without_warnings
+    omit_if JVMCompiler::JVM_VERSION.to_f < 1.8
     cls, = compile_no_warnings('x = []
        ints = [1:Integer]
        longs = ["123"]
