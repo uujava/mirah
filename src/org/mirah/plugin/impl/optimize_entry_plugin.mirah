@@ -39,10 +39,15 @@ class OptimizeEntryPlugin < CompilerPluginAdapter
   end
 
   private def read_params(params:String, args: MirahArguments):void
+    @prefix = '__'
+    @meta_prefix = 'META'
     if params != nil and params.trim.length > 0
       split_regexp = '\|'
       param_list = ArrayList.new Arrays.asList params.trim.split split_regexp
       @@log.fine "params: '#{param_list}'"
+      if param_list.contains "-pfx"
+        @prefix = ''
+      end
     end
   end
 
@@ -66,9 +71,11 @@ class OptimizeEntryPlugin < CompilerPluginAdapter
       
       # use temp const to avoid local variable issue when using static block initializer
       add_tmp_const(cdef, tmp_name)
+      # generate ID=0
+      add_const_statement(cdef, tmp_name, nil, 'ID', 0)
       index = 1
       map.each do |attr_name:String, attr_type:JVMType|
-        const_name = class_scope.temp("$ATTR_META")
+        const_name = attr_name.toUpperCase
         add_const_statement(cdef, tmp_name, attr_name, const_name, index)
         add_when_statement(case_node, attr_name, const_name)
         index +=1
@@ -99,9 +106,10 @@ class OptimizeEntryPlugin < CompilerPluginAdapter
   def from_meta_members(members:List, map:Map):void
     collect = []
     members.each do |member:Member|
-      if @attrMetaType === member.returnType
+      if @attrMetaType == member.returnType
         matcher = member.name.match(/__(.*?)_meta/)
         if matcher
+          @@log.info "found attr meta: #{matcher.group(1)} #{member.declaringClass}"
           collect << [matcher.group(1), member.declaringClass]
         end
       end
@@ -112,7 +120,7 @@ class OptimizeEntryPlugin < CompilerPluginAdapter
 
   def add_when_statement(caseNode:Case, attr:String, const:String):void
      attrName = SimpleString.new attr
-     attrConst = Constant.new(SimpleString.new(const))
+     attrConst = FieldAccess.new(caseNode.position, SimpleString.new("#{@prefix}#{@meta_prefix}_#{const}"), true)
      temp_case = @parser.quote do
        case
          when `attrName` then return `attrConst`
@@ -138,16 +146,25 @@ class OptimizeEntryPlugin < CompilerPluginAdapter
   end
 
   def add_const_statement(cdef:ClassDefinition, tmp:String, attr:String, const:String, index:int):void
-    tmpConst = SimpleString.new(tmp)
-    metaCall = FunctionalCall.new(SimpleString.new("__#{attr}_meta"), [], nil)
-    attr_index = Fixnum.new index
-    node =  @parser.quote do
-      @@`tmpConst` = `metaCall`
-      @@`tmpConst`.setFieldIndex(`attr_index`)
-      @@`tmpConst`
+    if index > 0
+      tmpConst = SimpleString.new(tmp)
+      metaCall = FunctionalCall.new(SimpleString.new("__#{attr}_meta"), [], nil)
+      attr_index = Fixnum.new index
+      node =  @parser.quote do
+        @@`tmpConst` = `metaCall`
+        @@`tmpConst`.setFieldIndex(`attr_index`)
+        @@`tmpConst`
+      end
+      meta_const = SimpleString.new "#{@prefix}#{@meta_prefix}_#{const}"
+      cdef.body.add(ConstantAssign.new(meta_const, node, nil, nil, nil))
+
+      index_node = Call.new(FieldAccess.new(cdef.position, meta_const, true), SimpleString.new("fieldIndex"), [], nil)
+      index_const = SimpleString.new "#{@prefix}#{const}"
+      cdef.body.add(ConstantAssign.new(index_const, index_node, nil, nil, nil))
+    else
+      index_const = SimpleString.new "#{@prefix}#{const}"
+      cdef.body.add(ConstantAssign.new(index_const, Fixnum.new(0), nil, nil, nil))
     end
-    attrConst = SimpleString.new const
-    cdef.body.add(ConstantAssign.new(attrConst, node, nil, nil, nil))
   end
 
   def overwriteAttrMeta(type:MirrorType):boolean
