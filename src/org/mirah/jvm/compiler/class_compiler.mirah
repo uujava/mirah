@@ -55,6 +55,7 @@ class ClassCompiler < BaseCompiler implements InnerClassCompiler
     @@log.fine "Compiling class #{@classdef.name.identifier}"
     startClass
     visit(@classdef.body, nil)
+    verifyClass
     @classwriter.visitEnd
     @@log.fine "Finished class #{@classdef.name.identifier}"
   end
@@ -197,7 +198,7 @@ class ClassCompiler < BaseCompiler implements InnerClassCompiler
     Collections.unmodifiableCollection(@innerClasses)
   end
 
-  protected def verify
+  private def verifyClass
     return if JVMTypeUtils.isAbstract(@type)
     # naive check all abstract methods implemented
     abstract_methods = HashSet.new
