@@ -341,7 +341,7 @@ class ClassCleanup < NodeScanner
     mdef = orig.clone:MethodDefinition
     mdef.arguments = args.clone:Arguments
     mdef.body = NodeList.new([FunctionalCall.new(mdef.position, mdef.name, params, nil)])
-    mdef.modifiers = ModifierList.new([Modifier.new(mdef.position, 'PUBLIC'), Modifier.new(mdef.position, 'SYNTHETIC'), Modifier.new(mdef.position, 'BRIDGE')])
+    mdef.modifiers = ModifierList.new([Modifier.new(mdef.position, 'PUBLIC')])
   end
 
   protected def verifyImplements

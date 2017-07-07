@@ -24,8 +24,6 @@ public abstract class AOne implements org.foo.AOneX{
     public AOne(){}
  /** static method */
     public static void method(){}
-    // SYNTHETIC
-    // BRIDGE
  /** @throws RuntimeException */
     public void call(int a){}
 }
